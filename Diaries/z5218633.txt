@@ -1,0 +1,7 @@
+Week 1
+===
+I met the other group members, discussed potential projects and decided on the event management option. 
+I was assigned mainly backend. I researched Java backend frameworks for potential usage.
+
+Week 2
+===
