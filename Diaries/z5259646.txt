@@ -1,0 +1,13 @@
+Week 1
+Group formation and discussion on what group project we wanted to do. We decided on Event managements
+I was delegated scrum master for the team
+
+
+Week 2
+Met up during our weekly meeting with Dylan to discuss what was considered a novel functionality
+Unfortunately a marketplace already existed but thought of the idea for a group ticket holding system
+
+Our group also formed our key functionalities, split them into sprints and drafted up user stories. 
+
+I created the document for the business proposal including formating as well as splitting up sections based upon the rubric
+
