@@ -5,11 +5,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import spark.Spark;
 import tickr.application.TickrController;
-import tickr.application.responses.TestResponse;
+import tickr.application.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -45,7 +44,10 @@ public class Server {
         }));
 
         get("/api/test/get", TickrController::testGet);
-        post("/api/test/post", TickrController::testPost, TestResponse.PostRequest.class);
+        get("/api/test/get/all", TickrController::testGetAll);
+        post("/api/test/post", TickrController::testPost, TestResponses.PostRequest.class);
+        put("/api/test/put", TickrController::testPut, TestResponses.PutRequest.class);
+        delete("/api/test/delete", TickrController::testDelete, TestResponses.DeleteRequest.class);
 
         Spark.exception(Exception.class, (exception, request, response) -> {
             logger.error("Uncaught exception: ", exception);
@@ -54,9 +56,9 @@ public class Server {
         });
     }
 
-    private static <T> void get (String path, Function<RouteWrapper.Context, T> routeFunc) {
+    /*private static <T> void get (String path, Function<RouteWrapper.Context, T> routeFunc) {
         Spark.get(path, new RouteWrapper<T>(dataModel, routeFunc), gson::toJson);
-    }
+    }*/
 
     private static <R> void get (String path, BiFunction<TickrController, ModelSession, R> route) {
         Spark.get(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session)), gson::toJson);

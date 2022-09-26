@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- MySQL driver-->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+
+        <!-- TODO: Update to real values-->
+        <property name="connection.url">jdbc:mysql://localhost:32768/TestSchema</property>
+        <property name="connection.username">root</property>
+        <property name="connection.password">rootpw</property>
+
+        <property name="connection.pool_size">100</property>
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="show_sql">true</property>
+
+        <!-- Drop and re-create the database schema on startup -->
+        <!-- TODO: remove and replace with our schema -->
+        <!-- <property name="hbm2ddl.auto">create</property> -->
+
+
+        <!-- Mappings -->
+        <mapping class="tickr.application.entities.TestEntity"/>
+    </session-factory>
+</hibernate-configuration>
