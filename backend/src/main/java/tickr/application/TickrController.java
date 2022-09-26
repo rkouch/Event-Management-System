@@ -61,7 +61,7 @@ public class TickrController {
         return entity;
     }
 
-    public Object testDelete (ModelSession session, TestResponses.DeleteRequest request) {
+    public void testDelete (ModelSession session, TestResponses.DeleteRequest request) {
         var entityOpt = session.getTestEntity(request.id);
 
         if (entityOpt.isEmpty()) {
@@ -71,7 +71,5 @@ public class TickrController {
         var entity = entityOpt.orElse(null);
         //assert entity == null;
         session.removeTestEntity(entity);
-
-        return new Object();
     }
 }

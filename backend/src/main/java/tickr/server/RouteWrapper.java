@@ -43,7 +43,6 @@ public class RouteWrapper<T> implements Route {
             modelSession.commit();
             modelSession.close();
         } catch (Exception e) {
-            logger.debug("Caught exception in route: ", e);
             modelSession.rollback();
             modelSession.close();
             throw e; // TODO: repeat if commits fail?
