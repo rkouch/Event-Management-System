@@ -26,41 +26,52 @@ public class HibernateSession implements ModelSession {
     }
 
     @Override
-    public List<TestEntity> getTestEntities () {
+    public <T> List<T> getAll (Class<T> entityClass) {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<TestEntity> criteriaQuery = criteriaBuilder.createQuery(TestEntity.class);
-        Root<TestEntity> criteriaRoot = criteriaQuery.from(TestEntity.class);
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+        Root<T> criteriaRoot = criteriaQuery.from(entityClass);
         criteriaQuery.select(criteriaRoot);
 
-        Query<TestEntity> query = session.createQuery(criteriaQuery);
+        Query<T> query = session.createQuery(criteriaQuery);
 
         return query.getResultList();
     }
 
     @Override
-    public Optional<TestEntity> getTestEntity (int id) {
+    public <T, I> List<T> getAllWith (Class<T> entityClass, String col, I data) {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<TestEntity> criteriaQuery = criteriaBuilder.createQuery(TestEntity.class);
-        Root<TestEntity> criteriaRoot = criteriaQuery.from(TestEntity.class);
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+        Root<T> criteriaRoot = criteriaQuery.from(entityClass);
 
-        criteriaQuery.select(criteriaRoot).where(criteriaBuilder.equal(criteriaRoot.get("id"), id));
+        criteriaQuery.select(criteriaRoot).where(criteriaBuilder.equal(criteriaRoot.get(col), data));
 
-        Query<TestEntity> query = session.createQuery(criteriaQuery);
+        Query<T> query = session.createQuery(criteriaQuery);
 
-        var list = query.getResultList();
-
-        return !list.isEmpty() ? Optional.of(list.get(0)) : Optional.empty();
+        return query.getResultList();
     }
 
     @Override
-    public void saveTestEntity (TestEntity entity) {
+    public <T, I> Optional<T> getById (Class<T> entityClass, String idCol, I id) {
+        var l = getAllWith(entityClass, idCol, id);
+        if (l.size() == 0) {
+            return Optional.empty();
+        } else if (l.size() == 1) {
+            return Optional.of(l.get(0));
+        } else {
+            throw new RuntimeException(String.format("Id not unique: %s in column %s (%d results)!", id, idCol, l.size()));
+        }
+    }
+
+    @Override
+    public <T> void save (T entity) {
         session.persist(entity);
     }
 
     @Override
-    public void removeTestEntity (TestEntity entity) {
+    public <T> void remove (T entity) {
         if (session.isReadOnly(entity)) {
-            logger.error("Attempted to remove readonly entity!");
+            logger.error("Attempted to remove readonly entity: {}!", entity);
+            return;
         }
         session.remove(entity);
     }

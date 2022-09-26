@@ -18,7 +18,8 @@ public class TickrController {
         if (!params.containsKey("id")) {
             throw new BadRequestException("Missing parameters!");
         }
-        var entity = session.getTestEntity(Integer.parseInt(params.get("id")));
+        //var entity = session.getTestEntity(Integer.parseInt(params.get("id")));
+        var entity = session.getById(TestEntity.class, "id", Integer.parseInt(params.get("id")));
 
         if (entity.isEmpty()) {
             throw new NotFoundException("No such id: " + Integer.parseInt(params.get("id")));
@@ -28,7 +29,7 @@ public class TickrController {
     }
 
     public TestResponses.GetAll testGetAll (ModelSession session) {
-        return new TestResponses.GetAll(session.getTestEntities());
+        return new TestResponses.GetAll(session.getAll(TestEntity.class));
     }
 
     public TestEntity testPost (ModelSession session, TestResponses.PostRequest request) {
@@ -36,7 +37,7 @@ public class TickrController {
             throw new BadRequestException("Missing parameters!");
         }
         var entity = new TestEntity(request.name, request.email);
-        session.saveTestEntity(entity);
+        session.save(entity);
         return entity;
     }
 
@@ -45,7 +46,7 @@ public class TickrController {
             throw new BadRequestException("Missing parameters!");
         }
 
-        var entityOpt = session.getTestEntity(request.id);
+        var entityOpt = session.getById(TestEntity.class, "id", request.id);
 
         if (entityOpt.isEmpty()) {
             throw new NotFoundException("No such id: " + request.id);
@@ -62,14 +63,13 @@ public class TickrController {
     }
 
     public void testDelete (ModelSession session, TestResponses.DeleteRequest request) {
-        var entityOpt = session.getTestEntity(request.id);
+        var entityOpt = session.getById(TestEntity.class, "id", request.id);
 
         if (entityOpt.isEmpty()) {
             throw new NotFoundException("No such id: " + request.id);
         }
 
         var entity = entityOpt.orElse(null);
-        //assert entity == null;
-        session.removeTestEntity(entity);
+        session.remove(entity);
     }
 }
