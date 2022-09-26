@@ -8,6 +8,7 @@ import tickr.application.TickrController;
 import tickr.application.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.ServerException;
 
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -49,6 +50,11 @@ public class Server {
         put("/api/test/put", TickrController::testPut, TestResponses.PutRequest.class);
         delete("/api/test/delete", TickrController::testDelete, TestResponses.DeleteRequest.class);
 
+        Spark.exception(ServerException.class, ((exception, request, response) -> {
+            logger.error("{}: {}", exception.getStatusString(), exception.getMessage());
+            response.status(exception.getStatusCode());
+            response.body(gson.toJson(exception.getSerialised()));
+        }));
         Spark.exception(Exception.class, (exception, request, response) -> {
             logger.error("Uncaught exception: ", exception);
             response.status(500);

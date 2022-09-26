@@ -3,6 +3,8 @@ package tickr.application;
 import tickr.application.entities.TestEntity;
 import tickr.application.responses.TestResponses;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.BadRequestException;
+import tickr.server.exceptions.NotFoundException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -12,13 +14,17 @@ public class TickrController {
 
     }
 
-    public TestResponses.EntityResponse testGet (ModelSession session, Map<String, String> params) {
+    public TestEntity testGet (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("id")) {
-            throw new RuntimeException("Invalid params!"); // TODO
+            throw new BadRequestException("Missing parameters!");
         }
         var entity = session.getTestEntity(Integer.parseInt(params.get("id")));
 
-        return entity.map(t -> new TestResponses.EntityResponse(t.getName(), t.getEmail(), t.getId())).orElse(null);
+        if (entity.isEmpty()) {
+            throw new NotFoundException("No such id: " + Integer.parseInt(params.get("id")));
+        }
+
+        return entity.orElse(null);
     }
 
     public TestResponses.GetAll testGetAll (ModelSession session) {
@@ -27,22 +33,22 @@ public class TickrController {
 
     public TestEntity testPost (ModelSession session, TestResponses.PostRequest request) {
         if (request.name == null || request.email == null) {
-            throw new RuntimeException("Invalid request!"); // TODO
+            throw new BadRequestException("Missing parameters!");
         }
         var entity = new TestEntity(request.name, request.email);
         session.saveTestEntity(entity);
         return entity;
     }
 
-    public TestResponses.EntityResponse testPut (ModelSession session, TestResponses.PutRequest request) {
+    public TestEntity testPut (ModelSession session, TestResponses.PutRequest request) {
         if (request.newName == null || request.newEmail == null) {
-            throw new RuntimeException("Invalid request!"); // TODO
+            throw new BadRequestException("Missing parameters!");
         }
 
         var entityOpt = session.getTestEntity(request.id);
 
         if (entityOpt.isEmpty()) {
-            throw new RuntimeException("No such id!"); // TODO
+            throw new NotFoundException("No such id: " + request.id);
         }
 
         var entity = entityOpt.orElse(null);
@@ -52,20 +58,20 @@ public class TickrController {
 
         // No save needed, any updates are synced (make sure to use setters)
 
-        return new TestResponses.EntityResponse(entity.getName(), entity.getEmail(), entity.getId());
+        return entity;
     }
 
     public Object testDelete (ModelSession session, TestResponses.DeleteRequest request) {
         var entityOpt = session.getTestEntity(request.id);
 
         if (entityOpt.isEmpty()) {
-            throw new RuntimeException("No such id!"); // TODO
+            throw new NotFoundException("No such id: " + request.id);
         }
 
         var entity = entityOpt.orElse(null);
         //assert entity == null;
         session.removeTestEntity(entity);
 
-        return null;
+        return new Object();
     }
 }
