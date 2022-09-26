@@ -4,6 +4,9 @@ plugins {
 
     // Hibernate
     id "org.hibernate.orm" version "6.1.3.Final"
+
+    // Jacoco coverage
+    id "jacoco"
 }
 
 group '3900-M10C-tickr'
@@ -42,6 +45,17 @@ dependencies {
 
 test {
     useJUnitPlatform()
+
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir("coverage")
+    }
 }
 
 run {

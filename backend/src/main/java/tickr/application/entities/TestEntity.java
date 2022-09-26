@@ -2,6 +2,8 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "TestTable")
 public class TestEntity {
@@ -46,5 +48,18 @@ public class TestEntity {
 
     public void setEmail (String email) {
         this.email = email;
+    }
+
+    @Override
+    public boolean equals (Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TestEntity that = (TestEntity) o;
+        return id == that.id && Objects.equals(name, that.name) && Objects.equals(email, that.email);
+    }
+
+    @Override
+    public int hashCode () {
+        return Objects.hash(id, name, email);
     }
 }

@@ -9,6 +9,15 @@ public class TestResponses {
     public static class PostRequest {
         public String name;
         public String email;
+
+        public PostRequest () {
+
+        }
+
+        public PostRequest (String name, String email) {
+            this.name = name;
+            this.email = email;
+        }
     }
 
     public static class PutRequest {
@@ -19,10 +28,24 @@ public class TestResponses {
 
         @SerializedName("new_email")
         public String newEmail;
+
+        public PutRequest () {
+
+        }
+
+        public PutRequest (int id, String newName, String newEmail) {
+            this.id = id;
+            this.newName = newName;
+            this.newEmail = newEmail;
+        }
     }
 
     public static class DeleteRequest {
         public int id;
+
+        public DeleteRequest (int id) {
+            this.id = id;
+        }
     }
 
     public static class GetAll {
@@ -30,18 +53,6 @@ public class TestResponses {
 
         public GetAll (List<TestEntity> entities) {
             this.entities = entities;
-        }
-    }
-
-    public static class EntityResponse {
-        public String name;
-        public String email;
-        public int id;
-
-        public EntityResponse (String name, String email, int id) {
-            this.name = name;
-            this.email = email;
-            this.id = id;
         }
     }
 }
