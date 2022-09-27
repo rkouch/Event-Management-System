@@ -1,5 +1,4 @@
 .App {
-  text-align: center;
 }
 
 .App-logo {
@@ -35,4 +34,35 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.Background {
+  background-image: linear-gradient(135deg,#AFDEDC, #CAA5C0);
+  width: 100%;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  height: 100vh;
+}
+
+.Form {
+  background-color: #FFFFFF;
+  min-width: 300px;
+  max-width: 700px;
+  width: 70%;
+  border: 3px solid grey;
+  border-radius: 25px;
+  padding: 10px;
+}
+
+.Form_Input{
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px;
+  margin: auto;
+  align-items: center;
+  gap: 10px;
 }
