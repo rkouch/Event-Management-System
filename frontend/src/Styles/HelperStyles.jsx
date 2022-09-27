@@ -13,3 +13,14 @@ export const FlexRow = styled('div')({
   alignItems: 'center',
   gap: '5px',
 });
+
+export const H3 = styled('h3')({
+  textAlign: 'center'
+})
+
+export const Logo = styled('img')({
+  padding: '20px',
+  width: '100px',
+  height: 'auto',
+  position: 'fixed',
+})

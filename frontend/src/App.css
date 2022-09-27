@@ -1,5 +1,4 @@
 .App {
-  text-align: center;
 }
 
 .App-logo {
@@ -38,7 +37,7 @@
 }
 
 .Background {
-  background-color: #FFFFFF;
+  background-image: linear-gradient(135deg,#AFDEDC, #CAA5C0);
   width: 100%;
   background-size: cover;
   display: flex;
