@@ -3,6 +3,7 @@ package tickr.mock;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -16,6 +17,10 @@ public interface IMockGenerator {
 
     static <T, V extends Comparable<? super V>> Function<Set<V>, V> sequentialGenerator (Function<V, V> incrementFunc) {
         return s -> incrementFunc.apply(Collections.max(s));
+    }
+
+    static Function<Set<UUID>, UUID> uuidGenerator () {
+        return s -> UUID.randomUUID();
     }
 
     class MockGenerator<T, V> implements IMockGenerator {

@@ -1,15 +1,23 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.usertype.UserTypeLegacyBridge;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Table(name = "TestTable")
 public class TestEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id = 0;
+    @UuidGenerator
+    @JdbcTypeCode(SqlTypes.CHAR)
+    private UUID id;
 
     private String name;
     
@@ -25,11 +33,11 @@ public class TestEntity {
     }
 
 
-    public int getId () {
+    public UUID getId () {
         return id;
     }
 
-    public void setId (int id) {
+    public void setId (UUID id) {
         this.id = id;
     }
 
@@ -55,7 +63,7 @@ public class TestEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TestEntity that = (TestEntity) o;
-        return id == that.id && Objects.equals(name, that.name) && Objects.equals(email, that.email);
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(email, that.email);
     }
 
     @Override

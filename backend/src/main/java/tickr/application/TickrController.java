@@ -8,6 +8,7 @@ import tickr.server.exceptions.NotFoundException;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Class encapsulating business logic. Is created once per user session, which is distinct to ModelSession instances -
@@ -23,10 +24,10 @@ public class TickrController {
         if (!params.containsKey("id")) {
             throw new BadRequestException("Missing parameters!");
         }
-        var entity = session.getById(TestEntity.class, Integer.parseInt(params.get("id")));
+        var entity = session.getById(TestEntity.class, UUID.fromString(params.get("id")));
 
         if (entity.isEmpty()) {
-            throw new NotFoundException("No such id: " + Integer.parseInt(params.get("id")));
+            throw new NotFoundException("No such id: " + UUID.fromString(params.get("id")));
         }
 
         return entity.orElse(null);

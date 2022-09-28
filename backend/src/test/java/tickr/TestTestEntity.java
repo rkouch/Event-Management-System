@@ -13,6 +13,7 @@ import tickr.server.exceptions.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 
 public class TestTestEntity {
     private TickrController controller;
@@ -30,7 +31,7 @@ public class TestTestEntity {
         // Register table column
         mockModel.registerTableColumn(TestEntity.class, "id", TestEntity::getId);
         // Add generated column
-        mockModel.addGeneratedColumn(TestEntity.class, TestEntity::setId, IMockGenerator.sequentialGenerator(i -> i + 1), 0);
+        mockModel.addGeneratedColumn(TestEntity.class, TestEntity::setId, IMockGenerator.uuidGenerator(), UUID.randomUUID());
     }
 
     @Test
@@ -62,7 +63,7 @@ public class TestTestEntity {
 
         session = mockModel.commitRemakeSession(session);
 
-        var result2 = controller.testGet(session, Map.of("id", Integer.toString(result.getId())));
+        var result2 = controller.testGet(session, Map.of("id", result.getId().toString()));
 
         assertEquals(result2, result);
     }
@@ -82,7 +83,7 @@ public class TestTestEntity {
         assertEquals(result2.getEmail(), "test2@example.com");
         assertEquals(result2.getId(), result.getId());
 
-        var result3 = controller.testGet(session, Map.of("id", Integer.toString(result.getId())));
+        var result3 = controller.testGet(session, Map.of("id", result.getId().toString()));
         assertNotEquals(result3, result);
         assertEquals(result3, result2);
     }
@@ -98,8 +99,8 @@ public class TestTestEntity {
         session = mockModel.commitRemakeSession(session);
 
         assertNotEquals(result2.getId(), result.getId());
-        assertEquals(controller.testGet(session, Map.of("id", Integer.toString(result.getId()))), result);
-        assertEquals(controller.testGet(session, Map.of("id", Integer.toString(result2.getId()))), result2);
+        assertEquals(controller.testGet(session, Map.of("id", result.getId().toString())), result);
+        assertEquals(controller.testGet(session, Map.of("id", result2.getId().toString())), result2);
     }
 
     @Test
@@ -115,19 +116,19 @@ public class TestTestEntity {
 
         assertEquals(controller.testGetAll(session).entities.size(), 0);
         var finalSession1 = session; // To keep Java happy
-        assertThrows(NotFoundException.class, () -> controller.testGet(finalSession1, Map.of("id", Integer.toString(result.getId()))));
+        assertThrows(NotFoundException.class, () -> controller.testGet(finalSession1, Map.of("id", result.getId().toString())));
     }
 
     @Test
     public void testExceptions () {
         var session = mockModel.makeSession();
         assertThrows(BadRequestException.class, () -> controller.testGet(session, Map.of()));
-        assertThrows(NotFoundException.class, () -> controller.testGet(session, Map.of("id", Integer.toString(4))));
+        assertThrows(NotFoundException.class, () -> controller.testGet(session, Map.of("id", UUID.randomUUID().toString())));
 
         assertThrows(BadRequestException.class, () -> controller.testPost(session, new TestResponses.PostRequest(null, null)));
-        assertThrows(BadRequestException.class, () -> controller.testPut(session, new TestResponses.PutRequest(0, null, null)));
-        assertThrows(NotFoundException.class, () -> controller.testPut(session, new TestResponses.PutRequest(4, "Jane Doe", "test2@example.com")));
-        assertThrows(NotFoundException.class, () -> controller.testDelete(session, new TestResponses.DeleteRequest(4)));
+        assertThrows(BadRequestException.class, () -> controller.testPut(session, new TestResponses.PutRequest(UUID.randomUUID(), null, null)));
+        assertThrows(NotFoundException.class, () -> controller.testPut(session, new TestResponses.PutRequest(UUID.randomUUID(), "Jane Doe", "test2@example.com")));
+        assertThrows(NotFoundException.class, () -> controller.testDelete(session, new TestResponses.DeleteRequest(UUID.randomUUID())));
     }
 
 }

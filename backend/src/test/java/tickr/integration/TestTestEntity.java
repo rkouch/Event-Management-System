@@ -13,6 +13,7 @@ import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class TestTestEntity {
     HibernateModel hibernateModel;
@@ -71,7 +72,7 @@ public class TestTestEntity {
         assertEquals(200, response.getStatus());
         var result = response.getBody(TestEntity.class);
 
-        response = httpHelper.get("/api/test/get", Map.of("id", Integer.toString(result.getId())));
+        response = httpHelper.get("/api/test/get", Map.of("id", result.getId().toString()));
         assertEquals(200, response.getStatus());
         var result2 = response.getBody(TestEntity.class);
 
@@ -92,7 +93,7 @@ public class TestTestEntity {
         assertEquals("test2@example.com", result2.getEmail());
         assertEquals(result.getId(), result2.getId());
 
-        response = httpHelper.get("/api/test/get", Map.of("id", Integer.toString(result2.getId())));
+        response = httpHelper.get("/api/test/get", Map.of("id", result2.getId().toString()));
         assertEquals(200, response.getStatus());
         var result3 = response.getBody(TestEntity.class);
         assertNotEquals(result, result3);
@@ -125,18 +126,18 @@ public class TestTestEntity {
         assertEquals(200, response.getStatus());
         assertEquals(0, response.getBody(TestResponses.GetAll.class).entities.size());
 
-        response = httpHelper.get("/api/test/get", Map.of("id", Integer.toString(result.getId())));
+        response = httpHelper.get("/api/test/get", Map.of("id", result.getId().toString()));
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testErrors () {
         assertEquals(400, httpHelper.get("/api/test/get").getStatus());
-        assertEquals(404, httpHelper.get("/api/test/get", Map.of("id", "2")).getStatus());
+        assertEquals(404, httpHelper.get("/api/test/get", Map.of("id", UUID.randomUUID().toString())).getStatus());
 
         assertEquals(400, httpHelper.post("/api/test/post", new TestResponses.PostRequest(null, null)).getStatus());
-        assertEquals(400, httpHelper.put("/api/test/put", new TestResponses.PutRequest(0, null, null)).getStatus());
-        assertEquals(404, httpHelper.put("/api/test/put", new TestResponses.PutRequest(41231, "Jane Doe", "test2@example.com")).getStatus());
-        assertEquals(404, httpHelper.delete("/api/test/delete", new TestResponses.DeleteRequest(41234)).getStatus());
+        assertEquals(400, httpHelper.put("/api/test/put", new TestResponses.PutRequest(UUID.randomUUID(), null, null)).getStatus());
+        assertEquals(404, httpHelper.put("/api/test/put", new TestResponses.PutRequest(UUID.randomUUID(), "Jane Doe", "test2@example.com")).getStatus());
+        assertEquals(404, httpHelper.delete("/api/test/delete", new TestResponses.DeleteRequest(UUID.randomUUID())).getStatus());
     }
 }

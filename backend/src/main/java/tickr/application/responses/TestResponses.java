@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import tickr.application.entities.TestEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 public class TestResponses {
     public static class PostRequest {
@@ -21,7 +22,7 @@ public class TestResponses {
     }
 
     public static class PutRequest {
-        public int id;
+        public UUID id;
 
         @SerializedName("new_name")
         public String newName;
@@ -33,7 +34,7 @@ public class TestResponses {
 
         }
 
-        public PutRequest (int id, String newName, String newEmail) {
+        public PutRequest (UUID id, String newName, String newEmail) {
             this.id = id;
             this.newName = newName;
             this.newEmail = newEmail;
@@ -41,9 +42,9 @@ public class TestResponses {
     }
 
     public static class DeleteRequest {
-        public int id;
+        public UUID id;
 
-        public DeleteRequest (int id) {
+        public DeleteRequest (UUID id) {
             this.id = id;
         }
     }
