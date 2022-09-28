@@ -13,8 +13,10 @@ public class HibernateModel implements DataModel {
     private final SessionFactory sessionFactory;
     private final StandardServiceRegistry registry;
 
-    public HibernateModel () {
-        registry = new StandardServiceRegistryBuilder().configure().build();
+
+    private HibernateModel (StandardServiceRegistry registry) {
+        this.registry = registry;
+
         try {
             sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
         } catch (Exception e) {
@@ -23,6 +25,15 @@ public class HibernateModel implements DataModel {
             throw new RuntimeException("Failed to initialise Hibernate model", e);
         }
         logger.info("Successfully initialised Hibernate database!");
+    }
+    public HibernateModel () {
+        this(new StandardServiceRegistryBuilder().configure().build());
+    }
+
+    public HibernateModel (String configFile) {
+        this(new StandardServiceRegistryBuilder()
+                .configure(configFile)
+                .build());
     }
 
     @Override

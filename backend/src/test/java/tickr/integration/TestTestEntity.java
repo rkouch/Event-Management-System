@@ -1,36 +1,36 @@
 package tickr.integration;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.*;
+
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
 import spark.Spark;
 import tickr.application.entities.TestEntity;
 import tickr.application.responses.TestResponses;
 import tickr.mock.IMockGenerator;
 import tickr.mock.MockModel;
+import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 
 import java.util.Map;
 
 public class TestTestEntity {
-    MockModel mockModel;
+    HibernateModel hibernateModel;
     HTTPHelper httpHelper;
     String serverUrl;
+
     @BeforeEach
     public void setup () {
-        mockModel = new MockModel();
-        mockModel.addTable(TestEntity.class);
-        mockModel.registerTableColumn(TestEntity.class, "id", TestEntity::getId);
-        mockModel.addGeneratedColumn(TestEntity.class, TestEntity::setId, IMockGenerator.sequentialGenerator(i -> i + 1), 0);
+        hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
 
-        Server.start(8080, null, mockModel);
+        Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
         Spark.awaitInitialization();
     }
     @AfterEach
     public void finish () {
         Spark.stop();
+        hibernateModel.cleanup();
         Spark.awaitStop();
     }
 
