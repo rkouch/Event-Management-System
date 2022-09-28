@@ -38,7 +38,7 @@ public class HibernateModel implements DataModel {
 
     @Override
     public synchronized ModelSession makeSession() {
-        logger.debug("Making a Hibernate model session!");
+        //logger.debug("Making a Hibernate model session!");
         return new HibernateSession(sessionFactory.openSession());
     }
 

@@ -14,12 +14,15 @@ public class Main {
         String frontendURL;
 
         if (args.length == 0) {
+            // Use defaults
             port = 8080;
             frontendURL = null;
         } else if (args.length == 1) {
+            // Parse server port
             port = Integer.parseInt(args[0]);
             frontendURL = null;
         } else {
+            // Parse server port and frontend URL for CORS setup
             port = Integer.parseInt(args[0]);
             frontendURL = args[1];
         }

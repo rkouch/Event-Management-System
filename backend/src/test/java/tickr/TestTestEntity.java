@@ -22,9 +22,14 @@ public class TestTestEntity {
     public void setupController () {
         controller = new TickrController();
 
+        // Make mock model
         mockModel = new MockModel();
+
+        // Add table
         mockModel.addTable(TestEntity.class);
+        // Register table column
         mockModel.registerTableColumn(TestEntity.class, "id", TestEntity::getId);
+        // Add generated column
         mockModel.addGeneratedColumn(TestEntity.class, TestEntity::setId, IMockGenerator.sequentialGenerator(i -> i + 1), 0);
     }
 

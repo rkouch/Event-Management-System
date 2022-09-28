@@ -35,8 +35,8 @@ public class MockSession implements ModelSession {
     }
 
     @Override
-    public <T, I> Optional<T> getById (Class<T> entityClass, String idCol, I id) {
-        var l = getAllWith(entityClass, idCol, id);
+    public <T, I> Optional<T> getById (Class<T> entityClass,  I id) {
+        var l = getAllWith(entityClass, "id", id);
         if (l.size() == 0) {
             return Optional.empty();
         } else if (l.size() == 1) {

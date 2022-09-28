@@ -2,7 +2,10 @@ package tickr.server.exceptions;
 
 import com.google.gson.annotations.SerializedName;
 
-public abstract class ServerException extends RuntimeException {
+/**
+ * Base class for all server exceptions used for error routes
+ */
+public class ServerException extends RuntimeException {
     private final int statusCode;
     private final String statusText;
 

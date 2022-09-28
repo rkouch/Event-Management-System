@@ -27,11 +27,15 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public <T> List<T> getAll (Class<T> entityClass) {
+        // Create query for entity class
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+
+        // Set table to be from the entity class' table
         Root<T> criteriaRoot = criteriaQuery.from(entityClass);
         criteriaQuery.select(criteriaRoot);
 
+        // Make query
         Query<T> query = session.createQuery(criteriaQuery);
 
         return query.getResultList();
@@ -39,26 +43,32 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public <T, I> List<T> getAllWith (Class<T> entityClass, String col, I data) {
+        // Create query for entity class
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
         Root<T> criteriaRoot = criteriaQuery.from(entityClass);
 
-        criteriaQuery.select(criteriaRoot).where(criteriaBuilder.equal(criteriaRoot.get(col), data));
+        criteriaQuery.select(criteriaRoot) // Set root to be of the entity's table
+                .where(criteriaBuilder.equal(criteriaRoot.get(col), data)); // Select only those which are equal to data
 
+        // Build query
         Query<T> query = session.createQuery(criteriaQuery);
 
         return query.getResultList();
     }
 
     @Override
-    public <T, I> Optional<T> getById (Class<T> entityClass, String idCol, I id) {
-        var l = getAllWith(entityClass, idCol, id);
+    public <T, I> Optional<T> getById (Class<T> entityClass,  I id) {
+        var l = getAllWith(entityClass, "id", id);
         if (l.size() == 0) {
+            // No results
             return Optional.empty();
         } else if (l.size() == 1) {
+            // One result
             return Optional.of(l.get(0));
         } else {
-            throw new RuntimeException(String.format("Id not unique: %s in column %s (%d results)!", id, idCol, l.size()));
+            // Multiple results, invalid id
+            throw new RuntimeException(String.format("Id not unique: %s in class %s (%d results)!", id, entityClass.getName(), l.size()));
         }
     }
 
@@ -88,7 +98,7 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public void commit () throws RollbackException {
-        logger.debug("Committing session!");
+        //logger.debug("Committing session!");
         session.flush();
         session.clear();
         session.getTransaction().commit();
@@ -103,7 +113,7 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public void close () {
-        logger.debug("Closing session!");
+        //logger.debug("Closing session!");
         session.close();
     }
 

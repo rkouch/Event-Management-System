@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Helper class representing a HTTP connection to a server
+ */
 public class HTTPHelper {
     private HttpClient client;
     private Gson gson;
@@ -21,6 +24,12 @@ public class HTTPHelper {
         this.serverUrl = serverUrl;
     }
 
+    /**
+     * Sends a GET request to a route
+     * @param route
+     * @param params the query parameters to be sent
+     * @return the response object for the request
+     */
     public Response get (String route, Map<String, String> params) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(buildParamsUrl(serverUrl + route, params)))
@@ -33,10 +42,21 @@ public class HTTPHelper {
                 .join();
     }
 
+    /**
+     * Sends a GET request to a route
+     * @param route
+     * @return the response object for the request
+     */
     public Response get (String route) {
         return get(route, Map.of());
     }
 
+    /**
+     * Sends a POST request to a route
+     * @param route
+     * @param body object representing the body of the request to be serialised
+     * @return the response for the request
+     */
     public <T> Response post (String route, T body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + route))
@@ -49,6 +69,12 @@ public class HTTPHelper {
                 .join();
     }
 
+    /**
+     * Sends a PUT request to a route
+     * @param route
+     * @param body object representing the body of the request to be serialised
+     * @return the response for the request
+     */
     public <T> Response put (String route, T body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + route))
@@ -61,6 +87,12 @@ public class HTTPHelper {
                 .join();
     }
 
+    /**
+     * Sends a DELETE request to a route
+     * @param route
+     * @param body object representing the body of the request to be serialised
+     * @return the response for the request
+     */
     public <T> Response delete (String route, T body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + route))
@@ -93,6 +125,10 @@ public class HTTPHelper {
         return builder.toString();
     }
 
+    /**
+     * Represents a HTTP response to a request, encoding the status and
+     * body of the request
+     */
     public static class Response {
         private int statusCode;
         private JsonElement jsonBody;
