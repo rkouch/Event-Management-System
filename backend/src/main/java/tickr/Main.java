@@ -8,7 +8,6 @@ import tickr.server.Server;
 public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
     public static void main(String[] args) {
-        logger.info("Starting tickr server!");
         var databaseModel = new HibernateModel();
 
         int port;
@@ -24,6 +23,8 @@ public class Main {
             port = Integer.parseInt(args[0]);
             frontendURL = args[1];
         }
+
+        logger.info("Starting tickr server on http://localhost:{}!", port);
 
         Server.start(port, frontendURL, databaseModel);
     }

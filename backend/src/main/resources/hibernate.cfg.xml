@@ -10,9 +10,9 @@
         <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
 
         <!-- TODO: Update to real values-->
-        <property name="connection.url">jdbc:mysql://localhost:32768/TestSchema</property>
-        <property name="connection.username">root</property>
-        <property name="connection.password">rootpw</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/tickr</property>
+        <property name="connection.username">tickr</property>
+        <property name="connection.password">tickr-pw</property>
 
         <property name="connection.pool_size">100</property>
         <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
