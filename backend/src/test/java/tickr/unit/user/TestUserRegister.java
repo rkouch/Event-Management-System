@@ -1,4 +1,4 @@
-package tickr.user;
+package tickr.unit.user;
 
 import static org.junit.jupiter.api.Assertions.*;
 

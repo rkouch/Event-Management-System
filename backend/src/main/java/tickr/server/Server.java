@@ -42,6 +42,8 @@ public class Server {
         post("/api/test/post", TickrController::testPost, TestResponses.PostRequest.class);
         put("/api/test/put", TickrController::testPut, TestResponses.PutRequest.class);
         delete("/api/test/delete", TickrController::testDelete, TestResponses.DeleteRequest.class);
+
+        post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
     }
 
     /**
