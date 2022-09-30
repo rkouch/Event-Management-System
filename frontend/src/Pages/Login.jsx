@@ -27,6 +27,7 @@ import { setFieldInState } from '../Helpers';
 import { FlexRow, Logo, H3 } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link } from "react-router-dom";
+import StandardLogo from "../Components/StandardLogo";
 
 
 export default function Login({}) {
@@ -82,7 +83,7 @@ export default function Login({}) {
 
   return (
     <div>
-      <Logo src={logo}/>
+      <StandardLogo/>
       <div>
       <Box disabled className='Background'> 
         <Box disabled sx={{ boxShadow: 3, width:350, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >

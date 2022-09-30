@@ -19,10 +19,19 @@ export const FormInput = styled('div')({
 
 
 export const TkrButton = styled(Button)({
-  backgroundColor: "#CAA5C0",
+  backgroundColor: "#D9BFD2",
   "&:hover": {
-    backgroundColor: "#AE759F"
-  }
+    backgroundColor: "#CAA5C0"
+  },
+  color: 'white'
+})
+
+export const TkrButton2 = styled(Button)({
+  backgroundColor: "#92C5DD",
+  "&:hover": {
+    backgroundColor: "#73B5D3"
+  },
+  color: 'white'
 })
 
 export const TextButton = styled(Button)({

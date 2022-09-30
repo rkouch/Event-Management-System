@@ -1,4 +1,6 @@
+import React from 'react'
 import { styled } from '@mui/system';
+import Box from '@mui/material/Box';
 
 export const TickrName = styled('div')({
   height: '50px',
@@ -23,4 +25,19 @@ export const Logo = styled('img')({
   width: '100px',
   height: 'auto',
   position: 'fixed',
+})
+
+export const Backdrop = styled(Box)({
+  backgroundImage: 'linear-gradient(135deg,#AFDEDC, #CAA5C0)',
+  width: '100%',
+  backgroundSize: 'cover',
+  margin: 'auto',
+  height: '100vh',
+  position: 'fixed'
+})
+
+export const CentredBox = styled(Box)({
+  display: "flex",
+  alignItems:'center',
+  justifyContent: 'center'
 })
