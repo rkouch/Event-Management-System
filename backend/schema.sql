@@ -1,8 +1,9 @@
 create table users (
     id          varchar(36) not null,
     email       varchar(255) not null,
-    `name`        varchar(255) not null,
-    `password`    varchar(255) not null,
+    first_name  varchar(255) not null,
+    last_name   varchar(255) not null,
+    `password`  varchar(255) not null,
     username    varchar(255) not null,
     dob         datetime not null,
     is_host      boolean,

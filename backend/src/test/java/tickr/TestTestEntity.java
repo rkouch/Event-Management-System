@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tickr.application.TickrController;
 import tickr.application.entities.TestEntity;
-import tickr.application.responses.TestResponses;
+import tickr.application.serialised.responses.TestResponses;
 import tickr.mock.IMockGenerator;
 import tickr.mock.MockModel;
 import tickr.server.exceptions.BadRequestException;

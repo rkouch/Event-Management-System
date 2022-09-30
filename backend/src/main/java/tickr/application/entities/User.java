@@ -5,7 +5,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,39 +19,44 @@ public class User {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
     private String email;
-    private String name;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
     private String password;
     private String username;
-    private LocalDateTime dob;
+    private LocalDate dob;
 
     @Column(name = "is_host")
     private boolean isHost;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
-    private Set<Event> hostingEvents;
+    private Set<Event> hostingEvents = new HashSet<>();
 
     //@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     //private Set<EventAdmin> adminEvents;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "admins")
-    private Set<Event> adminEvents;
+    private Set<Event> adminEvents = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "leader")
-    private Set<Group> ownedGroups;
+    private Set<Group> ownedGroups = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "users")
-    private Set<Group> groups;
+    private Set<Group> groups = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private Set<Ticket> tickets;
+    private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
-    private Set<Comment> comments;
+    private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
-    private Set<Reaction> reactions;
+    private Set<Reaction> reactions = new HashSet<>();
 
-    private UUID getId () {
+    public UUID getId () {
         return id;
     }
 
@@ -57,7 +64,7 @@ public class User {
         this.id = id;
     }
 
-    private String getEmail () {
+    public String getEmail () {
         return email;
     }
 
@@ -65,12 +72,20 @@ public class User {
         this.email = email;
     }
 
-    private String getName () {
-        return name;
+    public String getFirstName () {
+        return firstName;
     }
 
-    private void setName (String name) {
-        this.name = name;
+    private void setFirstName (String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName () {
+        return lastName;
+    }
+
+    private void setLastName (String lastName) {
+        this.lastName = lastName;
     }
 
     private String getPassword () {
@@ -81,7 +96,7 @@ public class User {
         this.password = password;
     }
 
-    private String getUsername () {
+    public String getUsername () {
         return username;
     }
 
@@ -89,11 +104,11 @@ public class User {
         this.username = username;
     }
 
-    private LocalDateTime getDob () {
+    public LocalDate getDob () {
         return dob;
     }
 
-    private void setDob (LocalDateTime dob) {
+    private void setDob (LocalDate dob) {
         this.dob = dob;
     }
 

@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import spark.Spark;
 import tickr.application.TickrController;
-import tickr.application.responses.TestResponses;
+import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ServerException;

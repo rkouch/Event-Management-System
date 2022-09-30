@@ -1,13 +1,14 @@
 package tickr.application;
 
 import tickr.application.entities.TestEntity;
-import tickr.application.responses.TestResponses;
+import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.responses.AuthTokenResponse;
+import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.NotFoundException;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -76,5 +77,9 @@ public class TickrController {
 
         var entity = entityOpt.orElse(null);
         session.remove(entity);
+    }
+
+    public AuthTokenResponse userRegister (ModelSession session, UserRegisterRequest request) {
+        return new AuthTokenResponse();
     }
 }
