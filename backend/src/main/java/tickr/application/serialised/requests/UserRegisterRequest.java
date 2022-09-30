@@ -1,6 +1,9 @@
 package tickr.application.serialised.requests;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class UserRegisterRequest {
     @SerializedName("user_name")

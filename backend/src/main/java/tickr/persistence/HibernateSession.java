@@ -88,11 +88,12 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public void newTransaction () {
-        if (!inTransaction) {
+        if (inTransaction) {
             logger.error("Attempted to create a new transaction in a HibernateSession when already in a transaction!");
             return;
         }
         session.beginTransaction();
+        inTransaction = true;
     }
 
 

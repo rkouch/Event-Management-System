@@ -3,6 +3,7 @@ package tickr.user;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.jsonwebtoken.Jwts;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tickr.TestHelper;
@@ -13,9 +14,13 @@ import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
+import tickr.util.CryptoHelper;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
 
@@ -26,6 +31,11 @@ public class TestUserRegister {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+    }
+
+    @AfterEach
+    public void cleanup () {
+        model.cleanup();
     }
 
 
@@ -41,7 +51,7 @@ public class TestUserRegister {
         assertThrows(BadRequestException.class, () -> controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "",
                         "password123!!", "2022-04-14")));
-        assertThrows(BadRequestException.class, () -> controller.userRegister(session,
+        assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "test@example.com",
                         "", "2022-04-14")));
         assertThrows(BadRequestException.class, () -> controller.userRegister(session,
@@ -87,9 +97,6 @@ public class TestUserRegister {
                 new UserRegisterRequest("test", "first", "last", "test@example", "Password123!", "2022-04-14")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test@example.c", "Password123!", "2022-04-14")));
-
-        assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "@example.com", "Password123!", "2022-04-14")));
     }
 
@@ -131,29 +138,34 @@ public class TestUserRegister {
     @Test
     public void testRegister () {
         var session = model.makeSession();
-        var beforeDate = new Date();
+        var beforeDate = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
         var authTokenString = controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "test@example.com",
                         "Password123!", "2022-04-14")).authToken;
-        var afterDate = new Date();
+        var afterDate = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofSeconds(1)).truncatedTo(ChronoUnit.SECONDS);
         session = TestHelper.commitMakeSession(model, session);
 
 
-        var authToken = Jwts.parserBuilder().build().parseClaimsJws(authTokenString);
+        var authToken = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(authTokenString);
 
         var id = authToken.getBody().getSubject();
+        assertNotNull(id);
+        var uuid = UUID.fromString(id);
 
-        var userOpt = session.getById(User.class, id);
+        var userOpt = session.getById(User.class, uuid);
         assertTrue(userOpt.isPresent());
         var user = userOpt.orElse(null);
-
-        assertTrue(beforeDate.before(authToken.getBody().getIssuedAt()) && afterDate.after(authToken.getBody().getIssuedAt()));
+        var tokenDate = LocalDateTime.ofInstant(authToken.getBody().getIssuedAt().toInstant(), ZoneId.of("UTC"));
+        assertTrue(beforeDate.compareTo(tokenDate) <= 0);
+        assertTrue(tokenDate.compareTo(afterDate) <= 0);
         assertEquals("test", user.getUsername());
         assertEquals("first", user.getFirstName());
         assertEquals("last", user.getLastName());
         assertEquals("test@example.com", user.getEmail());
         assertEquals(LocalDate.of(2022, 4, 14), user.getDob());
-        assertEquals(UUID.fromString(id), user.getId());
+        assertEquals(uuid, user.getId());
     }
 
     @Test
@@ -166,7 +178,9 @@ public class TestUserRegister {
         session = TestHelper.commitMakeSession(model, session);
 
 
-        var authToken1 = Jwts.parserBuilder().build().parseClaimsJws(authTokenString1);
+        var authToken1 = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(authTokenString1);
         var id1 = authToken1.getBody().getSubject();
 
         var authTokenString2 = controller.userRegister(session,
@@ -175,7 +189,9 @@ public class TestUserRegister {
         session = TestHelper.commitMakeSession(model, session);
 
 
-        var authToken2 = Jwts.parserBuilder().build().parseClaimsJws(authTokenString1);
+        var authToken2 = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(authTokenString2);
         var id2 = authToken2.getBody().getSubject();
 
         assertNotEquals(id1, id2);
@@ -188,11 +204,20 @@ public class TestUserRegister {
         controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "test@example.com",
                         "Password123!", "2022-04-14"));
-        session = TestHelper.commitMakeSession(model, session);
 
+        session = TestHelper.commitMakeSession(model, session);
         var finalSession = session;
         assertThrows(ForbiddenException.class, () -> controller.userRegister(finalSession,
                 new UserRegisterRequest("test", "first", "last", "test@example.com",
+                        "Password123!", "2022-04-14")));
+        session.rollback();
+        session.close();
+
+        session = model.makeSession();
+        var finalSession2 = session;
+
+        assertThrows(ForbiddenException.class, () -> controller.userRegister(finalSession2,
+                new UserRegisterRequest("test", "first", "last", "tEsT@exAMpLE.cOm",
                         "Password123!", "2022-04-14")));
     }
 }

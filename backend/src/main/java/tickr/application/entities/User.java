@@ -4,20 +4,25 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.persistence.ModelSession;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = {"email"}))
 public class User {
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
+
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "first_name")
@@ -31,6 +36,9 @@ public class User {
 
     @Column(name = "is_host")
     private boolean isHost;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    private Set<AuthToken> tokens = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
     private Set<Event> hostingEvents = new HashSet<>();
@@ -55,6 +63,28 @@ public class User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
     private Set<Reaction> reactions = new HashSet<>();
+
+    public User () {
+
+    }
+
+    public User (String email, String password, String username, String firstName, String lastName, LocalDate dob) {
+        this.email = email;
+        this.password = password;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dob = dob;
+        this.isHost = false;
+    }
+
+    public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
+        var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
+        session.save(token);
+        tokens.add(token);
+
+        return token;
+    }
 
     public UUID getId () {
         return id;
