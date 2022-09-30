@@ -86,13 +86,13 @@ public class TestUserRegister {
                 new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "abdefg")).getStatus());
 
         assertEquals(403, httpHelper.post("/api/user/register",
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022")).getStatus());
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022")).getStatus());
 
         assertEquals(403, httpHelper.post("/api/user/register",
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022-04")).getStatus());
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022-04")).getStatus());
 
         assertEquals(403, httpHelper.post("/api/user/register",
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2100-12-25")).getStatus());
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2100-12-25")).getStatus());
 
     }
 

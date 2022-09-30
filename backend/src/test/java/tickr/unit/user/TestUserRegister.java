@@ -108,31 +108,31 @@ public class TestUserRegister {
                 new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "abdefg")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022-04")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022-04")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "04-14")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "04-14")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "20220414")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "20220414")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "14-04-2022")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "14-04-2022")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022-13-14")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022-13-14")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022-02-30")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022-02-30")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2022-02-29")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "2022-02-29")));
 
         assertThrows(ForbiddenException.class, () -> controller.userRegister(session,
-                new UserRegisterRequest("test", "first", "last", "test", "Password123!", "2100-12-25")));
+                new UserRegisterRequest("test", "first", "last", "test@example.com", "Password123!", "25-12-2100")));
     }
 
     @Test
