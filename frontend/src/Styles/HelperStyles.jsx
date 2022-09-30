@@ -32,12 +32,21 @@ export const Backdrop = styled(Box)({
   width: '100%',
   backgroundSize: 'cover',
   margin: 'auto',
-  height: '100vh',
-  position: 'fixed'
+  minHeight: '100vh',
+  height: '100%'
+  // position: 'fixed',
 })
 
 export const CentredBox = styled(Box)({
   display: "flex",
   alignItems:'center',
   justifyContent: 'center'
+})
+
+export const ContentBox = styled(Box)({
+  width: '90%',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+  backgroundColor: 'white',
+  padding: '10px',
 })

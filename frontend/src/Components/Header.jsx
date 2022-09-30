@@ -14,66 +14,69 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link } from "react-router-dom";
+import AppBar from '@mui/material/AppBar';
 
 export const HeaderBar = styled(Box) ({
   width: '90%',
   height: '40px',
   marginTop: '15px',
-  marginLeft: 'auto',
-  marginRight: 'auto',
+  marginLeft: '5%',
+  marginRight: '5%',
   backgroundColor: 'white',
   padding: '10px',
-  borderRadius: '5px'
+  borderRadius: '2px',
 })
 
 export default function Header({}) {
   return (
-    <HeaderBar>
-      <Grid container >
-        <Grid item xs={2}>
-          <Box
-            display = "flex"
-            alignItems ='center'
-            justifyContent = 'flex-start'
-          >
-            <AdjustableLogo width='100px' height='auto'/>
-          </Box>
-        </Grid>
-        <Grid item xs={8}>
-          <CentredBox>
-            <FormControl
-              sx={{
-                width: '80%'
-              }}
+    <AppBar position="static">
+      <HeaderBar>
+        <Grid container >
+          <Grid item xs={2}>
+            <Box
+              display = "flex"
+              alignItems ='center'
+              justifyContent = 'flex-start'
             >
-              <OutlinedInput 
-                size="small"
-                startAdornment={
-                  <InputAdornment>
-                    <SearchSharpIcon/>
-                  </InputAdornment>
-                }
-                placeholder='Search'
+              <AdjustableLogo width='100px' height='auto'/>
+            </Box>
+          </Grid>
+          <Grid item xs={8}>
+            <CentredBox>
+              <FormControl
+                sx={{
+                  width: '80%'
+                }}
               >
-              </OutlinedInput>
-            </FormControl>
+                <OutlinedInput 
+                  size="small"
+                  startAdornment={
+                    <InputAdornment>
+                      <SearchSharpIcon/>
+                    </InputAdornment>
+                  }
+                  placeholder='Search'
+                >
+                </OutlinedInput>
+              </FormControl>
+              
+            </CentredBox>
             
-          </CentredBox>
-          
+          </Grid>
+          <Grid item xs={2}>
+            <Box
+              display = "flex"
+              alignItems ='center'
+              justifyContent = 'flex-end'
+            >
+              <ButtonGroup variant="contained" color="inherit">
+                <TkrButton2 component={Link} to="/login">Log In</TkrButton2>
+                <TkrButton component={Link} to="/register">Sign Up</TkrButton>
+              </ButtonGroup>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={2}>
-          <Box
-            display = "flex"
-            alignItems ='center'
-            justifyContent = 'flex-end'
-          >
-            <ButtonGroup variant="contained" color="inherit">
-              <TkrButton2 component={Link} to="/login">Log In</TkrButton2>
-              <TkrButton component={Link} to="/register">Sign Up</TkrButton>
-            </ButtonGroup>
-          </Box>
-        </Grid>
-      </Grid>
-    </HeaderBar>
+      </HeaderBar>
+    </AppBar>
   )
 }
