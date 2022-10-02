@@ -5,6 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
+import tickr.util.CryptoHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -30,7 +31,7 @@ public class User {
 
     @Column(name = "last_name")
     private String lastName;
-    private String password;
+    private char[] passwordHash;
     private String username;
     private LocalDate dob;
 
@@ -70,7 +71,7 @@ public class User {
 
     public User (String email, String password, String username, String firstName, String lastName, LocalDate dob) {
         this.email = email;
-        this.password = password;
+        this.passwordHash = CryptoHelper.hashPassword(password);
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -81,9 +82,13 @@ public class User {
     public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
         var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
         session.save(token);
-        tokens.add(token);
+        getTokens().add(token);
 
         return token;
+    }
+
+    public boolean verifyPassword (String password) {
+        return CryptoHelper.verifyHash(password, getPasswordHash());
     }
 
     public UUID getId () {
@@ -118,12 +123,12 @@ public class User {
         this.lastName = lastName;
     }
 
-    private String getPassword () {
-        return password;
+    private char[] getPasswordHash () {
+        return passwordHash;
     }
 
-    private void setPassword (String password) {
-        this.password = password;
+    private void setPasswordHash (char[] hash) {
+        this.passwordHash = hash;
     }
 
     public String getUsername () {
@@ -204,5 +209,13 @@ public class User {
 
     private void setReactions (Set<Reaction> reactions) {
         this.reactions = reactions;
+    }
+
+    public Set<AuthToken> getTokens () {
+        return tokens;
+    }
+
+    public void setTokens (Set<AuthToken> tokens) {
+        this.tokens = tokens;
     }
 }

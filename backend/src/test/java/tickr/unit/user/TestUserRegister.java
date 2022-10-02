@@ -220,4 +220,24 @@ public class TestUserRegister {
                 new UserRegisterRequest("test", "first", "last", "tEsT@exAMpLE.cOm",
                         "Password123!", "2022-04-14")));
     }
+
+    @Test
+    public void testHashing () {
+        var session = model.makeSession();
+        var tokenStr = controller.userRegister(session, new UserRegisterRequest("test", "first", "last", "test@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var authToken = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(tokenStr);
+
+        var id = authToken.getBody().getSubject();
+
+        var user = session.getById(User.class, UUID.fromString(id)).orElse(null);
+        assertNotNull(user);
+
+        assertTrue(user.verifyPassword("Password123!"));
+        assertFalse(user.verifyPassword("password123!"));
+    }
 }
