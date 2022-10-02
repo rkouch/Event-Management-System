@@ -3,7 +3,7 @@ create table users (
     email       varchar(255) not null unique,
     first_name  varchar(255) not null,
     last_name   varchar(255) not null,
-    `password`  varchar(255) not null,
+    password_hash  varchar(255) not null,
     username    varchar(255) not null,
     dob         datetime not null,
     is_host      boolean,
