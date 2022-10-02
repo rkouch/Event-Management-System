@@ -141,8 +141,6 @@ public class TickrController {
 
         var authToken = user.makeToken(session, AUTH_TOKEN_EXPIRY);
 
-        // Persist?
-
         return new AuthTokenResponse(authToken.makeJWT());
     }
 }

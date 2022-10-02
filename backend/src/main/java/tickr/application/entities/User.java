@@ -79,6 +79,12 @@ public class User {
         this.isHost = false;
     }
 
+    /**
+     * Makes an auth token for the user
+     * @param session
+     * @param expiryDuration the requested expiry duration for the token
+     * @return the resulting auth token
+     */
     public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
         var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
         session.save(token);
@@ -87,6 +93,11 @@ public class User {
         return token;
     }
 
+    /**
+     * Checks that the password matches the stored password hash
+     * @param password
+     * @return true if valid, false if not
+     */
     public boolean verifyPassword (String password) {
         return CryptoHelper.verifyHash(password, getPasswordHash());
     }
