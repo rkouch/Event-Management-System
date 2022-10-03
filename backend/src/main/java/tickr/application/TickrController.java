@@ -146,6 +146,14 @@ public class TickrController {
     }
 
     public AuthTokenResponse userLogin (ModelSession session, UserLoginRequest request) {
-        return null;
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var user = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", request.email)));
+
+
+        return new AuthTokenResponse(user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY).makeJWT());
     }
 }
