@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import spark.Spark;
 import tickr.application.entities.TestEntity;
-import tickr.application.responses.TestResponses;
-import tickr.mock.IMockGenerator;
-import tickr.mock.MockModel;
+import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 

@@ -58,8 +58,8 @@ public class HibernateSession implements ModelSession {
     }
 
     @Override
-    public <T, I> Optional<T> getById (Class<T> entityClass,  I id) {
-        var l = getAllWith(entityClass, "id", id);
+    public <T, I> Optional<T> getByUnique (Class<T> entityClass, String col, I data) {
+        var l = getAllWith(entityClass, col, data);
         if (l.size() == 0) {
             // No results
             return Optional.empty();
@@ -68,8 +68,13 @@ public class HibernateSession implements ModelSession {
             return Optional.of(l.get(0));
         } else {
             // Multiple results, invalid id
-            throw new RuntimeException(String.format("Id not unique: %s in class %s (%d results)!", id, entityClass.getName(), l.size()));
+            throw new RuntimeException(String.format("Column not unique: %s in class %s (%d results)!", data, entityClass.getName(), l.size()));
         }
+    }
+
+    @Override
+    public <T, I> Optional<T> getById (Class<T> entityClass,  I id) {
+        return getByUnique(entityClass, "id", id);
     }
 
     @Override
@@ -88,11 +93,12 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public void newTransaction () {
-        if (!inTransaction) {
+        if (inTransaction) {
             logger.error("Attempted to create a new transaction in a HibernateSession when already in a transaction!");
             return;
         }
         session.beginTransaction();
+        inTransaction = true;
     }
 
 

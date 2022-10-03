@@ -27,6 +27,7 @@
 
 
         <!-- Mappings -->
+        <mapping class="tickr.application.entities.AuthToken"/>
         <mapping class="tickr.application.entities.Category"/>
         <mapping class="tickr.application.entities.Comment"/>
         <mapping class="tickr.application.entities.Event"/>
