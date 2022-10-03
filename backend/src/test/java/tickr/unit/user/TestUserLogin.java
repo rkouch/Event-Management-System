@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.entities.AuthToken;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 public class TestUserLogin {
     private DataModel model;
@@ -114,5 +116,33 @@ public class TestUserLogin {
 
         assertEquals(user1Reg.getBody().getSubject(), login.getBody().getSubject());
         assertNotEquals(user2Reg.getBody().getSubject(), login.getBody().getSubject());
+    }
+
+    @Test
+    public void testDoubleLogin () {
+        var session = model.makeSession();
+        var tokenStr1 = controller.userRegister(session, new UserRegisterRequest("test", "first", "last",
+                "test@example.com", "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var tokenStr2 = controller.userLogin(session, new UserLoginRequest("test@example.com", "Password123!")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+        var tokenStr3 = controller.userLogin(session, new UserLoginRequest("test@example.com", "Password123!")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertNotEquals(tokenStr1, tokenStr2);
+        assertNotEquals(tokenStr1, tokenStr3);
+        assertNotEquals(tokenStr2, tokenStr3);
+
+        var token1 = CryptoHelper.makeJWTParserBuilder().build().parseClaimsJws(tokenStr1);
+        var token2 = CryptoHelper.makeJWTParserBuilder().build().parseClaimsJws(tokenStr2);
+        var token3 = CryptoHelper.makeJWTParserBuilder().build().parseClaimsJws(tokenStr3);
+        assertNotEquals(token1.getBody().getId(), token2.getBody().getId());
+        assertNotEquals(token1.getBody().getId(), token3.getBody().getId());
+        assertNotEquals(token2.getBody().getId(), token3.getBody().getId());
+
+        assertTrue(session.getById(AuthToken.class, UUID.fromString(token1.getBody().getId())).isPresent());
+        assertTrue(session.getById(AuthToken.class, UUID.fromString(token2.getBody().getId())).isPresent());
+        assertTrue(session.getById(AuthToken.class, UUID.fromString(token3.getBody().getId())).isPresent());
     }
 }

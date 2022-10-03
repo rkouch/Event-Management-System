@@ -99,6 +99,7 @@ public class Server {
         if (frontendUrl != null) {
             addCORS(frontendUrl);
         }
+        logger.debug("Finished server startup!");
     }
 
     private static void addCORS (String frontendUrl) {
