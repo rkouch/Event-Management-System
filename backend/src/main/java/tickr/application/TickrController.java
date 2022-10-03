@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
@@ -142,5 +143,9 @@ public class TickrController {
         var authToken = user.makeToken(session, AUTH_TOKEN_EXPIRY);
 
         return new AuthTokenResponse(authToken.makeJWT());
+    }
+
+    public AuthTokenResponse userLogin (ModelSession session, UserLoginRequest request) {
+        return null;
     }
 }
