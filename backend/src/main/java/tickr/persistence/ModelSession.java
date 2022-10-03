@@ -32,6 +32,8 @@ public interface ModelSession {
      */
     <T, I> List<T> getAllWith (Class<T> entityClass, String col, I data);
 
+    <T, I> Optional<T> getByUnique (Class<T> entityClass, String col, I data);
+
     /**
      * Gets a managed entity with a given id, if it exists
      * @param entityClass

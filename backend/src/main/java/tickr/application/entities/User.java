@@ -5,6 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
 
 import java.time.Duration;
@@ -93,6 +94,14 @@ public class User {
         getTokens().add(token);
 
         return token;
+    }
+
+    public AuthToken authenticatePassword (ModelSession session, String password, Duration tokenExpiryDuration) {
+        if (CryptoHelper.verifyHash(password, getPasswordHash())) {
+            return makeToken(session, tokenExpiryDuration);
+        } else {
+            throw new ForbiddenException("Incorrect password.");
+        }
     }
 
     /**
