@@ -5,7 +5,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import spark.Spark;
 import tickr.application.TickrController;
-import tickr.application.responses.TestResponses;
+import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ServerException;
@@ -41,6 +42,8 @@ public class Server {
         post("/api/test/post", TickrController::testPost, TestResponses.PostRequest.class);
         put("/api/test/put", TickrController::testPut, TestResponses.PutRequest.class);
         delete("/api/test/delete", TickrController::testDelete, TestResponses.DeleteRequest.class);
+
+        post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
     }
 
     /**

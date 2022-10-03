@@ -1,4 +1,4 @@
-package tickr.application.responses;
+package tickr.application.serialised.responses;
 
 import com.google.gson.annotations.SerializedName;
 import tickr.application.entities.TestEntity;

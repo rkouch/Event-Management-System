@@ -1,12 +1,23 @@
 create table users (
     id          varchar(36) not null,
-    email       varchar(255) not null,
-    `name`        varchar(255) not null,
-    `password`    varchar(255) not null,
+    email       varchar(255) not null unique,
+    first_name  varchar(255) not null,
+    last_name   varchar(255) not null,
+    password_hash  varchar(255) not null,
     username    varchar(255) not null,
     dob         datetime not null,
     is_host      boolean,
     primary key (id)
+);
+
+create table auth_token (
+    id          varchar(36) not null,
+    user_id     varchar(36) not null,
+    issue_time  datetime not null,
+    expiry_time datetime not null,
+
+    primary key (id),
+    foreign key (user_id) references users(id)
 );
 
 create table locations (

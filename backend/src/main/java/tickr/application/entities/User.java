@@ -4,52 +4,107 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.persistence.ModelSession;
+import tickr.util.CryptoHelper;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = {"email"}))
 public class User {
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
+
+    @Column(name = "email", unique = true)
     private String email;
-    private String name;
-    private String password;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "password_hash")
+    private char[] passwordHash;
     private String username;
-    private LocalDateTime dob;
+    private LocalDate dob;
 
     @Column(name = "is_host")
     private boolean isHost;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    private Set<AuthToken> tokens = new HashSet<>();
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
-    private Set<Event> hostingEvents;
+    private Set<Event> hostingEvents = new HashSet<>();
 
     //@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     //private Set<EventAdmin> adminEvents;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "admins")
-    private Set<Event> adminEvents;
+    private Set<Event> adminEvents = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "leader")
-    private Set<Group> ownedGroups;
+    private Set<Group> ownedGroups = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "users")
-    private Set<Group> groups;
+    private Set<Group> groups = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private Set<Ticket> tickets;
+    private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
-    private Set<Comment> comments;
+    private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
-    private Set<Reaction> reactions;
+    private Set<Reaction> reactions = new HashSet<>();
 
-    private UUID getId () {
+    public User () {
+
+    }
+
+    public User (String email, String password, String username, String firstName, String lastName, LocalDate dob) {
+        this.email = email;
+        this.passwordHash = CryptoHelper.hashPassword(password);
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dob = dob;
+        this.isHost = false;
+    }
+
+    /**
+     * Makes an auth token for the user
+     * @param session
+     * @param expiryDuration the requested expiry duration for the token
+     * @return the resulting auth token
+     */
+    public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
+        var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
+        session.save(token);
+        getTokens().add(token);
+
+        return token;
+    }
+
+    /**
+     * Checks that the password matches the stored password hash
+     * @param password
+     * @return true if valid, false if not
+     */
+    public boolean verifyPassword (String password) {
+        return CryptoHelper.verifyHash(password, getPasswordHash());
+    }
+
+    public UUID getId () {
         return id;
     }
 
@@ -57,7 +112,7 @@ public class User {
         this.id = id;
     }
 
-    private String getEmail () {
+    public String getEmail () {
         return email;
     }
 
@@ -65,23 +120,31 @@ public class User {
         this.email = email;
     }
 
-    private String getName () {
-        return name;
+    public String getFirstName () {
+        return firstName;
     }
 
-    private void setName (String name) {
-        this.name = name;
+    private void setFirstName (String firstName) {
+        this.firstName = firstName;
     }
 
-    private String getPassword () {
-        return password;
+    public String getLastName () {
+        return lastName;
     }
 
-    private void setPassword (String password) {
-        this.password = password;
+    private void setLastName (String lastName) {
+        this.lastName = lastName;
     }
 
-    private String getUsername () {
+    private char[] getPasswordHash () {
+        return passwordHash;
+    }
+
+    private void setPasswordHash (char[] hash) {
+        this.passwordHash = hash;
+    }
+
+    public String getUsername () {
         return username;
     }
 
@@ -89,11 +152,11 @@ public class User {
         this.username = username;
     }
 
-    private LocalDateTime getDob () {
+    public LocalDate getDob () {
         return dob;
     }
 
-    private void setDob (LocalDateTime dob) {
+    private void setDob (LocalDate dob) {
         this.dob = dob;
     }
 
@@ -159,5 +222,13 @@ public class User {
 
     private void setReactions (Set<Reaction> reactions) {
         this.reactions = reactions;
+    }
+
+    public Set<AuthToken> getTokens () {
+        return tokens;
+    }
+
+    public void setTokens (Set<AuthToken> tokens) {
+        this.tokens = tokens;
     }
 }
