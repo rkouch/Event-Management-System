@@ -1,14 +1,18 @@
 package tickr.server;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
+import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ServerException;
 
 import java.util.Map;
@@ -44,6 +48,7 @@ public class Server {
         delete("/api/test/delete", TickrController::testDelete, TestResponses.DeleteRequest.class);
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
+        post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
     }
 
     /**
@@ -156,7 +161,7 @@ public class Server {
      * @param <R> Response object type
      */
     private static <T, R> void post (String path, TriFunction<TickrController, ModelSession, T, R> route, Class<T> reqClass) {
-        Spark.post(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, gson.fromJson(ctx.request.body(), reqClass))),
+        Spark.post(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, safeDeserialise(ctx.request, reqClass))),
                 gson::toJson);
     }
 
@@ -183,7 +188,7 @@ public class Server {
      * @param <R> Response object type
      */
     private static <T, R> void put (String path, TriFunction<TickrController, ModelSession, T, R> route, Class<T> reqClass) {
-        Spark.put(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, gson.fromJson(ctx.request.body(), reqClass))),
+        Spark.put(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, safeDeserialise(ctx.request, reqClass))),
                 gson::toJson);
     }
 
@@ -210,7 +215,7 @@ public class Server {
      * @param <R> Response object type
      */
     private static <T, R> void delete (String path, TriFunction<TickrController, ModelSession, T, R> route, Class<T> reqClass) {
-        Spark.delete(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, gson.fromJson(ctx.request.body(), reqClass))),
+        Spark.delete(path, new RouteWrapper<>(dataModel, ctx -> route.apply(ctx.controller, ctx.session, safeDeserialise(ctx.request, reqClass))),
                 gson::toJson);
     }
 
@@ -226,5 +231,13 @@ public class Server {
             route.consume(t, u, v);
             return new Object();
         }, reqClass);
+    }
+
+    private static <T> T safeDeserialise (Request request, Class<T> reqClass) {
+        try {
+            return gson.fromJson(request.body(), reqClass);
+        } catch (JsonSyntaxException e) {
+            throw new BadRequestException("Invalid request!", e);
+        }
     }
 }
