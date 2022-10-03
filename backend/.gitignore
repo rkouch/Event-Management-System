@@ -9,3 +9,4 @@ build
 bin
 
 jwt_key
+!gradle/wrapper/*.jar
