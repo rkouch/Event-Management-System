@@ -6,20 +6,62 @@ import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
 import java.security.Key;
+import java.util.Base64;
+import java.util.Optional;
 
 public class CryptoHelper {
-    private static final Key JWT_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256); // TODO
+    static final Logger logger = LogManager.getLogger();
+    private static Key JWT_KEY = null;
+
+    private static Optional<Key> readJWTKey (String keyPath) {
+        try (var reader = new BufferedReader(new FileReader(keyPath))) {
+            var contents = reader.lines().reduce(String::concat);
+            return contents.map(Base64.getDecoder()::decode)
+                    .map(bytes -> new SecretKeySpec(bytes, SignatureAlgorithm.HS256.getJcaName()));
+        } catch (FileNotFoundException e) {
+            logger.info("Failed to find JWT key file!");
+            return Optional.empty();
+        } catch (IOException e) {
+            logger.error("Failed to read JWT key file!");
+            return Optional.empty();
+        }
+    }
+
+    private static Key makeJWTKey (String keyPath) {
+        logger.info("Making new JWT key!");
+        var key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        try (var writer = new BufferedWriter(new FileWriter(keyPath))) {
+            writer.write(Base64.getEncoder().encodeToString(key.getEncoded()));
+        } catch (IOException e) {
+            logger.error("Failed to write JWT key file!");
+        }
+
+        return key;
+    }
+
+    private static synchronized Key getJwtKey () {
+        if (JWT_KEY == null) {
+            JWT_KEY = readJWTKey("jwt_key")
+                    .orElseGet(() -> makeJWTKey("jwt_key"));
+        }
+
+        return JWT_KEY;
+    }
 
     public static JwtBuilder makeJWTBuilder () {
         return Jwts.builder()
-                .signWith(JWT_KEY);
+                .signWith(getJwtKey());
     }
 
     public static JwtParserBuilder makeJWTParserBuilder () {
         return Jwts.parserBuilder()
-                .setSigningKey(JWT_KEY);
+                .setSigningKey(getJwtKey());
     }
 
     public static char[] hashPassword (String password) {
