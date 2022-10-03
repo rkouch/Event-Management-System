@@ -3,8 +3,9 @@
 
 .gradle
 gradle
-gradlew
-gradlew.bat
+#gradlew
+#gradlew.bat
 build
+bin
 
 jwt_key
