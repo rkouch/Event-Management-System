@@ -19,16 +19,17 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import logo from '../Images/TickrLogo.png'
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
 
 import '../App.css';
 
-import { setFieldInState } from '../Helpers';
+import { apiFetch, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3 } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import StandardLogo from '../Components/StandardLogo';
+
 
 export default function Register ({}) {
   // States
@@ -69,22 +70,27 @@ export default function Register ({}) {
 
   const [DOB, setDOB] = React.useState(dayjs())
 
+  const [errorStatus, setErrorStatus] = React.useState(false)
+  const [errorMsg, setErrorMsg] = React.useState(false)
+
+  const navigate = useNavigate()
+
   const userNameChange = (e) => {
     setFieldInState('name', e.target.value, userName, setUserName)
     setFieldInState('error', false, userName, setUserName)
-    setErrorMsg(false)
+    setErrorStatus(false)
   }
 
   const firstNameChange = (e) => {
     setFieldInState('name', e.target.value, firstName, setFirstName)
     setFieldInState('error', false, firstName, setFirstName)
-    setErrorMsg(false)
+    setErrorStatus(false)
   }
 
   const lastNameChange = (e) => {
     setFieldInState('name', e.target.value, lastName, setLastName)
     setFieldInState('error', false, lastName, setLastName)
-    setErrorMsg(false)
+    setErrorStatus(false)
   }
 
   var validEmail = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
@@ -100,7 +106,7 @@ export default function Register ({}) {
       setFieldInState('errorMsg', '', email, setEmail);
       console.log('Valid email')
     }
-    setErrorMsg(false)
+    setErrorStatus(false)
   };
 
   function EmailHelperText() {
@@ -114,7 +120,6 @@ export default function Register ({}) {
     return <FormHelperText>{helperText}</FormHelperText>;
   }
 
-  var validPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})$/i;
 
   const PasswordChange = (e) => {
     setFieldInState('password', e.target.value, password, setPassword);
@@ -176,7 +181,7 @@ export default function Register ({}) {
         setFieldInState('errorMsg', '', confirmPassword, setConfirmPassword)
       }    
     }
-    setErrorMsg(false)
+    setErrorStatus(false)
   }
 
   function PasswordHelperText() {
@@ -205,7 +210,7 @@ export default function Register ({}) {
       setFieldInState('errorMsg', '', password, setPassword)
       setFieldInState('errorMsg', '', confirmPassword, setConfirmPassword)
     }
-    setErrorMsg(false)
+    setErrorStatus(false)
   }
 
   const checkFields = () => {
@@ -232,47 +237,65 @@ export default function Register ({}) {
       error = true
     }
     if (error) {
-      setErrorMsg(true)
+      setErrorStatus(true)
     } else {
-      setErrorMsg(false)
+      setErrorStatus(false)
     }
     return error
   }
 
-  const [errorMsg, setErrorMsg] = React.useState(false)
-
-  const SubmitRegister = (e) => {
+  const SubmitRegister = async (e) => {
     if (checkFields()) {
       return
     } 
     console.log("submit register")
 
-    var response = true
-    if (!response) {
+    const body = {
+      first_name: firstName.name,
+      last_name: lastName.name,
+      password: password.password,
+      user_name: userName.name,
+      email: email.email,
+      date_of_birth: DOB.format("YYYY-MM-DD")
+    }
+
+    try{
+      const response = await apiFetch('POST', '/api/user/register', null, body)
+      setToken(response.auth_token)
+      navigate("/")
+    }
+    catch(error) {
+      console.log(error)
+      setErrorMsg(error.reason)
+      setErrorStatus(true)
       setFieldInState('errorMsg', "Email taken", email, setEmail)
       setFieldInState('error', true, email, setEmail)
       setFieldInState('forceError', true, email, setEmail)
     }
-    
   }
 
   return (
     <div>
       <StandardLogo/>
       <Box disabled className='Background'> 
-        <Box disabled sx={{ boxShadow: 3, width:350, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
-          <H3>
+        <Box disabled sx={{ boxShadow: 3, width:500, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
+          <H3
+            sx={{
+              fontSize: '30px'
+            }}
+          >
             Create an account
           </H3>
           <Divider/>
+          <br/>
           <FormInput>
             <Grid container spacing={2}>
               <Grid xs={6}>
-                <OutlinedInput id="first_name" placeholder="First Name" variant="outlined" onChange={firstNameChange} size="small" sx={{borderRadius: 2}} error={firstName.error}/>
+                <OutlinedInput id="first_name" placeholder="First Name" variant="outlined" onChange={firstNameChange} sx={{borderRadius: 2}} error={firstName.error}/>
                 {/* <TextField id="first_name" label="First Name" variant="outlined" onChange={firstNameChange} size="small"/> */}
               </Grid>
               <Grid xs={6}>
-                <OutlinedInput id="last_name" placeholder="Last Name" variant="outlined" onChange={lastNameChange} size="small" sx={{borderRadius: 2}} error={lastName.error}/>
+                <OutlinedInput id="last_name" placeholder="Last Name" variant="outlined" onChange={lastNameChange} sx={{borderRadius: 2}} error={lastName.error}/>
               </Grid>
               <Grid xs={12}>
                 <FormControl fullWidth={true}>
@@ -280,7 +303,6 @@ export default function Register ({}) {
                     id="email"
                     placeholder="Email"
                     variant="outlined"
-                    size="small"
                     onChange={EmailChange}
                     error={email.error}
                     sx={{borderRadius: 2}}
@@ -295,7 +317,6 @@ export default function Register ({}) {
                     placeholder='Password'
                     variant="outlined"
                     type={!password.visibility ? "password" : "text"}
-                    size="small"
                     error={password.error}
                     onChange={PasswordChange}
                     sx={{borderRadius: 2}}
@@ -322,7 +343,6 @@ export default function Register ({}) {
                     placeholder='Confirm Password'
                     variant="outlined"
                     type="password"
-                    size="small"
                     error={confirmPassword.error}
                     onChange={ConfirmPasswordChange}
                     disabled={confirmPassword.disabled}
@@ -355,7 +375,9 @@ export default function Register ({}) {
               </Grid>
             </Grid>
           </FormInput>
+          <br/>
           <Divider/>
+          <br/>
           <FormInput>
             <TkrButton
               variant="contained"
@@ -363,11 +385,12 @@ export default function Register ({}) {
             >
               Register
             </TkrButton>
-            <Collapse in={errorMsg}>
-              <Alert severity="error">Please fill in all required fields.</Alert>
+            <Collapse in={errorStatus}>
+              <Alert severity="error">{errorMsg}.</Alert>
             </Collapse>
             <TextButton component={Link} to="/login" >Already have an account?</TextButton>
           </FormInput>
+          <br/>
         </Box>
       </Box>
     </div>

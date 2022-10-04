@@ -20,7 +20,7 @@ export const apiFetch = (method, route, TOKEN, body) => {
   }
 
   return new Promise((resolve, reject) => {
-    fetch(`http://localhost:5005${route}`, requestOptions)
+    fetch(`${route}`, requestOptions)
       .then((response) => {
         switch (response.status) {
           case 200:
@@ -29,23 +29,24 @@ export const apiFetch = (method, route, TOKEN, body) => {
             });
             break;
           case 400:
-            console.log('responseError', response);
             response.json().then((data) => {
-              console.log(data.error);
-              reject(data.error);
+              console.log(data);
+              reject(data);
             });
             break;
           case 403:
             response.json().then((data) => {
-              reject(data.error);
+              reject(data);
             });
             break;
+          default:
+            console.log("Hello")
         }
       })
       .catch((response) => {
         console.log(response);
         response.json().then((data) => {
-          resolve(data.error);
+          resolve(data);
         });
       });
   });
@@ -59,4 +60,21 @@ export const setFieldInState = (field, value, state, setState) => {
     ...state,
     stateCopy,
   });
+}
+
+export const setToken = (token) => {
+  if (token == null) {
+    localStorage.removeItem('active-email');
+    localStorage.removeItem('token');
+  } else {
+    localStorage.setItem('token', token);
+  }
+}
+
+export const getToken = () => {
+  return localStorage.getItem('token');
+}
+
+export const isLoggedIn = () => {
+  return (localStorage.getItem('token') != null)
 }

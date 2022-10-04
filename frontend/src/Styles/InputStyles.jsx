@@ -23,7 +23,8 @@ export const TkrButton = styled(Button)({
   "&:hover": {
     backgroundColor: "#CAA5C0"
   },
-  color: 'white'
+  color: 'white',
+  fontSize: '20px',
 })
 
 export const TkrButton2 = styled(Button)({
