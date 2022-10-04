@@ -23,10 +23,10 @@ import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
 
 import '../App.css';
 
-import { setFieldInState } from '../Helpers';
+import { apiFetch, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3 } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
 
 
@@ -43,39 +43,48 @@ export default function Login({}) {
     error: false
   })
 
-  const [error, setError] = React.useState(false)
+  const navigate = useNavigate()
+
+  const [error, setError] = React.useState({
+    state: false,
+    msg: ''
+  })
 
   var validEmail = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
   const EmailChange = (e) => {
     setFieldInState('email', e.target.value, email, setEmail);
-    setError(false)
+    setFieldInState('state', false, error, setError)
     if (!email.email.match(validEmail)) {
       setFieldInState('error', true, email, setEmail);
       setFieldInState('errorMsg', 'Enter a valid email', email, setEmail);
-      console.log('Invalid')
     } else {
       setFieldInState('error', false, email, setEmail);
       setFieldInState('errorMsg', '', email, setEmail);
-      console.log('Valid email')
     }
   };
 
   const PasswordChange = (e) => {
-    setError(false)
+    setFieldInState('state', false, error, setError)
     setFieldInState('password', e.target.value, password, setPassword)
     setFieldInState('error', false, password, setPassword)
   }
   
-  const submitLogin = () => {
-    console.log(email)
-    console.log(password.password)
+  const submitLogin = async () => {
 
-    // Send request to login
+    const body = {
+      email: email.email,
+      password: password.password
+    }
 
-    const response = false
-
-    if (!response) {
-      setError(!response)
+    try {
+      const response = await apiFetch('POST', '/api/user/login', null, body)
+      setToken(response.auth_token)
+      navigate("/")
+    } catch (errorResponse) {
+      console.log(errorResponse.reason)
+      console.log(error)
+      setFieldInState('state', true, error, setError)
+      setFieldInState('msg', errorResponse.reason, error, setError)
       setFieldInState('error', true, email, setEmail)
       setFieldInState('error', true, password, setPassword)
     }
@@ -86,11 +95,16 @@ export default function Login({}) {
       <StandardLogo/>
       <div>
       <Box disabled className='Background'> 
-        <Box disabled sx={{ boxShadow: 3, width:350, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
-          <H3>
+        <Box disabled sx={{ boxShadow: 3, width:500, height: 500, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
+          <H3
+            sx={{
+              fontSize: '30px',
+            }}
+          >
             Login
           </H3>
           <Divider/>
+          <br/>
           <FormInput>
             <Grid container spacing={2} sx={{paddingLeft: 5, paddingRight: 5}}>
               <Grid xs={12}>
@@ -99,7 +113,6 @@ export default function Login({}) {
                     id="email"
                     placeholder="Email"
                     variant="outlined"
-                    size="small"
                     sx={{borderRadius: 2}} 
                     fullWidth={true} 
                     error={email.error}
@@ -114,7 +127,6 @@ export default function Login({}) {
                     id="password"
                     placeholder="Password"
                     type={!password.visibility ? "password" : "text"}
-                    size="small"
                     error={password.error}
                     onChange={PasswordChange}
                     sx={{borderRadius: 2}}
@@ -135,7 +147,9 @@ export default function Login({}) {
               </Grid>
             </Grid>
           </FormInput>
+          <br/>
           <Divider/>
+          <br/>
           <FormInput>
             <TkrButton
               variant="contained"
@@ -143,8 +157,8 @@ export default function Login({}) {
             >
               Sign in
             </TkrButton>
-            <Collapse in={error}>
-              <Alert severity="error">Email and password does not match</Alert>
+            <Collapse in={error.state}>
+              <Alert severity="error">{error.msg}</Alert>
             </Collapse>
             <TextButton component={Link} to="/register">Don&#39;t have an account?</TextButton>
           </FormInput>

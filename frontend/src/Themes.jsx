@@ -1,4 +1,4 @@
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme,  alpha} from '@mui/material/styles';
 
 export const TickrTheme = createTheme({
   components: {
