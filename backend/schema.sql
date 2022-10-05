@@ -8,6 +8,8 @@ create table users (
     dob         datetime not null,
     is_host      boolean,
     reminders    boolean,
+    `description`  text,
+    profile_pic varchar(255),
     primary key (id)
 );
 

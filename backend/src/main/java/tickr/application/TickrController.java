@@ -16,6 +16,7 @@ import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
+import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -206,5 +207,21 @@ public class TickrController {
         var user = authenticateToken(session, request.authToken);
         user.setSettings(request.settings);
         return new NotificationManagement.GetResponse(user.getSettings());
+    }
+
+    public ViewProfileResponse userGetProfile (ModelSession session, Map<String, String> params) {
+        if (params.containsKey("auth_token") == params.containsKey("user_id")) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        User user;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        } else {
+            user = session.getById(User.class, UUID.fromString(params.get("user_id")))
+                    .orElseThrow(() -> new ForbiddenException("Unknown user."));
+        }
+
+        return user.getProfile();
     }
 }

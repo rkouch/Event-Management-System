@@ -5,6 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
@@ -43,6 +44,11 @@ public class User {
 
     @Column(name = "is_host")
     private boolean isHost;
+
+    private String description;
+
+    @Column(name = "profile_pic")
+    private String profilePicture;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private Set<AuthToken> tokens = new HashSet<>();
@@ -83,6 +89,9 @@ public class User {
         this.lastName = lastName;
         this.dob = dob;
         this.isHost = false;
+
+        this.description = "";
+        this.profilePicture = null;
     }
 
     /**
@@ -252,6 +261,22 @@ public class User {
         this.reminders = reminders;
     }
 
+    private String getDescription () {
+        return description;
+    }
+
+    private void setDescription (String description) {
+        this.description = description;
+    }
+
+    private String getProfilePicture () {
+        return profilePicture;
+    }
+
+    private void setProfilePicture (String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
     public NotificationManagement.Settings getSettings () {
         return new NotificationManagement.Settings(doReminders());
     }
@@ -260,5 +285,9 @@ public class User {
         if (settings.reminders != null) {
             setReminders(settings.reminders);
         }
+    }
+
+    public ViewProfileResponse getProfile () {
+        return new ViewProfileResponse(getUsername(), getFirstName(), getLastName(), getProfilePicture(), getEmail(), getDescription());
     }
 }

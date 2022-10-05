@@ -53,6 +53,8 @@ public class Server {
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
+
+        get("/api/user/profile", TickrController::userGetProfile);
     }
 
     /**
