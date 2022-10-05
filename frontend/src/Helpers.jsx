@@ -2,7 +2,7 @@ import React from 'react';
 import { Route } from 'react-router';
 
 // Function to make api calls
-export const apiFetch = (method, route, TOKEN, body) => {
+export const apiFetch = (method, route, body) => {
   const requestOptions = {
     method: method,
     headers: { 'Content-Type': 'application/json' },
@@ -11,12 +11,6 @@ export const apiFetch = (method, route, TOKEN, body) => {
 
   if (method !== 'GET' && body !== null) {
     requestOptions.body = JSON.stringify(body);
-  }
-
-  if (TOKEN !== null) {
-    requestOptions.headers.Authorization = `Bearer ${TOKEN}`;
-  } else {
-    console.log('empty token');
   }
 
   return new Promise((resolve, reject) => {
@@ -40,7 +34,7 @@ export const apiFetch = (method, route, TOKEN, body) => {
             });
             break;
           default:
-            console.log("Hello")
+            console.log("Defaulted fetch response")
         }
       })
       .catch((response) => {
@@ -93,4 +87,13 @@ export function fileToDataUrl (file) {
   });
   reader.readAsDataURL(file);
   return dataUrlPromise;
+}
+
+export const getUserData = async(body) => {
+  try {
+    const response = await apiFetch('GET',`/api/user/profile/${body}`)
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+  }
 }

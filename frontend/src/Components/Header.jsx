@@ -16,7 +16,7 @@ import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import { isLoggedIn } from '../Helpers';
+import { getToken, getUserData, isLoggedIn } from '../Helpers';
 import AccountMenu from './AccountMenu';
 
 const Search = styled('div')(({ theme }) => ({
@@ -46,6 +46,21 @@ const SearchInput = styled(OutlinedInput)(({ theme }) => ({
 }))
 
 export default function Header({}) {
+  
+  const [profile, setProfile] = React.useState({
+    userName: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    profilePicture: '',
+    profileDescription: ''
+  })
+
+  // Test data
+  React.useEffect(() => {
+    getUserData(`token=${getToken()}`)
+  }, [])
+
   return (
     <HeaderBar>
       <Grid container >

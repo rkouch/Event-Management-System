@@ -77,7 +77,7 @@ export default function Login({}) {
     }
 
     try {
-      const response = await apiFetch('POST', '/api/user/login', null, body)
+      const response = await apiFetch('POST', '/api/user/login', body)
       setToken(response.auth_token)
       navigate("/")
     } catch (errorResponse) {

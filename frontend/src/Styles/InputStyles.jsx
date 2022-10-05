@@ -35,6 +35,15 @@ export const TkrButton2 = styled(Button)({
   color: 'white'
 })
 
+export const DeleteButton = styled(Button)({
+  backgroundColor: "#E07464",
+  "&:hover": {
+    backgroundColor: "#A72F1D"
+  },
+  color: 'white',
+  fontSize: '20px',
+})
+
 export const TextButton = styled(Button)({
   variant: 'text',
   color: '#ABC7ED',

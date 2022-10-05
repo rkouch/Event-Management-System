@@ -9,7 +9,10 @@ import { Avatar, Button, Divider, OutlinedInput, Typography } from '@mui/materia
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
-import { ContrastInput, ContrastInputWrapper, TkrButton } from '../Styles/InputStyles';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, TkrButton } from '../Styles/InputStyles';
+import { setFieldInState } from '../Helpers';
 
 export default function Profile({isEditable = false}){
   const [editMode, setEditMode] = React.useState(false)
@@ -23,12 +26,14 @@ export default function Profile({isEditable = false}){
     profileDescription: ''
   })
 
-  const editModeChange = (e) => {
-    e.stopPropagation()
-    e.nativeEvent.stopImmediatePropagation()
-    setEditMode(!editMode)
-    console.log(editMode)
-  }
+  const [profileOG, setProfileOG] = React.useState({
+    userName: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    profilePicture: '',
+    profileDescription: ''
+  })
 
   // Test data
   React.useEffect(() => {
@@ -40,7 +45,30 @@ export default function Profile({isEditable = false}){
       profilePicture: '',
       profileDescription: 'This is a profiles description'
     })
+    setProfileOG(profile)
   }, [])
+
+  const editModeChange = (e) => {
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+    setEditMode(!editMode)
+  }
+  
+  const saveChanges = (e) => {
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+    setProfileOG(profile)
+    setEditMode(!editMode)
+  }
+
+  const discardChanges = (e) => {
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+    console.log(profileOG)
+    console.log(profile)
+    setProfile(profileOG)
+    setEditMode(!editMode)
+  }
 
   return (
     <div>
@@ -87,18 +115,24 @@ export default function Profile({isEditable = false}){
                     <Grid container spacing={2}>
                       <Grid item xs={4}>
                         <ContrastInputWrapper>
-                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.firstName}/>
+                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.firstName} onChange={(e) => {
+                            setFieldInState('firstName', e.target.value, profile, setProfile)
+                          }}/>
                         </ContrastInputWrapper>
                       </Grid>
                       <Grid item xs={4}>
                         <ContrastInputWrapper>
-                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.lastName}/>
+                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.lastName} onChange={(e) => {
+                            setFieldInState('lastName', e.target.value, profile, setProfile)
+                          }}/>
                         </ContrastInputWrapper>
                       </Grid>
                       <Grid item xs={3}>
                         <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
                           <ContrastInputWrapper>
-                            <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth/>
+                            <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
+                            setFieldInState('userName', e.target.value, profile, setProfile)
+                          }}/>
                           </ContrastInputWrapper>
                         </Box>
                       </Grid>
@@ -142,7 +176,9 @@ export default function Profile({isEditable = false}){
                 >
                   {editMode
                     ? <ContrastInputWrapper>
-                        <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth/>
+                        <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                            setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                          }}/>
                       </ContrastInputWrapper>
                     : <Typography
                         sx={{
@@ -174,7 +210,9 @@ export default function Profile({isEditable = false}){
                   <Grid item xs={9}>
                     {editMode
                       ? <ContrastInputWrapper>
-                          <ContrastInput fullWidth defaultValue={profile.email}/>
+                          <ContrastInput fullWidth defaultValue={profile.email} onChange={(e) => {
+                            setFieldInState('email', e.target.value, profile, setProfile)
+                          }}/>
                         </ContrastInputWrapper>
                       : <Typography
                           sx={{
@@ -200,15 +238,30 @@ export default function Profile({isEditable = false}){
                 }}
               >
                 {editMode
-                  ? <TkrButton variant='text' startIcon={<SaveIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
+                  ? <TkrButton variant='text' startIcon={<SaveIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={saveChanges}>
                       Save
                     </TkrButton>
                   : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
                       Edit
                     </TkrButton>
                 }
-                
               </Box>
+              {editMode
+                ? <Box
+                    sx={{
+                      display: 'flex',
+                      paddingLeft: '15px',
+                      marginTop: '20px'
+                    }}
+                  >
+                    <Tooltip title="Discard changes">
+                      <DeleteButton variant='text' startIcon={<DeleteIcon/>} sx={{height: 30, width: 90, fontSize: 15, textTransform: "none", textAlign: "left"}} onClick={discardChanges}>
+                        Discard
+                      </DeleteButton>
+                    </Tooltip>
+                  </Box>
+                : <div></div>
+              }
             </Grid>
           </Grid>
         </Box>
