@@ -1,11 +1,17 @@
 package tickr.application;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
+import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
@@ -14,6 +20,8 @@ import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.NotFoundException;
+import tickr.server.exceptions.UnauthorizedException;
+import tickr.util.CryptoHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -40,6 +48,27 @@ public class TickrController {
     static final Logger logger = LogManager.getLogger();
     public TickrController () {
 
+    }
+
+    private User authenticateToken (ModelSession session, String authTokenStr) {
+        AuthToken token;
+        try {
+            var parsedToken = CryptoHelper.makeJWTParserBuilder()
+                    .build()
+                    .parseClaimsJws(authTokenStr);
+
+            var tokenId = UUID.fromString(parsedToken.getBody().getId());
+
+            token = session.getById(AuthToken.class, tokenId).orElseThrow(() -> new UnauthorizedException("Invalid auth token!"));
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException("Invalid auth token!", e);
+        }
+
+        if (!token.makeJWT().equals(authTokenStr.trim())) {
+            throw new UnauthorizedException("Invalid auth token!");
+        }
+
+        return token.getUser();
     }
 
     public TestEntity testGet (ModelSession session, Map<String, String> params) {
@@ -155,5 +184,27 @@ public class TickrController {
 
 
         return new AuthTokenResponse(user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY).makeJWT());
+    }
+
+    public NotificationManagement.GetResponse userGetSettings (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+        var user = authenticateToken(session, params.get("auth_token"));
+        return new NotificationManagement.GetResponse(user.getSettings());
+    }
+
+    public NotificationManagement.GetResponse userUpdateSettings (ModelSession session, NotificationManagement.UpdateRequest request) {
+        if (request.authToken == null) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+
+        if (request.settings == null) {
+            throw new BadRequestException("Missing settings!");
+        }
+
+        var user = authenticateToken(session, request.authToken);
+        user.setSettings(request.settings);
+        return new NotificationManagement.GetResponse(user.getSettings());
     }
 }

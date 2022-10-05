@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
+import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.TestResponses;
@@ -39,7 +40,7 @@ public class Server {
      * Adds routes to the server
      */
     private static void addRoutes () {
-        logger.debug("Adding routes!");
+        logger.info("Adding routes!");
 
         get("/api/test/get", TickrController::testGet);
         get("/api/test/get/all", TickrController::testGetAll);
@@ -49,6 +50,9 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+
+        get("/api/user/settings", TickrController::userGetSettings);
+        put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
     }
 
     /**
@@ -77,6 +81,7 @@ public class Server {
 
         Spark.exception(ServerException.class, ((exception, request, response) -> {
             // Catch server exception, log and convert to error response
+            logger.debug("Server exception: ", exception);
             logger.info("\t{}: {}", exception.getStatusString(), exception.getMessage());
             response.status(exception.getStatusCode());
             response.type("application/json");
@@ -99,7 +104,7 @@ public class Server {
         if (frontendUrl != null) {
             addCORS(frontendUrl);
         }
-        logger.debug("Finished server startup!");
+        logger.info("Finished server startup!");
     }
 
     private static void addCORS (String frontendUrl) {
@@ -236,8 +241,9 @@ public class Server {
 
     private static <T> T safeDeserialise (Request request, Class<T> reqClass) {
         try {
+            logger.debug(request.body());
             return gson.fromJson(request.body(), reqClass);
-        } catch (JsonSyntaxException e) {
+        } catch (IllegalStateException | JsonSyntaxException e) {
             throw new BadRequestException("Invalid request!", e);
         }
     }

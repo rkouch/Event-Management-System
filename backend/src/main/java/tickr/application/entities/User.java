@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.application.serialised.combined.NotificationManagement;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
@@ -37,6 +38,8 @@ public class User {
     private char[] passwordHash;
     private String username;
     private LocalDate dob;
+
+    private boolean reminders = true;
 
     @Column(name = "is_host")
     private boolean isHost;
@@ -239,5 +242,23 @@ public class User {
 
     public void setTokens (Set<AuthToken> tokens) {
         this.tokens = tokens;
+    }
+
+    private boolean doReminders () {
+        return reminders;
+    }
+
+    private void setReminders (boolean reminders) {
+        this.reminders = reminders;
+    }
+
+    public NotificationManagement.Settings getSettings () {
+        return new NotificationManagement.Settings(doReminders());
+    }
+
+    public void setSettings (NotificationManagement.Settings settings) {
+        if (settings.reminders != null) {
+            setReminders(settings.reminders);
+        }
     }
 }
