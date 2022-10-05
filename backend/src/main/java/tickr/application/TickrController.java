@@ -210,6 +210,18 @@ public class TickrController {
     }
 
     public ViewProfileResponse userGetProfile (ModelSession session, Map<String, String> params) {
-        return new ViewProfileResponse();
+        if (params.containsKey("auth_token") == params.containsKey("user_id")) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        User user;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        } else {
+            user = session.getById(User.class, UUID.fromString(params.get("user_id")))
+                    .orElseThrow(() -> new ForbiddenException("Unknown user."));
+        }
+
+        return user.getProfile();
     }
 }

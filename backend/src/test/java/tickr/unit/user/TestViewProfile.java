@@ -41,7 +41,7 @@ public class TestViewProfile {
                 .build()
                 .parseClaimsJws(authToken)
                 .getBody()
-                .getId();
+                .getSubject();
 
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.userGetProfile(finalSession, Map.of()));
@@ -80,7 +80,7 @@ public class TestViewProfile {
                 .build()
                 .parseClaimsJws(authToken)
                 .getBody()
-                .getId();
+                .getSubject();
 
         var response = controller.userGetProfile(session, Map.of("user_id", userId));
 
