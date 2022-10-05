@@ -1,5 +1,7 @@
 package tickr.application.serialised.combined;
 
+import com.google.gson.annotations.SerializedName;
+
 public class NotificationManagement {
     public static class GetResponse {
         public Settings settings;
@@ -15,6 +17,7 @@ public class NotificationManagement {
     }
 
     public static class UpdateRequest {
+        @SerializedName("auth_token")
         public String authToken = null;
         public Settings settings = null;
 
