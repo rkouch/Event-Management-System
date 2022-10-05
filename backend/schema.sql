@@ -7,6 +7,7 @@ create table users (
     username    varchar(255) not null,
     dob         datetime not null,
     is_host      boolean,
+    reminders    boolean,
     primary key (id)
 );
 

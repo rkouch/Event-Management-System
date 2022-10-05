@@ -1,5 +1,6 @@
 package tickr.unit.user;
 
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,14 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
+import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 
-import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,15 +48,25 @@ public class TestNotificationManagement {
         session = TestHelper.commitMakeSession(model, session);
 
         var finalSession = session;
-        assertThrows(BadRequestException.class, () -> controller.userGetSettings(finalSession, Map.of()));
-        assertThrows(BadRequestException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest()));
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession, Map.of()));
+        assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest()));
 
-        assertThrows(BadRequestException.class, () -> controller.userGetSettings(finalSession, Map.of("auth_token", "testing123")));
-        assertThrows(BadRequestException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest("testing123",
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession, Map.of("auth_token", "testing123")));
+        assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest("testing123",
                 new NotificationManagement.Settings())));
 
-        assertThrows(BadRequestException.class, () -> controller.userGetSettings(finalSession, Map.of("auth_token", TestHelper.makeFakeJWT(user.getId()))));
-        assertThrows(BadRequestException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest(TestHelper.makeFakeJWT(user.getId()),
+        var badIdJWT = CryptoHelper.makeJWTBuilder()
+                .setId("testing123")
+                .setSubject(UUID.randomUUID().toString())
+                .setIssuedAt(Date.from(Instant.now()))
+                .setExpiration(Date.from(Instant.now().plus(Duration.ofDays(30))))
+                .compact();
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession, Map.of("auth_token", badIdJWT)));
+        assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest(badIdJWT,
+                new NotificationManagement.Settings())));
+
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession, Map.of("auth_token", TestHelper.makeFakeJWT(user.getId()))));
+        assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest(TestHelper.makeFakeJWT(user.getId()),
                 new NotificationManagement.Settings())));
 
         var expiredToken = new AuthToken(user, LocalDateTime.now().minus(Duration.ofDays(1)), Duration.ofHours(1));
@@ -63,9 +75,34 @@ public class TestNotificationManagement {
         var expiredStr = expiredToken.makeJWT();
 
         var finalSession1 = session;
-        assertThrows(BadRequestException.class, () -> controller.userGetSettings(finalSession1, Map.of("auth_token", expiredStr)));
-        assertThrows(BadRequestException.class, () -> controller.userUpdateSettings(finalSession1, new NotificationManagement.UpdateRequest(expiredStr,
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession1, Map.of("auth_token", expiredStr)));
+        assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession1, new NotificationManagement.UpdateRequest(expiredStr,
                 new NotificationManagement.Settings())));
+
+        var authToken = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+        var jwtToken = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(authToken);
+
+        var remadeToken = Jwts.builder()
+                .setId(jwtToken.getBody().getId())
+                .setSubject(jwtToken.getBody().getSubject())
+                .setIssuedAt(jwtToken.getBody().getIssuedAt())
+                .setExpiration(jwtToken.getBody().getExpiration())
+                .compact();
+
+        var incorrectToken = CryptoHelper.makeJWTBuilder().setId(jwtToken.getBody().getId())
+                .setSubject(jwtToken.getBody().getSubject())
+                .setIssuedAt(Date.from(Instant.now().minus(Duration.ofDays(1))))
+                .setExpiration(Date.from(Instant.now().plus(Duration.ofDays(365))))
+                .compact();
+
+        var finalSession2 = session;
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession2, Map.of("auth_token", remadeToken)));
+        assertThrows(UnauthorizedException.class, () -> controller.userGetSettings(finalSession2, Map.of("auth_token", incorrectToken)));
+
+        assertThrows(BadRequestException.class, () -> controller.userUpdateSettings(finalSession2, new NotificationManagement.UpdateRequest(authToken, null)));
     }
 
     @Test
