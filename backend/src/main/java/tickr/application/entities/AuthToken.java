@@ -49,7 +49,7 @@ public class AuthToken {
         this.id = id;
     }
 
-    private User getUser () {
+    public User getUser () {
         return user;
     }
 
