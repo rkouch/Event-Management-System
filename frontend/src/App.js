@@ -10,6 +10,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Landing from './Pages/Landing';
+import Profile from './Pages/Profile';
 
 
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login/>
+  },
+  {
+    path: "/myProfile",
+    element: <Profile/>
   }
 ])
 

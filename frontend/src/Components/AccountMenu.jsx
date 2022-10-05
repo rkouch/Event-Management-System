@@ -11,8 +11,16 @@ import Tooltip from '@mui/material/Tooltip';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import Settings from '@mui/icons-material/Settings';
 import Logout from '@mui/icons-material/Logout';
+import EventIcon from '@mui/icons-material/Event';
+
+import { Link, useNavigate } from 'react-router-dom';
+import { setToken } from '../Helpers';
+
 
 export default function AccountMenu() {
+
+  const navigate = useNavigate()
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -21,6 +29,14 @@ export default function AccountMenu() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const doLogout = (e) => {
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+    setToken(null)
+    window.location.reload()
+  };
+
   return (
     <React.Fragment>
       <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
@@ -73,10 +89,17 @@ export default function AccountMenu() {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         disableScrollLock={true}
       >
-        <MenuItem>
+        <MenuItem component={Link} to="/myProfile">
           <Avatar /> View Profile
         </MenuItem>
         <MenuItem>
+          <ListItemIcon>
+            <EventIcon fontSize="medium"/>
+          </ListItemIcon>
+          Create Event
+        </MenuItem>
+        <Divider></Divider>
+        <MenuItem onClick={doLogout}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

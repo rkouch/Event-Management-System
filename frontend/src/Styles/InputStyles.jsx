@@ -1,4 +1,4 @@
-import { styled } from '@mui/system';
+import { borderRadius, styled, alpha } from '@mui/system';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import OutlinedInput, { OutlinedInputProps } from '@mui/material/OutlinedInput';
 import Button from '@mui/material/Button';
@@ -42,3 +42,32 @@ export const TextButton = styled(Button)({
     color: "#424C55"
   }
 })
+
+export const ContrastInput = styled(OutlinedInput)(({ theme }) => ({
+  '.MuiOutlinedInput-notchedOutline': {
+    borderColor: "#FFFFFF"
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#FFFFFF"
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: '#FFFFFF',
+  },
+  "&.Mui-focused": {
+    backgroundColor: alpha('#6A7B8A', 0.5),
+  },
+  borderRadius: '5px'
+}))
+
+export const ContrastInputWrapper = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: '5px',
+  backgroundColor: alpha('#6A7B8A', 0.3),
+  '&:hover': {
+    backgroundColor: alpha('#6A7B8A', 0.5),
+  },
+  "&.Mui-focused": {
+    backgroundColor: alpha('#6A7B8A', 0.5),
+  },
+  width: '100%',
+}));
