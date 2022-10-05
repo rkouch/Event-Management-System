@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Landing from './Pages/Landing';
-
+import CreateEvent from './Pages/CreateEvent';
 
 const router = createBrowserRouter([
   {
@@ -24,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login/>
+  },
+  {
+    path: "/createEvent",
+    element: <CreateEvent/>
   }
 ])
 
