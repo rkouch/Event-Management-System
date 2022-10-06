@@ -14,6 +14,9 @@ import { setFieldInState } from '../Helpers';
 import Grid from '@mui/material/Unstable_Grid2';
 import { H3 } from '../Styles/HelperStyles';
 import { TkrButton } from '../Styles/InputStyles';
+import ListItemText from '@mui/material/ListItemText';
+import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from '@mui/material/IconButton';
 
 export const EventForm = styled('div')({
     display: 'flex',
@@ -30,7 +33,7 @@ export const EventForm = styled('div')({
 
 export default function CreateEvent({}) {
     // States 
-
+    
     const [start, setStartValue] = React.useState(dayjs('2014-08-18T21:11:54'));
 
     const [end, setEndValue] = React.useState({
@@ -44,6 +47,8 @@ export default function CreateEvent({}) {
     const [newHost, setNewHost] = React.useState("");
 
     const [hostList, setHostList] = React.useState([{ host: "" }]);
+
+    const [seatingList, setSeatingList] = React.useState([{ sectionName: "", sectionCapacity: 0 }])
 
     const handleStartChange = (newValue) => {
         setStartValue(newValue);
@@ -83,7 +88,38 @@ export default function CreateEvent({}) {
         const hostList_t = [...hostList]; 
         hostList_t.push({host: newHost});
         setHostList(hostList_t);
-        console.log(hostList);
+    }
+
+    const removeHost = (index) => {
+        const host_list = [...hostList]; 
+        host_list.splice(index, 1);
+        setHostList(host_list);
+    }
+
+    const addSection = (e) => {
+        setSeatingList([...seatingList, { sectionName: "", sectionCapacity: 0 }])
+        console.log(seatingList)
+    }
+
+    const removeSeating = (index) => {
+        const list = [...seatingList]
+        list.splice(index, 1)
+        setSeatingList(list)
+    }
+
+    const handleSectionChange = (e, index) => {
+        const list = [...seatingList]
+        list[index].sectionName = e.target.value 
+        setSeatingList(list)
+        console.log(seatingList)
+    }
+
+    const handleCapacityChange = (e, index) => {
+        const {name, value} = e.target
+        const list = [...seatingList]
+        list[index][name] = value 
+        setSeatingList(list)
+        console.log(seatingList)
     }
 
     return (
@@ -99,7 +135,7 @@ export default function CreateEvent({}) {
                     <Grid item xs={12}>
                         Event Cover photo
                     </Grid>
-                    <Grid item xs={7}>
+                    <Grid item xs={6}>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <OutlinedInput placeholder="Event name" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
@@ -150,27 +186,44 @@ export default function CreateEvent({}) {
                                 <OutlinedInput placeholder="New host" variant="outlined" onChange={handleNewHost} sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
                             </Grid>
                             <Grid item xs={7}>
-                                
-                            </Grid>
-                            <Grid item xs={3}>
                             <TkrButton variant="contained" onClick={addHost}>
                                 Add Host
                             </TkrButton>
+                            </Grid>
+                            <Grid item xs={12}>
+                            
+                            Host List:
                                 {hostList.map((value, key) => {                                    
-                                    return (<div key={key}>
-                                        {value.host}
-                                    </div>)
+                                    // return (<div key={key}>
+                                    //     {value.host}
+                                    // </div>)
+                                    return (
+                                    <div key={key}>
+                                        <Grid container spacing={1}>
+                                            <Grid item xs={7}>
+                                                <ListItemText
+                                                    primary={value.host}
+                                                />  
+                                            </Grid>
+                                            <Grid item xs={5}>
+                                                { hostList.length != 0 ? <IconButton edge="end" aria-label="delete" onClick={() => removeHost(key)}>
+                                                    <DeleteIcon />
+                                                </IconButton> : <></>}
+                                            </Grid>
+                                        </Grid>
+                                        
+                                    </div>
+                                    )
                                 })}
                             </Grid>
-                            <Grid item xs={9}></Grid>
 
 
-                            <Grid item xs={8}>
+                            <Grid item xs={12}>
                             <TextField
                             id="standard-multiline-static"
                             label="Event Description"
                             multiline
-                            rows={3}
+                            rows={4}
                             defaultValue=""
                             variant="filled"
                             onChange={handleDescription}
@@ -179,9 +232,50 @@ export default function CreateEvent({}) {
                             </Grid>
                         </Grid>
                     </Grid>
+                    <Grid item xs={1}></Grid>
                     <Grid item xs={5}>
-
+                        <h3> Ticket Allocations </h3>
+                        {/* <OutlinedInput placeholder="Country" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/> */}
+                        {seatingList.map((value, index) => {
+                            return (
+                            <div key={index}>
+                                <Grid container spacing={1}>
+                                    <Grid item xs={7}>
+                                        <OutlinedInput 
+                                            placeholder="Section Name" 
+                                            variant="outlined" 
+                                            sx={{paddingLeft: '15px', borderRadius: 2}} 
+                                            fullWidth={true}
+                                            onChange= {(e) => handleSectionChange(e, index)}  
+                                        />
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                    <OutlinedInput placeholder="Spots" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                                    </Grid>
+                                    <Grid item xs={2}>
+                                        
+                                        <IconButton edge="end" aria-label="delete" onClick={() => removeSeating(index)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Grid>
+                                </Grid>
+                                
+                                {(seatingList.length - 1 === index) && 
+                                (
+                                    <TkrButton variant="contained" onClick={addSection}>
+                                        Add Section
+                                    </TkrButton>
+                                )}
+                            </div>                                
+                            )
+                        })}
+                        {seatingList.length === 0 ? <TkrButton variant="contained" onClick={addSection}>
+                                        Add Section
+                        </TkrButton> : <></>}
                     </Grid>
+                    <TkrButton variant="contained">
+                        Create Event
+                    </TkrButton>
                 </Grid>
 
                 {/* <Grid container spacing={2} sx={{paddingLeft: 5, paddingRight: 5}}>
