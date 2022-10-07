@@ -11,11 +11,15 @@ import {
 } from "react-router-dom";
 import Landing from './Pages/Landing';
 import CreateEvent from './Pages/CreateEvent';
+import Profile from './Pages/Profile';
+import PageNotFound from './Pages/PageNotFound';
+
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Landing/>
+    element: <Landing/>,
+    // errorElement: <PageNotFound/>
   },
   {
     path: "/register",
@@ -27,7 +31,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/createEvent",
-    element: <CreateEvent/>
+    element: <CreateEvent/>,
+  },
+  
+  {
+    path: "/myProfile",
+    element: <Profile editable={true}/>
   }
 ])
 
