@@ -16,7 +16,7 @@ import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import { isLoggedIn } from '../Helpers';
+import { getToken, getUserData, isLoggedIn } from '../Helpers';
 import AccountMenu from './AccountMenu';
 
 const Search = styled('div')(({ theme }) => ({
@@ -24,7 +24,7 @@ const Search = styled('div')(({ theme }) => ({
   borderRadius: '5px',
   backgroundColor: alpha(theme.palette.common.white, 0.3),
   '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.5),
+    backgroundColor: alpha(theme.palette.common.white, 0.4),
   },
   width: '100%',
 }));
@@ -38,6 +38,9 @@ const SearchInput = styled(OutlinedInput)(({ theme }) => ({
   },
   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
     borderColor: '#AFDEDC',
+  },
+  "&.Mui-focused": {
+    backgroundColor: alpha(theme.palette.common.white, 0.35),
   },
   borderRadius: '5px'
 }))
@@ -66,7 +69,7 @@ export default function Header({}) {
                   <SearchInput 
                     size="small"
                     startAdornment={
-                      <InputAdornment>
+                      <InputAdornment position='start'>
                         <SearchSharpIcon/>
                       </InputAdornment>
                     }
@@ -76,9 +79,7 @@ export default function Header({}) {
                   </SearchInput>
                 </Search>
               </FormControl>
-              
             </CentredBox>
-            
           </Grid>
           {isLoggedIn()
             ? <Grid item xs={2}>
