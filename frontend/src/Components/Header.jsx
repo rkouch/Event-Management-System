@@ -3,7 +3,6 @@ import React from 'react'
 import Box from '@mui/material/Box';
 import { borderRadius, styled, alpha } from '@mui/system';
 import Grid from '@mui/material/Grid';
-import logo from '../Images/TickrLogo.png'
 import { CentredBox, HeaderBar, Logo } from '../Styles/HelperStyles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import AdjustableLogo from './AdjustableLogo';
