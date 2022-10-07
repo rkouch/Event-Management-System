@@ -14,12 +14,14 @@ import Logout from '@mui/icons-material/Logout';
 import EventIcon from '@mui/icons-material/Event';
 
 import { Link, useNavigate } from 'react-router-dom';
-import { setToken } from '../Helpers';
+import { getToken, setToken, getUserData } from '../Helpers';
 
 
 export default function AccountMenu() {
 
   const navigate = useNavigate()
+
+  const [isLoggedIn, setIsLoggedIn] = React.useState((getToken() == null))
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -34,8 +36,23 @@ export default function AccountMenu() {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
     setToken(null)
-    window.location.reload()
+    setIsLoggedIn(false)
+    navigate('/')
   };
+
+  const [userData, setUserData] = React.useState({
+    firstName: '',
+    lastName: '',
+    userName: '',
+    email: '',
+    profileDescription: '',
+    events: [],
+  })
+
+  React.useEffect(() => {
+    console.log('Getting user data from menu')
+    getUserData(`auth_token=${getToken()}`, setUserData)
+  }, []);
 
   return (
     <React.Fragment>
@@ -49,7 +66,7 @@ export default function AccountMenu() {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
           >
-            <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+            <Avatar sx={{ width: 35, height: 35 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
           </IconButton>
         </Tooltip>
       </Box>

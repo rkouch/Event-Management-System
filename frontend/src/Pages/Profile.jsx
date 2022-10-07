@@ -12,9 +12,9 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState } from '../Helpers';
+import { setFieldInState, getToken, getUserData } from '../Helpers';
 
-export default function Profile({isEditable = false}){
+export default function Profile({editable = false, id=null}){
   const [editMode, setEditMode] = React.useState(false)
 
   const [profile, setProfile] = React.useState({
@@ -23,7 +23,7 @@ export default function Profile({isEditable = false}){
     lastName: '',
     email: '',
     profilePicture: '',
-    profileDescription: ''
+    events: []
   })
 
   const [profileOG, setProfileOG] = React.useState({
@@ -32,25 +32,31 @@ export default function Profile({isEditable = false}){
     lastName: '',
     email: '',
     profilePicture: '',
-    profileDescription: ''
+    profileDescription: '',
+    events: []
   })
 
   // Test data
   React.useEffect(() => {
-    setProfile({
-      userName: 'TestUser',
-      firstName: 'Kennan',
-      lastName: 'Wong',
-      email: 'test@email.com',
-      profilePicture: '',
-      profileDescription: 'This is a profiles description'
-    })
-    setProfileOG(profile)
+    if (editable) {
+      console.log('Getting user data from profile page')
+      getUserData(`auth_token=${getToken()}`, setProfile)
+    } else {
+      console.log('Getting user data from profile page')
+      getUserData(`auth_token=${getToken()}`, setProfile)
+    }
+    
   }, [])
 
   const editModeChange = (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
+    
+    if (!editMode) {
+      console.log('Setting profileOG')
+      setProfileOG(profile)
+      console.log(profile)
+    }
     setEditMode(!editMode)
   }
   
@@ -69,6 +75,11 @@ export default function Profile({isEditable = false}){
     setProfile(profileOG)
     setEditMode(!editMode)
   }
+
+  console.log('profileOG')
+  console.log(profileOG)
+  console.log('profile')
+  console.log(profile)
 
   return (
     <div>
@@ -167,30 +178,45 @@ export default function Profile({isEditable = false}){
                   height: '100%',
                 }}
               >
-                <Box
-                  sx={{
-                    padding: editMode ? 0 : '10px',
-                    borderRadius: '10px',
-                    backgroundColor: '#F1F9F9',
-                  }}
-                >
-                  {editMode
-                    ? <ContrastInputWrapper>
-                        <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
-                            setFieldInState('profileDescription', e.target.value, profile, setProfile)
-                          }}/>
-                      </ContrastInputWrapper>
-                    : <Typography
-                        sx={{
-                          fontSize: '20px',
-                          fontWeight: 'regular',
-                          fontStyle: 'italic',
-                        }}
-                      >
-                        {profile.profileDescription}
-                      </Typography>
-                  }
-                </Box>
+                {(profile.profileDescription != '')
+                  ? <Box
+                      sx={{
+                        padding: editMode ? 0 : '10px',
+                        borderRadius: '10px',
+                        backgroundColor: '#F1F9F9',
+                      }}
+                    >
+                      {editMode
+                        ? <ContrastInputWrapper>
+                            <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                                setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                              }}/>
+                          </ContrastInputWrapper>
+                        : <Typography
+                            sx={{
+                              fontSize: '20px',
+                              fontWeight: 'regular',
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            {profile.profileDescription}
+                          </Typography>
+                      }
+                    </Box>
+                  : <div>
+                    {editMode
+                      ? <ContrastInputWrapper>
+                          <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                              setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                            }}/>
+                        </ContrastInputWrapper>
+
+                      : <div></div>
+
+                    }
+
+                  </div>
+                }
                 <br/>
                 <Grid container spacing={2}>
                   <Grid item xs={3} sx={{display: 'flex', alignItems: 'center'}}>

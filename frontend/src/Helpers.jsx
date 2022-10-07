@@ -89,10 +89,19 @@ export function fileToDataUrl (file) {
   return dataUrlPromise;
 }
 
-export const getUserData = async(body) => {
+export const getUserData = async (body, setUserData) => {
   try {
-    const response = await apiFetch('GET',`/api/user/profile/${body}`)
-    console.log(response)
+    const response = await apiFetch('GET',`/api/user/profile?${body}`)
+    const ret = {
+      userName: response.user_name,
+      firstName: response.first_name,
+      lastName: response.last_name,
+      profileDescription: response.profile_description,
+      email: response.email,
+      events: response.events
+    }
+    console.log(ret)
+    setUserData(ret)
   } catch (error) {
     console.log(error)
   }
