@@ -42,13 +42,43 @@ export default function CreateEvent({}) {
         errorMsg: ''
     });
 
+    const [eventName, setEventName] = React.useState(""); 
+
+    const [address, setAddress] = React.useState(""); 
+
+    const [postcode, setPostcode] = React.useState(""); 
+
+    const [state, setState] = React.useState(""); 
+
+    const [country, setCountry] = React.useState(""); 
+
     const [description, setDescription] = React.useState(""); 
 
-    const [newHost, setNewHost] = React.useState("");
+    const [newAdmin, setNewAdmin] = React.useState("");
 
-    const [hostList, setHostList] = React.useState([{ host: "" }]);
+    const [adminList, setAdminList] = React.useState([{ admin: "" }]);
 
     const [seatingList, setSeatingList] = React.useState([{ sectionName: "", sectionCapacity: 0 }])
+
+    const handleEventNameChange = (e) => {
+        setEventName(e.target.value)
+    }
+
+    const handleAddressChange = (e) => {
+        setAddress(e.target.value)
+    }
+
+    const handlePostcodeChange = (e) => {
+        setPostcode(e.target.value)
+    }
+
+    const handleStateChange = (e) => {
+        setState(e.target.value)
+    }
+
+    const handleCountryChange = (e) => {
+        setCountry(e.target.value)
+    }
 
     const handleStartChange = (newValue) => {
         setStartValue(newValue);
@@ -75,25 +105,24 @@ export default function CreateEvent({}) {
 
     const handleDescription = (e) => {
         setDescription(e.target.value);
-        console.log(description);
     }
 
-    const handleNewHost = (e) => {
-        setNewHost(e.target.value); 
+    const handleNewAdmin = (e) => {
+        setNewAdmin(e.target.value); 
     }
 
-    const addHost = (e) => {
+    const addAdmin = (e) => {
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
-        const hostList_t = [...hostList]; 
-        hostList_t.push({host: newHost});
-        setHostList(hostList_t);
+        const adminList_t = [...adminList]; 
+        adminList_t.push({admin: newAdmin});
+        setAdminList(adminList_t);
     }
 
-    const removeHost = (index) => {
-        const host_list = [...hostList]; 
-        host_list.splice(index, 1);
-        setHostList(host_list);
+    const removeAdmin = (index) => {
+        const admin_list = [...adminList]; 
+        admin_list.splice(index, 1);
+        setAdminList(admin_list);
     }
 
     const addSection = (e) => {
@@ -138,19 +167,19 @@ export default function CreateEvent({}) {
                     <Grid item xs={6}>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                <OutlinedInput placeholder="Event name" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                                <OutlinedInput placeholder="Event name" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handleEventNameChange}/>
                             </Grid>
                             <Grid item xs={12}>
-                            <OutlinedInput placeholder="Address" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                            <OutlinedInput placeholder="Address" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handleAddressChange}/>
                             </Grid>
                             <Grid item xs={3}>
-                            <OutlinedInput placeholder="Postcode" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                            <OutlinedInput placeholder="Postcode" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handlePostcodeChange}/>
                             </Grid>
                             <Grid item xs={4}>
-                            <OutlinedInput placeholder="State" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                            <OutlinedInput placeholder="State" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handleStateChange}/>
                             </Grid>
                             <Grid item xs={5}>
-                            <OutlinedInput placeholder="Country" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                            <OutlinedInput placeholder="Country" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handleCountryChange}/>
                             </Grid>
 
                             <LocalizationProvider dateAdapter={AdapterMoment}>
@@ -183,30 +212,30 @@ export default function CreateEvent({}) {
                             
 
                             <Grid item xs={5}>
-                                <OutlinedInput placeholder="New host" variant="outlined" onChange={handleNewHost} sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                                <OutlinedInput placeholder="New admin" variant="outlined" onChange={handleNewAdmin} sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
                             </Grid>
                             <Grid item xs={7}>
-                            <TkrButton variant="contained" onClick={addHost}>
-                                Add Host
+                            <TkrButton variant="contained" onClick={addAdmin}>
+                                Add Admin
                             </TkrButton>
                             </Grid>
                             <Grid item xs={12}>
                             
-                            Host List:
-                                {hostList.map((value, key) => {                                    
+                            Admin List:
+                                {adminList.map((value, key) => {                                    
                                     // return (<div key={key}>
-                                    //     {value.host}
+                                    //     {value.admin}
                                     // </div>)
                                     return (
                                     <div key={key}>
                                         <Grid container spacing={1}>
                                             <Grid item xs={7}>
                                                 <ListItemText
-                                                    primary={value.host}
+                                                    primary={value.admin}
                                                 />  
                                             </Grid>
                                             <Grid item xs={5}>
-                                                { hostList.length != 0 ? <IconButton edge="end" aria-label="delete" onClick={() => removeHost(key)}>
+                                                { adminList.length != 0 ? <IconButton edge="end" aria-label="delete" onClick={() => removeAdmin(key)}>
                                                     <DeleteIcon />
                                                 </IconButton> : <></>}
                                             </Grid>
@@ -319,12 +348,12 @@ export default function CreateEvent({}) {
                     </Grid>
                     
                     <Grid xs={6}>
-                    <OutlinedInput placeholder="New Host" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={false}/>
+                    <OutlinedInput placeholder="New Admin" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={false}/>
                     <TkrButton
                         variant="contained"
                         
                         >
-                        Add Host
+                        Add Admin
                     </TkrButton>
                     </Grid>
 
