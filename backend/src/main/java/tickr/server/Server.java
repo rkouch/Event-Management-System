@@ -107,6 +107,7 @@ public class Server {
             // Log successful responses
             if (response.status() == 200) {
                 logger.info("\t200 OK");
+                logger.debug(response.body());
             } else if (response.status() == 404) {
                 logger.info("\t404: Not Found");
             }

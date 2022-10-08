@@ -47,7 +47,7 @@ public class TestEditProfile {
 
     @AfterAll
     public static void clearStaticFiles () {
-        TestHelper.clearStaticFiles();
+        //TestHelper.clearStaticFiles();
     }
 
     @Test
