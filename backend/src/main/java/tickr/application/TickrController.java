@@ -1,19 +1,24 @@
 package tickr.application;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.exception.ConstraintViolationException;
 import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+<<<<<<< HEAD
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
+=======
+import tickr.application.serialised.requests.EditProfileRequest;
+>>>>>>> e8abcae38485cf8a4fcff7043762fec10a8eabab
 import tickr.application.serialised.requests.UserLoginRequest;
+import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.requests.UserRequestPasswordChangeRequest;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -23,6 +28,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -51,7 +57,7 @@ public class TickrController {
 
     }
 
-    private User authenticateToken (ModelSession session, String authTokenStr) {
+    private AuthToken getTokenFromStr (ModelSession session, String authTokenStr) {
         AuthToken token;
         try {
             var parsedToken = CryptoHelper.makeJWTParserBuilder()
@@ -69,7 +75,11 @@ public class TickrController {
             throw new UnauthorizedException("Invalid auth token!");
         }
 
-        return token.getUser();
+        return token;
+    }
+
+    private User authenticateToken (ModelSession session, String authTokenStr) {
+        return getTokenFromStr(session, authTokenStr).getUser();
     }
 
     public TestEntity testGet (ModelSession session, Map<String, String> params) {
@@ -136,7 +146,7 @@ public class TickrController {
             throw new BadRequestException("Invalid register request!");
         }
 
-        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+        if (!EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
             logger.debug("Email did not match regex!");
             throw new ForbiddenException("Invalid email!");
         }
@@ -187,6 +197,12 @@ public class TickrController {
         return new AuthTokenResponse(user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY).makeJWT());
     }
 
+    public void userLogout (ModelSession session, UserLogoutRequest request) {
+        var token = getTokenFromStr(session, request.authToken);
+        var user = token.getUser();
+        user.invalidateToken(session, token);
+    }
+
     public NotificationManagement.GetResponse userGetSettings (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("auth_token")) {
             throw new UnauthorizedException("Missing auth token!");
@@ -223,5 +239,54 @@ public class TickrController {
         }
 
         return user.getProfile();
+    }
+
+<<<<<<< HEAD
+    public AuthTokenResponse loggedChangePassword (ModelSession session, UserChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        authenticateToken(session, request.authToken);
+
+        return new AuthTokenResponse(request.authToken);
+    }
+
+    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestPasswordChangeRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        // email is good? if not bad response
+        session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+
+        return new RequestChangePasswordResponse(true);
+    }
+
+    public AuthTokenResponse unloggedComplete (ModelSession session, UserCompleteChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+        authenticateToken(session, request.resetToken);
+
+        return new AuthTokenResponse(request.resetToken);
+=======
+    public void userEditProfile (ModelSession session, EditProfileRequest request) {
+        var user = authenticateToken(session, request.authToken);
+
+        if (request.email != null && !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        if (request.pfpDataUrl == null) {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription, null);
+        } else {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription,
+                    FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
+                            .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
+        }
+>>>>>>> e8abcae38485cf8a4fcff7043762fec10a8eabab
     }
 }

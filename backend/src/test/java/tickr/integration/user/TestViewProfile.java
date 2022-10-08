@@ -71,6 +71,6 @@ public class TestViewProfile {
         assertEquals("TestLast", profile.lastName);
         assertEquals("test@example.com", profile.email);
         assertEquals("", profile.description);
-        assertNull(profile.profilePicture);
+        assertEquals("", profile.profilePicture);
     }
 }
