@@ -12,6 +12,7 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
@@ -223,5 +224,9 @@ public class TickrController {
         }
 
         return user.getProfile();
+    }
+
+    public void userEditProfile (ModelSession session, EditProfileRequest request) {
+
     }
 }
