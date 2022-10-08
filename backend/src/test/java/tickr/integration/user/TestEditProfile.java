@@ -45,9 +45,9 @@ public class TestEditProfile {
         Spark.awaitStop();
     }
 
-    @AfterAll
-    public static void clearStaticFiles () {
-        //TestHelper.clearStaticFiles();
+    @AfterEach
+    public void clearStaticFiles () {
+        TestHelper.clearStaticFiles();
     }
 
     @Test

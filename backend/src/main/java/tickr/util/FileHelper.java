@@ -26,7 +26,14 @@ public class FileHelper {
 
     static final Logger logger = LogManager.getLogger();
 
-    public static String getStaticPath () {
+    public synchronized static String getStaticPath () {
+        var file = new File(STATIC_FILE_PATH);
+        if (!file.exists()) {
+            logger.debug("Creating static directory!");
+            if (!file.mkdirs()) {
+                logger.error("Failed to make static directory!");
+            }
+        }
         return STATIC_FILE_PATH;
     }
 
@@ -92,7 +99,7 @@ public class FileHelper {
     public static void deleteFileAtUrl (String staticUrl) {
         var file = new File(getStaticPath() + staticUrl);
         if (file.exists() && !file.delete()) {
-            logger.error("Failed to delete static file at \"{}\"", getStaticPath() + staticUrl);
+            logger.error("Failed to delete static file at \"{}\"", STATIC_FILE_PATH + staticUrl);
         }
     }
 

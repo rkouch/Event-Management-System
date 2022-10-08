@@ -75,6 +75,7 @@ public class TestHelper {
             for (var i : Objects.requireNonNull(file.listFiles())) {
                 recursiveDelete(i);
             }
+            assert file.delete();
         }
     }
 
