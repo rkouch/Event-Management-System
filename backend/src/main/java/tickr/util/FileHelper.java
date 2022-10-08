@@ -89,6 +89,13 @@ public class FileHelper {
         }
     }
 
+    public static void deleteFileAtUrl (String staticUrl) {
+        var file = new File(getStaticPath() + staticUrl);
+        if (file.exists() && !file.delete()) {
+            logger.error("Failed to delete static file at \"{}\"", getStaticPath() + staticUrl);
+        }
+    }
+
     public static OutputStream openOutputStream (String filePath) throws IOException {
         return new FileOutputStream(filePath);
     }

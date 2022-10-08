@@ -9,12 +9,14 @@ import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -313,6 +315,9 @@ public class User {
         }
 
         if (pfpUrl != null) {
+            if (!getProfilePicture().equals("")) {
+                FileHelper.deleteFileAtUrl(getProfilePicture());
+            }
             this.profilePicture = pfpUrl;
         }
     }

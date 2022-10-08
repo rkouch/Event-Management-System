@@ -34,7 +34,7 @@ public class TestEditProfile {
                 "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
     }
-    
+
     @AfterEach
     public void cleanup () {
         model.cleanup();
