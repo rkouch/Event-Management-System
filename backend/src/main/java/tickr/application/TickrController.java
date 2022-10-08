@@ -9,13 +9,10 @@ import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
-import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
+
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -254,36 +251,4 @@ public class TickrController {
                             .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
         }
     }
-
-    public AuthTokenResponse loggedChangePassword (ModelSession session, UserChangePasswordRequest request) {
-        if (!request.isValid()) {
-            throw new BadRequestException("Invalid request!");
-        }
- 
-        authenticateToken(session, request.authToken);
- 
-        return new AuthTokenResponse(request.authToken);
-    }
- 
-    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest request) {
-        if (!request.isValid()) {
-            throw new BadRequestException("Invalid request!");
-        }
- 
-        // email is good? if not bad response
-        session.getByUnique(User.class, "email", request.email)
-                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
- 
-        return new RequestChangePasswordResponse(true);
-    }
- 
-    public AuthTokenResponse unloggedComplete (ModelSession session, UserCompleteChangePasswordRequest request) {
-        if (!request.isValid()) {
-            throw new BadRequestException("Invalid request!");
-        }
-        authenticateToken(session, request.resetToken);
- 
-        return new AuthTokenResponse(request.resetToken);
-    }
-
 }
