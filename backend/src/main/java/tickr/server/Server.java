@@ -8,16 +8,13 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
-<<<<<<< HEAD
-import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-=======
 import tickr.application.serialised.requests.EditProfileRequest;
->>>>>>> e8abcae38485cf8a4fcff7043762fec10a8eabab
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
-import tickr.application.serialised.requests.UserRequestPasswordChangeRequest;
+import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
@@ -61,13 +58,10 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
-<<<<<<< HEAD
-        post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestPasswordChangeRequest.class);
+        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
+        post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestChangePasswordRequest.class);
         put("/api/user/reset", TickrController::loggedChangePassword, UserChangePasswordRequest.class);
         put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
-=======
-        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
->>>>>>> e8abcae38485cf8a4fcff7043762fec10a8eabab
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
