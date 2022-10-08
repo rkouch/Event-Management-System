@@ -8,11 +8,8 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
-<<<<<<< HEAD
 import tickr.application.serialised.requests.CreateEventRequest;
-=======
 import tickr.application.serialised.requests.EditProfileRequest;
->>>>>>> main
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
