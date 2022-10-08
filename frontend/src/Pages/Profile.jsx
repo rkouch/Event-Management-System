@@ -23,6 +23,7 @@ import Checkbox from '@mui/material/Checkbox';
 import ConfirmPassword from '../Components/ConfirmPassword';
 
 import { Link } from 'react-router-dom';
+import LoadingButton from '../Components/LoadingButton';
 
 export default function Profile({editable = false, id=null}){
 
@@ -84,10 +85,12 @@ export default function Profile({editable = false, id=null}){
     setEditMode(!editMode)
   }
   
+
   const saveChanges = (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
     setEditMode(!editMode)
+
   }
 
   const discardChanges = (e) => {
@@ -113,14 +116,22 @@ export default function Profile({editable = false, id=null}){
     }
   }
 
-  const submitPasswordChange = (e) => {
-    setLoading(true)
-  }
-
   const [delAcc, setDelAcc] = React.useState(false)
 
   const handleDelAcc = (e) => {
     setDelAcc(!delAcc)
+  }
+
+  const packageBody = () => {
+    const body = {
+      auth_token: getToken(),
+      user_name: profile.userName,
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      email: profile.email,
+      profile_description: profile.profileDescription,
+    }
+    return body
   }
 
   return (
@@ -301,9 +312,16 @@ export default function Profile({editable = false, id=null}){
                     }}
                   >
                     {editMode
-                      ? <TkrButton variant='text' startIcon={<SaveIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={saveChanges}>
-                          Save
-                        </TkrButton>
+                      ? <LoadingButton
+                          label={"Save"}
+                          method={'PUT'}
+                          sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
+                          startIcon={<SaveIcon/>}
+                          route={"/api/user/editprofile"}
+                          body={packageBody()}
+                          func={setEditMode} 
+                          funcVal={false}
+                        />
                       : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
                           Edit
                         </TkrButton>
