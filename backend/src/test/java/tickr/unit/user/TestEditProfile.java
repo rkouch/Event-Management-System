@@ -14,7 +14,9 @@ import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
+import tickr.util.FileHelper;
 
+import java.io.File;
 import java.util.Map;
 
 public class TestEditProfile {
@@ -34,9 +36,12 @@ public class TestEditProfile {
         session = TestHelper.commitMakeSession(model, session);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        var outputDir = new File(FileHelper.getStaticPath());
+        outputDir.delete();
     }
 
     @Test
@@ -53,6 +58,17 @@ public class TestEditProfile {
                 new EditProfileRequest(authToken, null, null, null, null, "@example.com", null)));
         assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
                 new EditProfileRequest(authToken, null, null, null, null, "test@example", null)));
+
+        assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, "test bad url", null, null)));
+        assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, "data:aksdhasjd;base64,askdasdasdas=", null, null)));
+        assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, "data:image/png,askdasdasdas=", null, null)));
+        assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, "data:image/png;stuff,askdasdasdas=", null, null)));
+        assertThrows(ForbiddenException.class, () -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, "data:image/png;base64,askdasdasdas=", null, null)));
     }
 
     @Test
@@ -85,4 +101,29 @@ public class TestEditProfile {
         assertEquals("testing123", response.description);
         assertEquals("", response.profilePicture);
     }
+
+    @Test
+    public void testUploadPfp () {
+        assertDoesNotThrow(() -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null)));
+
+        session = TestHelper.commitMakeSession(model, session);
+        var response = controller.userGetProfile(session, Map.of("auth_token", authToken));
+
+        assertNotEquals("", response.profilePicture);
+        var newFilePath = FileHelper.getStaticPath() + "/" + response.profilePicture;
+
+        assertTrue(TestHelper.fileDiff("/test_images/smile.jpg", newFilePath));
+
+        assertDoesNotThrow(() -> controller.userEditProfile(session,
+                new EditProfileRequest(authToken, null, null, null, FileHelper.readToDataUrl("/test_images/smile.png"), null, null)));
+
+        session = TestHelper.commitMakeSession(model, session);
+        response = controller.userGetProfile(session, Map.of("auth_token", authToken));
+
+        newFilePath = FileHelper.getStaticPath() + "/" + response.profilePicture;
+
+        assertTrue(TestHelper.fileDiff("/test_images/smile.jpg", newFilePath));
+    }
+
 }

@@ -2,17 +2,23 @@ package tickr;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class TestHelper {
+    static final Logger logger = LogManager.getLogger();
     public static ModelSession commitMakeSession (DataModel model, ModelSession session) {
         assertDoesNotThrow(session::commit);
         session.close();
@@ -44,5 +50,18 @@ public class TestHelper {
     public static UserRegisterRequest makeRegisterRequest () {
         var user = "x" + Long.toHexString(System.nanoTime());
         return new UserRegisterRequest(user, "First", "Last", user + "@example.com", "Password123!", "2022-01-01");
+    }
+
+    public static boolean fileDiff (String filepath1, String filepath2) {
+        try (var file1 = FileHelper.openInputStream(filepath1); var file2 = FileHelper.openInputStream(filepath2)) {
+            byte[] bytes1 = file1.readAllBytes();
+            byte[] bytes2 = file2.readAllBytes();
+
+            return Arrays.equals(bytes1, bytes2);
+
+        } catch (IOException e) {
+            logger.info("Encountered IOException in diff: ", e);
+            return false;
+        }
     }
 }
