@@ -10,11 +10,14 @@ import tickr.persistence.ModelSession;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 public class TestHelper {
@@ -53,6 +56,7 @@ public class TestHelper {
     }
 
     public static boolean fileDiff (String filepath1, String filepath2) {
+        logger.debug("Comparing {} and {}!", filepath1, filepath2);
         try (var file1 = FileHelper.openInputStream(filepath1); var file2 = FileHelper.openInputStream(filepath2)) {
             byte[] bytes1 = file1.readAllBytes();
             byte[] bytes2 = file2.readAllBytes();
@@ -63,5 +67,27 @@ public class TestHelper {
             logger.info("Encountered IOException in diff: ", e);
             return false;
         }
+    }
+
+    public static void clearStaticFiles () {
+        var file = new File(FileHelper.getStaticPath());
+        if (file.exists() && file.isDirectory()) {
+            for (var i : Objects.requireNonNull(file.listFiles())) {
+                recursiveDelete(i);
+            }
+        }
+    }
+
+    private static void recursiveDelete (File file) {
+        var subdirectories = file.listFiles();
+        if (subdirectories != null) {
+            for (var i : subdirectories) {
+                if (!Files.isSymbolicLink(file.toPath())) {
+                    recursiveDelete(i);
+                }
+            }
+        }
+
+        assert file.delete();
     }
 }

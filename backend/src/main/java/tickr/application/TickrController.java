@@ -24,6 +24,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -234,6 +235,12 @@ public class TickrController {
             throw new ForbiddenException("Invalid email!");
         }
 
-        user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription, null);
+        if (request.pfpDataUrl == null) {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription, null);
+        } else {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription,
+                    FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
+                            .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
+        }
     }
 }

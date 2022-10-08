@@ -1,5 +1,6 @@
 package tickr.unit.user;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,12 +12,10 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
-import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.FileHelper;
 
-import java.io.File;
 import java.util.Map;
 
 public class TestEditProfile {
@@ -35,13 +34,15 @@ public class TestEditProfile {
                 "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
     }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    
     @AfterEach
     public void cleanup () {
         model.cleanup();
-        var outputDir = new File(FileHelper.getStaticPath());
-        outputDir.delete();
+    }
+
+    @AfterAll
+    public static void clearStaticFiles () {
+        TestHelper.clearStaticFiles();
     }
 
     @Test
@@ -123,7 +124,7 @@ public class TestEditProfile {
 
         newFilePath = FileHelper.getStaticPath() + "/" + response.profilePicture;
 
-        assertTrue(TestHelper.fileDiff("/test_images/smile.jpg", newFilePath));
+        assertTrue(TestHelper.fileDiff("/test_images/smile.png", newFilePath));
     }
 
 }

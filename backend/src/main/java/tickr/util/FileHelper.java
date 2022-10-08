@@ -32,7 +32,7 @@ public class FileHelper {
 
     public synchronized static Optional<String> uploadFromDataUrl (String subdirectory, String filePrefix, String dataUrl) {
         var pathFile = new File(STATIC_FILE_PATH + "/" + subdirectory);
-        if (!pathFile.mkdirs()) {
+        if (!pathFile.exists() && !pathFile.mkdirs()) {
             logger.error("Failed to create directories for static file path {}!", STATIC_FILE_PATH + "/" + subdirectory);
             return Optional.empty();
         }
@@ -61,6 +61,8 @@ public class FileHelper {
             logger.error("Failed to write to file {}!", filePath);
             throw new RuntimeException(e);
         }
+
+        logger.debug("Wrote data url to {} (url: {})", filePath, "/" + subdirectory + "/" + filePrefix + "." + fileType);
 
         return Optional.of("/" + subdirectory + "/" + filePrefix + "." + fileType);
     }
@@ -115,6 +117,8 @@ public class FileHelper {
                 data = parts[1];
             }
 
+            logger.debug("Data url header: \"{}\"", header);
+
             if (!header.startsWith(SCHEME_STR)) {
                 logger.warn("Data url does not start with scheme!");
                 throw new IllegalArgumentException("Data url is missing a scheme");
@@ -142,7 +146,7 @@ public class FileHelper {
 
 
         public String getMediaType () {
-            return mediaType.substring(SCHEME_STR.length()).split(";")[0];
+            return mediaType;
         }
 
         public boolean writeData (OutputStream outputStream) throws IOException {
