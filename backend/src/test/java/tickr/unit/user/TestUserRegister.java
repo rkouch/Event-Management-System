@@ -219,6 +219,8 @@ public class TestUserRegister {
         assertThrows(ForbiddenException.class, () -> controller.userRegister(finalSession2,
                 new UserRegisterRequest("test", "first", "last", "tEsT@exAMpLE.cOm",
                         "Password123!", "2022-04-14")));
+        session.rollback();
+        session.close();
     }
 
     @Test

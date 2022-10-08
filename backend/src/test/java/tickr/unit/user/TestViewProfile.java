@@ -66,7 +66,7 @@ public class TestViewProfile {
         assertEquals("TestLast", response.lastName);
         assertEquals("test@example.com", response.email);
         assertEquals("", response.description);
-        assertNull(response.profilePicture); // TODO
+        assertEquals("", response.profilePicture); // TODO
     }
 
     @Test
@@ -89,6 +89,6 @@ public class TestViewProfile {
         assertEquals("TestLast", response.lastName);
         assertEquals("test@example.com", response.email);
         assertEquals("", response.description);
-        assertNull(response.profilePicture); // TODO
+        assertEquals("", response.profilePicture); // TODO
     }
 }

@@ -91,7 +91,7 @@ public class User {
         this.isHost = false;
 
         this.description = "";
-        this.profilePicture = null;
+        this.profilePicture = "";
     }
 
     /**
@@ -289,5 +289,31 @@ public class User {
 
     public ViewProfileResponse getProfile () {
         return new ViewProfileResponse(getUsername(), getFirstName(), getLastName(), getProfilePicture(), getEmail(), getDescription());
+    }
+
+    public void editProfile (String username, String firstName, String lastName, String email, String description, String pfpUrl) {
+        if (username != null) {
+            this.username = username;
+        }
+
+        if (firstName != null) {
+            this.firstName = firstName;
+        }
+
+        if (lastName != null) {
+            this.lastName = lastName;
+        }
+
+        if (email != null) {
+            this.email = email;
+        }
+
+        if (description != null) {
+            this.description = description;
+        }
+
+        if (pfpUrl != null) {
+            this.profilePicture = pfpUrl;
+        }
     }
 }

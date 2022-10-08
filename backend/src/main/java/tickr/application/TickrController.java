@@ -137,7 +137,7 @@ public class TickrController {
             throw new BadRequestException("Invalid register request!");
         }
 
-        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+        if (!EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
             logger.debug("Email did not match regex!");
             throw new ForbiddenException("Invalid email!");
         }
@@ -227,6 +227,13 @@ public class TickrController {
     }
 
     public void userEditProfile (ModelSession session, EditProfileRequest request) {
+        var user = authenticateToken(session, request.authToken);
 
+        if (request.email != null && !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription, null);
     }
 }

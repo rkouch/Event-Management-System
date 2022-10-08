@@ -41,7 +41,7 @@ public class TestEditProfile {
 
     @Test
     public void testBadRequest () {
-        assertThrows(BadRequestException.class, () -> controller.userEditProfile(session,
+        assertThrows(UnauthorizedException.class, () -> controller.userEditProfile(session,
                 new EditProfileRequest(null, null, null, null, null, null, null)));
 
         assertThrows(UnauthorizedException.class, () -> controller.userEditProfile(session,
@@ -82,7 +82,7 @@ public class TestEditProfile {
         assertEquals("John", response.firstName);
         assertEquals("Doe", response.lastName);
         assertEquals("test2@gmail.com", response.email);
-        assertEquals("testing", response.description);
+        assertEquals("testing123", response.description);
         assertEquals("", response.profilePicture);
     }
 }
