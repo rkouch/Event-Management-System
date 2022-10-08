@@ -36,6 +36,15 @@ public class SeatingPlan {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
     private Set<Ticket> tickets;
 
+    
+
+    public SeatingPlan(Event event, Location location, String section, int availableSeats) {
+        this.event = event;
+        this.location = location;
+        this.section = section;
+        this.availableSeats = availableSeats;
+    }
+
     private UUID getId () {
         return id;
     }

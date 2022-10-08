@@ -8,13 +8,22 @@ import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import tickr.application.entities.AuthToken;
+import tickr.application.entities.Event;
+import tickr.application.entities.Location;
+import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
+import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
@@ -26,6 +35,7 @@ import tickr.util.CryptoHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -223,5 +233,52 @@ public class TickrController {
         }
 
         return user.getProfile();
+    }
+
+    public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
+        if (request.authToken == null) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+
+        if (!request.isValid()) {
+            logger.debug("Missing parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        try {
+            startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
+            endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
+        } catch (DateTimeParseException e) {
+            logger.debug("Date is in incorrect format!");
+            throw new ForbiddenException("Invalid date time string!");
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new BadRequestException("Event start time is later than event end time!");
+        }
+
+
+        // getting user from token
+        var user = authenticateToken(session, request.authToken); 
+        // creating location from request 
+        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
+                                        request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+        session.save(location);
+
+        // creating event from request 
+        Event event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        session.save(event);
+        // creating seating plan for each section
+        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
+            session.save(seatingPlan);
+        }
+
+        event.setLocation(location);
+
+        return new CreateEventResponse(event.getId().toString());
     }
 }

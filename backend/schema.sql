@@ -41,7 +41,8 @@ create table `events` (
     host_id      varchar(36) not null,
     location_id  varchar(36),
     event_name   varchar(255) not null,
-    event_date        datetime not null,
+    event_start       datetime not null,
+    event_end         datetime not null,
     event_description text,
     seat_availability int,
 /*    has_seats    boolean not null,*/

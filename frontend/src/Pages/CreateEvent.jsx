@@ -56,9 +56,9 @@ export default function CreateEvent({}) {
 
     const [newAdmin, setNewAdmin] = React.useState("");
 
-    const [adminList, setAdminList] = React.useState([{ admin: "" }]);
+    const [adminList, setAdminList] = React.useState([]);
 
-    const [seatingList, setSeatingList] = React.useState([{ sectionName: "", sectionCapacity: 0 }])
+    const [seatingList, setSeatingList] = React.useState([])
 
     const handleEventNameChange = (e) => {
         setEventName(e.target.value)
@@ -151,6 +151,17 @@ export default function CreateEvent({}) {
         console.log(seatingList)
     }
 
+    const submitEvent = async (e) => {
+
+        const locationBody = {
+
+        }
+
+        const body = {
+
+        }
+    }
+
     return (
         <div>
             <BackdropNoBG>
@@ -221,7 +232,7 @@ export default function CreateEvent({}) {
                             </Grid>
                             <Grid item xs={12}>
                             
-                            Admin List:
+                            <h3>Admin List:</h3>
                                 {adminList.map((value, key) => {                                    
                                     // return (<div key={key}>
                                     //     {value.admin}
@@ -279,7 +290,7 @@ export default function CreateEvent({}) {
                                         />
                                     </Grid>
                                     <Grid item xs={3}>
-                                    <OutlinedInput placeholder="Spots" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/>
+                                    <OutlinedInput placeholder="Spots" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true} onChange={handleCapacityChange}/>
                                     </Grid>
                                     <Grid item xs={2}>
                                         

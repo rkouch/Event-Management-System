@@ -8,6 +8,7 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.TestResponses;
@@ -50,6 +51,7 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+        post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);

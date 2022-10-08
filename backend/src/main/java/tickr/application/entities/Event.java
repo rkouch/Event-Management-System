@@ -53,8 +53,11 @@ public class Event {
     @Column(name = "event_name")
     private String eventName;
 
-    @Column(name = "event_date")
-    private LocalDateTime eventDate;
+    @Column(name = "event_start")
+    private LocalDateTime eventStart;
+
+    @Column(name = "event_end")
+    private LocalDateTime eventEnd;
 
     @Column(name = "event_description")
     private String eventDescription;
@@ -62,7 +65,20 @@ public class Event {
     @Column(name = "seat_availability")
     private int seatAvailability;
 
-    private UUID getId () {
+    public Event() {}
+
+    public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
+            String eventDescription, Location location, int seatAvailability) {
+        this.location = location;
+        this.eventName = eventName;
+        this.eventStart = eventStart;
+        this.eventEnd = eventEnd;
+        this.eventDescription = eventDescription;
+        this.seatAvailability = seatAvailability;
+        this.host = host;
+    }
+
+    public UUID getId () {
         return id;
     }
 
@@ -78,11 +94,11 @@ public class Event {
         this.host = host;
     }
 
-    private Location getLocation () {
+    public Location getLocation () {
         return location;
     }
 
-    private void setLocation (Location location) {
+    public void setLocation (Location location) {
         this.location = location;
     }
 
@@ -126,7 +142,7 @@ public class Event {
         this.comments = comments;
     }
 
-    private String getEventName () {
+    public String getEventName () {
         return eventName;
     }
 
@@ -134,15 +150,23 @@ public class Event {
         this.eventName = eventName;
     }
 
-    private LocalDateTime getEventDate () {
-        return eventDate;
+    public LocalDateTime getEventStart () {
+        return eventStart;
+    }
+    
+    private void setEventStart (LocalDateTime eventStart) {
+        this.eventStart = eventStart;
     }
 
-    private void setEventDate (LocalDateTime eventDate) {
-        this.eventDate = eventDate;
+    public LocalDateTime getEventEnd () {
+        return eventEnd;
     }
 
-    private String getEventDescription () {
+    private void setEventEnd (LocalDateTime eventEnd) {
+        this.eventEnd = eventEnd;
+    }
+
+    public String getEventDescription () {
         return eventDescription;
     }
 
@@ -150,7 +174,7 @@ public class Event {
         this.eventDescription = eventDescription;
     }
 
-    private int getSeatAvailability () {
+    public int getSeatAvailability () {
         return seatAvailability;
     }
 
