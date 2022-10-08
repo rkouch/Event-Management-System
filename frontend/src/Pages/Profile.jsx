@@ -1,20 +1,32 @@
 import React from 'react'
 
-import { BackdropNoBG, CentredBox } from '../Styles/HelperStyles'
+import { BackdropNoBG, CentredBox, H3  } from '../Styles/HelperStyles'
 import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
 import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, Divider, OutlinedInput, Typography } from '@mui/material';
+import { Avatar, Button, CircularProgress, Collapse, Divider, OutlinedInput, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
-import { ContrastInput, ContrastInputWrapper, DeleteButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState, getToken, getUserData } from '../Helpers';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, TextButton, TkrButton } from '../Styles/InputStyles';
+import { setFieldInState, getToken, getUserData, loggedIn, apiFetch } from '../Helpers';
+import ShadowInput from '../Components/ShadowInput';
+import LinearProgress from '@mui/material/LinearProgress';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import ConfirmPassword from '../Components/ConfirmPassword';
+
+import { Link } from 'react-router-dom';
+import LoadingButton from '../Components/LoadingButton';
 
 export default function Profile({editable = false, id=null}){
+
   const [editMode, setEditMode] = React.useState(false)
 
   const [profile, setProfile] = React.useState({
@@ -26,60 +38,101 @@ export default function Profile({editable = false, id=null}){
     events: []
   })
 
-  const [profileOG, setProfileOG] = React.useState({
-    userName: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    profilePicture: '',
-    profileDescription: '',
-    events: []
-  })
+  const [notifications, setNotifications] = React.useState({
+    reminders: false,
+  });
 
-  // Test data
+  const setNotificationsVal = (settings) => {
+    for (const option in settings) {
+      console.log(`${option} : ${settings[option]}`)
+      setFieldInState(option, settings[option], notifications, setNotifications)
+    }
+  }
+
+  const getNotifications = async () => {
+    try {
+      const response = await apiFetch('GET', `/api/user/settings?auth_token=${getToken()}`)
+      const settings = response.settings
+      setNotifications(settings)
+    } catch (e) {
+      console.log(e)
+    }
+    
+    return
+  }
+
+  const [changePW, setChangePW] = React.useState(false)
+
+  const [loading, setLoading] = React.useState(false)
+
+  const handleChangePW = (e) => {
+    setChangePW(!changePW)
+  }
+
   React.useEffect(() => {
     if (editable) {
-      console.log('Getting user data from profile page')
+      getNotifications()
       getUserData(`auth_token=${getToken()}`, setProfile)
     } else {
-      console.log('Getting user data from profile page')
       getUserData(`auth_token=${getToken()}`, setProfile)
     }
     
-  }, [])
+  }, [editMode])
 
   const editModeChange = (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
-    
-    if (!editMode) {
-      console.log('Setting profileOG')
-      setProfileOG(profile)
-      console.log(profile)
-    }
     setEditMode(!editMode)
   }
   
+
   const saveChanges = (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
-    setProfileOG(profile)
     setEditMode(!editMode)
+
   }
 
   const discardChanges = (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
-    console.log(profileOG)
-    console.log(profile)
-    setProfile(profileOG)
     setEditMode(!editMode)
   }
 
-  console.log('profileOG')
-  console.log(profileOG)
-  console.log('profile')
-  console.log(profile)
+  const notificationChange = async (e) => {
+    console.log(notifications)
+    setFieldInState(e.target.name, e.target.checked, notifications, setNotifications)
+    // Send API call
+    try {
+      const body = {
+        auth_token: getToken(),
+        settings: notifications
+      }
+      console.log(notifications)
+      const response = await apiFetch('PUT', '/api/user/settings/update', body)
+      console.log(response)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  const [delAcc, setDelAcc] = React.useState(false)
+
+  const handleDelAcc = (e) => {
+    setDelAcc(!delAcc)
+  }
+
+  const packageBody = () => {
+    const body = {
+      auth_token: getToken(),
+      user_name: profile.userName,
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      email: profile.email,
+      profile_description: profile.profileDescription,
+    }
+    return body
+  }
 
   return (
     <div>
@@ -88,209 +141,273 @@ export default function Profile({editable = false, id=null}){
         <Box
           sx={{
             minHeight: 600,
+            maxWidth: 1500,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '95%',
             backgroundColor: '#FFFFFF',
             marginTop: '50px',
-            marginLeft: '50px',
-            marginRight: '50px',
             borderRadius: '15px',
             boxShadow: editMode ? '5' : 0,
+            paddingBottom: 5,
           }}
         >
-          <Grid container spacing={2}>
-            <Grid item xs={4}>
-              <Box 
-                sx={{
-                  height: '100%',
-                  marginTop: '10px',
-                  marginLeft: '30px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <CentredBox
-                  sx={{
-                    width: '300px',
-                    height: '300px',
-                    borderRadius: '15px',
-                  }}
-                >
-                  <Avatar sx={{width: 300, height: 300, fontSize: 100}}>
-                    {profile.firstName[0]}{profile.lastName[0]}
-                  </Avatar>
-                </CentredBox>
+          {(profile.userName == '')
+            ? <Box sx={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '50px', paddingTop: '100px'}}> 
+                <Box sx={{ width: '90%', hieght: 50}}>
+                  <LinearProgress color='secondary'/>
+                </Box>
               </Box>
-            </Grid>
-            <Grid item xs={6}>
-              {editMode
-                ? <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={4}>
-                        <ContrastInputWrapper>
-                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.firstName} onChange={(e) => {
-                            setFieldInState('firstName', e.target.value, profile, setProfile)
-                          }}/>
-                        </ContrastInputWrapper>
-                      </Grid>
-                      <Grid item xs={4}>
-                        <ContrastInputWrapper>
-                          <ContrastInput sx={{fontWeight: 'bold'}} defaultValue={profile.lastName} onChange={(e) => {
-                            setFieldInState('lastName', e.target.value, profile, setProfile)
-                          }}/>
-                        </ContrastInputWrapper>
-                      </Grid>
-                      <Grid item xs={3}>
-                        <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
-                          <ContrastInputWrapper>
-                            <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
-                            setFieldInState('userName', e.target.value, profile, setProfile)
-                          }}/>
-                          </ContrastInputWrapper>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CentredBox>
-                : <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
-                    <Typography 
+            : <Grid container spacing={2}>
+                <Grid item xs={4}>
+                  <Box 
+                    sx={{
+                      height: '100%',
+                      marginTop: '10px',
+                      marginLeft: '30px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CentredBox
                       sx={{
-                        fontSize: '40px',
-                        fontWeight: 'bold'
+                        width: '300px',
+                        height: '300px',
+                        borderRadius: '15px',
                       }}
                     >
-                      {profile.firstName} {profile.lastName}
-                    </Typography>
-                    <Divider orientation="vertical" variant="middle" flexItem/>
-                    <Typography 
-                      sx={{
-                        fontSize: '20px',
-                        fontWeight: 'light',
-                        fontStyle: 'italic',
-                        color: '#454545',
-                      }}
-                    >
-                      @{profile.userName}
-                    </Typography>
-                  </CentredBox>
-              }
-              <Divider></Divider>
-              <br/>
-              <Box 
-                sx={{
-                  height: '100%',
-                }}
-              >
-                {(profile.profileDescription != '')
-                  ? <Box
-                      sx={{
-                        padding: editMode ? 0 : '10px',
-                        borderRadius: '10px',
-                        backgroundColor: '#F1F9F9',
-                      }}
-                    >
-                      {editMode
-                        ? <ContrastInputWrapper>
-                            <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
-                                setFieldInState('profileDescription', e.target.value, profile, setProfile)
-                              }}/>
-                          </ContrastInputWrapper>
-                        : <Typography
-                            sx={{
-                              fontSize: '20px',
-                              fontWeight: 'regular',
-                              fontStyle: 'italic',
-                            }}
-                          >
-                            {profile.profileDescription}
-                          </Typography>
-                      }
-                    </Box>
-                  : <div>
-                    {editMode
-                      ? <ContrastInputWrapper>
-                          <ContrastInput multiline rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
-                              setFieldInState('profileDescription', e.target.value, profile, setProfile)
-                            }}/>
-                        </ContrastInputWrapper>
-
-                      : <div></div>
-
-                    }
-
-                  </div>
-                }
-                <br/>
-                <Grid container spacing={2}>
-                  <Grid item xs={3} sx={{display: 'flex', alignItems: 'center'}}>
-                    <CentredBox sx={{gap: '5px', justifyContent: 'flex-start'}}>
-                      <EmailIcon sx={{color: '#AE759F'}}/>
-                      <Typography
-                        sx={{
-                          fontSize: '20px',
-                          fontWeight: 'bold',
-                          color: '#AE759F',
-                        }}
-                      >
-                        Email
-                      </Typography>
+                      <Avatar sx={{width: 300, height: 300, fontSize: 100}}>
+                        {profile.firstName[0]}{profile.lastName[0]}
+                      </Avatar>
                     </CentredBox>
-                  </Grid>
-                  <Grid item xs={9}>
-                    {editMode
-                      ? <ContrastInputWrapper>
-                          <ContrastInput fullWidth defaultValue={profile.email} onChange={(e) => {
-                            setFieldInState('email', e.target.value, profile, setProfile)
-                          }}/>
-                        </ContrastInputWrapper>
-                      : <Typography
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  {editMode
+                    ? <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
+                        <Grid container spacing={2}>
+                          <Grid item xs={4}>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.firstName} field='firstName'/>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.lastName} field='lastName'/>
+                          </Grid>
+                          <Grid item xs={3}>
+                            <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
+                              <ContrastInputWrapper>
+                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
+                                  setFieldInState('userName', e.target.value, profile, setProfile)
+                                }}/>
+                              </ContrastInputWrapper>
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </CentredBox>
+                    : <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
+                        <Typography 
                           sx={{
-                            fontSize: '20px',
-                            fontWeight: 'regular'
+                            fontSize: '40px',
+                            fontWeight: 'bold'
                           }}
                         >
-                          {profile.email}
+                          {profile.firstName} {profile.lastName}
                         </Typography>
+                        <Divider orientation="vertical" variant="middle" flexItem/>
+                        <Typography 
+                          sx={{
+                            fontSize: '20px',
+                            fontWeight: 'light',
+                            fontStyle: 'italic',
+                            color: '#454545',
+                          }}
+                        >
+                          @{profile.userName}
+                        </Typography>
+                      </CentredBox>
+                  }
+                  <Divider/>
+                  <br/>
+                  <Box 
+                    sx={{
+                      height: '100%',
+                    }}
+                  >
+                    {editMode
+                      ? <Box
+                          sx={{
+                            padding: editMode ? 0 : '10px',
+                            borderRadius: '10px',
+                            backgroundColor: '#F1F9F9',
+                          }}
+                        > 
+                          <ContrastInputWrapper>
+                              <ContrastInput multiline placeholder={'Enter a description'} rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                                  setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                                }}/>
+                            </ContrastInputWrapper>
+                        </Box>
+                      : <div>
+                          {(profile.profileDescription != '')
+                            ? <Box
+                                sx={{
+                                  padding: editMode ? 0 : '10px',
+                                  borderRadius: '10px',
+                                  backgroundColor: '#F1F9F9',
+                                }}
+                              > 
+                                <Typography
+                                  sx={{
+                                    fontSize: '20px',
+                                    fontWeight: 'regular',
+                                    fontStyle: 'italic',
+                                  }}
+                                >
+                                  {profile.profileDescription}
+                                </Typography>
+                                </Box>
+                            : <div></div>
+                          }
+                        </div>
                     }
-                    
-                  </Grid>
+                    <br/>
+                    <Grid container spacing={2}>
+                      <Grid item xs={3} sx={{display: 'flex', alignItems: 'center'}}>
+                        <CentredBox sx={{gap: '5px', justifyContent: 'flex-start'}}>
+                          <EmailIcon sx={{color: '#AE759F'}}/>
+                          <Typography
+                            sx={{
+                              fontSize: '20px',
+                              fontWeight: 'bold',
+                              color: '#AE759F',
+                            }}
+                          >
+                            Email
+                          </Typography>
+                        </CentredBox>
+                      </Grid>
+                      <Grid item xs={9}>
+                        {editMode
+                          ? <ShadowInput state={profile} setState={setProfile} defaultValue={profile.email} field='email'/>
+                          : <Typography
+                              sx={{
+                                fontSize: '20px',
+                                fontWeight: 'regular'
+                              }}
+                            >
+                              {profile.email}
+                            </Typography>
+                        }
+                      </Grid>
+                    </Grid>
+                    <br/>
+                  </Box>
                 </Grid>
-                <br/>
-              </Box>
-            </Grid>
-            <Grid item xs={2}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  paddingLeft: '15px',
-                  marginTop: '20px'
-                }}
-              >
-                {editMode
-                  ? <TkrButton variant='text' startIcon={<SaveIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={saveChanges}>
-                      Save
-                    </TkrButton>
-                  : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
-                      Edit
-                    </TkrButton>
-                }
-              </Box>
-              {editMode
-                ? <Box
+                <Grid item xs={2}>
+                  <Box
                     sx={{
                       display: 'flex',
                       paddingLeft: '15px',
                       marginTop: '20px'
                     }}
                   >
-                    <Tooltip title="Discard changes">
-                      <DeleteButton variant='text' startIcon={<DeleteIcon/>} sx={{height: 30, width: 90, fontSize: 15, textTransform: "none", textAlign: "left"}} onClick={discardChanges}>
-                        Discard
-                      </DeleteButton>
-                    </Tooltip>
+                    {editMode
+                      ? <LoadingButton
+                          label={"Save"}
+                          method={'PUT'}
+                          sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
+                          startIcon={<SaveIcon/>}
+                          route={"/api/user/editprofile"}
+                          body={packageBody()}
+                          func={setEditMode} 
+                          funcVal={false}
+                        />
+                      : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
+                          Edit
+                        </TkrButton>
+                    }
                   </Box>
-                : <div></div>
-              }
-            </Grid>
-          </Grid>
+                  {editMode
+                    ? <Box
+                        sx={{
+                          display: 'flex',
+                          paddingLeft: '15px',
+                          marginTop: '20px'
+                        }}
+                      >
+                        <Tooltip title="Discard changes">
+                          <DeleteButton variant='text' startIcon={<DeleteIcon/>} sx={{height: 30, width: 90, fontSize: 15, textTransform: "none", textAlign: "left"}} onClick={discardChanges}>
+                            Discard
+                          </DeleteButton>
+                        </Tooltip>
+                      </Box>
+                    : <div></div>
+                  }
+                </Grid>
+                <Grid item xs={4}></Grid>
+                <Grid item xs={6}>
+                  {editable
+                    ? <Box sx={{}}>
+                        <Typography
+                          sx={{
+                            fontSize: '20px',
+                            fontWeight: 'regular'
+                          }}
+                        > Account Settings</Typography>
+                        <Divider/>
+                        <FormControl sx={{paddingTop: 2, width: 250}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Notification</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <FormGroup>
+                            <FormControlLabel
+                              control={
+                                <Checkbox  name="reminders" checked={notifications.reminders} onChange={notificationChange}/>
+                              }
+                              label="Enable email reminders"
+                            />
+                          </FormGroup>
+                        </FormControl>
+                        <br/>
+                        <FormControl sx={{paddingTop: 2}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Password Management</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <Box sx={{paddingTop: 1, width: 250}}>
+                            <TkrButton variant='text' sx={{height: 30, fontSize: 20, textTransform: "none"}} onClick={handleChangePW} component={Link} to="/change_password">Change Password</TkrButton>
+                          </Box>
+                        </FormControl>
+                        <br/>
+                        <FormControl sx={{paddingTop: 2, width: 250}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Account Management</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <Box sx={{paddingTop: 1}}>
+                            <DeleteButton 
+                              variant='text'
+                              sx={{
+                                height: 30,
+                                fontSize: 20, 
+                                textTransform: "none", 
+                                textAlign: "left", 
+                                "&:hover": {
+                                  backgroundColour: "#AA4344"
+                                }
+                              }} 
+                              startIcon={<DeleteIcon/>}
+                              onClick = {handleDelAcc}
+                            >
+                              Delete Account
+                            </DeleteButton>
+                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc}/>
+                          </Box>
+                        </FormControl>
+                      </Box>
+                    : <div></div>
+                  }
+                </Grid>
+                <Grid item xs={2}></Grid>
+              </Grid>
+          }
         </Box>
+        
       </BackdropNoBG>
     </div>
   )

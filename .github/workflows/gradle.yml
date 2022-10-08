@@ -14,7 +14,7 @@ on:
     #branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
   checks: write
 
 jobs:
@@ -34,15 +34,15 @@ jobs:
     - name: Gradle Build
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: build
+        arguments: build --info
         gradle-version: 7.5.1
         build-root-directory: ./backend
-    - name: Run Tests
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: test
-        gradle-version: 7.5.1
-        build-root-directory: ./backend
+    #- name: Run Tests
+    #  uses: gradle/gradle-build-action@v2
+    #  with:
+    #    arguments: test --info
+    #    gradle-version: 7.5.1
+    #    build-root-directory: ./backend
     - name: Test Coverage
       id: jacoco_reporter
       uses: PavanMudigonda/jacoco-reporter@v4.6
@@ -65,4 +65,21 @@ jobs:
         name: code-coverage-report-markdown
         path: ./backend/build/coverage/
         retention-days: 1 
+
+    - name: Upload Logs
+      uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: gradle-test-results
+        path: ./backend/build/reports/tests/test/
+        retention-days: 1
+      
+    - name: Upload debug.log
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: debug.log
+        path: ./backend/debug.log
+        retention-days: 1
+
 

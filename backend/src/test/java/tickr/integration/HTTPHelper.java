@@ -132,11 +132,14 @@ public class HTTPHelper {
      */
     public static class Response {
         private int statusCode;
-        private JsonElement jsonBody;
+
+        private String body;
+        private Gson gson;
 
         public Response (int statusCode, String body, Gson gson) {
             this.statusCode = statusCode;
-            this.jsonBody = gson.fromJson(body, JsonElement.class);
+            this.body = body;
+            this.gson = gson;
         }
 
         public int getStatus () {
@@ -144,11 +147,15 @@ public class HTTPHelper {
         }
 
         public JsonElement getBody () {
-            return jsonBody;
+            return gson.fromJson(body, JsonElement.class);
         }
 
         public <T> T getBody (Class<T> tClass) {
-            return new Gson().fromJson(jsonBody, tClass);
+            return gson.fromJson(body, tClass);
+        }
+
+        public String getBodyRaw () {
+            return body;
         }
     }
 }

@@ -3,7 +3,6 @@ import React from 'react'
 import Box from '@mui/material/Box';
 import { borderRadius, styled, alpha } from '@mui/system';
 import Grid from '@mui/material/Grid';
-import logo from '../Images/TickrLogo.png'
 import { CentredBox, HeaderBar, Logo } from '../Styles/HelperStyles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import AdjustableLogo from './AdjustableLogo';
@@ -16,7 +15,7 @@ import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import { getToken, getUserData, isLoggedIn } from '../Helpers';
+import { getToken, getUserData, loggedIn } from '../Helpers';
 import AccountMenu from './AccountMenu';
 
 const Search = styled('div')(({ theme }) => ({
@@ -81,7 +80,7 @@ export default function Header({}) {
               </FormControl>
             </CentredBox>
           </Grid>
-          {isLoggedIn()
+          {loggedIn()
             ? <Grid item xs={2}>
                 <Box
                   display = "flex"

@@ -1,0 +1,120 @@
+import React from "react";
+
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import FormControl, { useFormControl } from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import Grid from '@mui/material/Unstable_Grid2';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Alert from '@mui/material/Alert';
+import Collapse from '@mui/material/Collapse';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
+
+import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
+import {CircularProgress, Typography } from '@mui/material';
+
+import '../App.css';
+
+import { apiFetch, getToken, setFieldInState, setToken } from '../Helpers';
+import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
+import HelperText from '../Components/HelperText';
+import { Link, useNavigate } from "react-router-dom";
+import StandardLogo from "../Components/StandardLogo";
+import PasswordInput from "../Components/PasswordInput";
+
+
+export default function RequestChangePassword({}) {
+  const navigate = useNavigate()
+
+  const [email, setEmail] = React.useState({
+    email: '',
+    error: false,
+    errorMsg: '',
+  })
+
+  const [emailConfirmed, setEmailConfirmed] = React.useState(false)
+
+  const [loading, setLoading] = React.useState(false)
+
+  const [inError, setInError] = React.useState(false)
+  const [errorMsg, setErrorMsg] = React.useState('')
+
+  const handleRequest = (e) => {
+    // Wait for response
+    setLoading(true)
+  }
+
+
+  return (
+    <div>
+      <StandardLogo/>
+      <Box disabled className='Background'> 
+        <Box disabled sx={{ boxShadow: 3, width:500, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
+          <H3
+            sx={{
+              fontSize: '30px',
+            }}
+          >
+            Confirm Your Email
+          </H3>
+          <Divider/>
+          <br/>
+          <FormInput>
+            <Grid container spacing={2} sx={{paddingLeft: 5, paddingRight: 5, width: '90%'}}>
+              <Grid xs={12}>
+                <FormControl fullWidth={true}>
+                  <OutlinedInput
+                    id="email"
+                    placeholder="Email"
+                    variant="outlined"
+                    sx={{borderRadius: 2}} 
+                    fullWidth={true} 
+                    error={email.error}
+                    onChange={(e) => setFieldInState('email', e.target.value, email, setEmail)}
+                  />
+                  <FormHelperText>{email.errorMsg}</FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </FormInput>
+          <br/>
+          <Divider/>
+          <br/>
+          <FormInput>
+            <CentredBox sx={{position: 'relative'}}>
+              <TkrButton
+                variant="contained"
+                disabled={loading}
+                sx={{fontSize: 15}}
+                onClick={handleRequest}
+              >
+                Request Password Change
+              </TkrButton>
+              {loading && (
+                <CircularProgress 
+                  size={24}
+                  sx={{
+                    color: "#AE759F",
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-12px',
+                    marginLeft: '-12px',
+                  }}
+                />
+              )}
+            </CentredBox>
+            <Collapse in={inError}>
+              <Alert severity="error">{errorMsg}</Alert>
+            </Collapse>
+          </FormInput>
+        </Box>
+      </Box>
+    </div>
+  )
+}
