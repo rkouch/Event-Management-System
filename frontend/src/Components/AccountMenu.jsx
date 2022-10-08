@@ -114,7 +114,7 @@ export default function AccountMenu() {
           Home
         </MenuItem>
         <MenuItem component={Link} to="/my_profile">
-          <Avatar /> View Profile
+          <Avatar  sx={{backgroundColor: "#999999"}}/> View Profile
         </MenuItem>
         <MenuItem component={Link} to="/create_event">
           <ListItemIcon>

@@ -58,10 +58,12 @@ export default function Header({}) {
             </Box>
           </Grid>
           <Grid item xs={8}>
-            <CentredBox>
+            <CentredBox sx={{alignItems: 'center'}}>
               <FormControl
                 sx={{
-                  width: '60%'
+                  width: '60%',
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
               >
                 <Search>
