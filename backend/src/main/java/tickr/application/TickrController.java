@@ -12,6 +12,7 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
@@ -23,6 +24,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -136,7 +138,7 @@ public class TickrController {
             throw new BadRequestException("Invalid register request!");
         }
 
-        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+        if (!EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
             logger.debug("Email did not match regex!");
             throw new ForbiddenException("Invalid email!");
         }
@@ -223,5 +225,22 @@ public class TickrController {
         }
 
         return user.getProfile();
+    }
+
+    public void userEditProfile (ModelSession session, EditProfileRequest request) {
+        var user = authenticateToken(session, request.authToken);
+
+        if (request.email != null && !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        if (request.pfpDataUrl == null) {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription, null);
+        } else {
+            user.editProfile(request.username, request.firstName, request.lastName, request.email, request.profileDescription,
+                    FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
+                            .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
+        }
     }
 }
