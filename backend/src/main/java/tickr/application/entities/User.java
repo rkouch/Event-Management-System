@@ -126,6 +126,16 @@ public class User {
         return CryptoHelper.verifyHash(password, getPasswordHash());
     }
 
+    /**
+     * @para newPassword
+     * @return
+     */
+    public void changePassword (String newPassword) {
+        if (!verifyPassword(newPassword)) {
+            this.passwordHash = CryptoHelper.hashPassword(newPassword);
+        }
+    }
+
     public UUID getId () {
         return id;
     }
