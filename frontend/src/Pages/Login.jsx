@@ -24,7 +24,7 @@ import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
 import '../App.css';
 
 import { apiFetch, setFieldInState, setToken } from '../Helpers';
-import { FlexRow, Logo, H3 } from '../Styles/HelperStyles';
+import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link, useNavigate } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
@@ -160,8 +160,11 @@ export default function Login({}) {
             <Collapse in={error.state}>
               <Alert severity="error">{error.msg}</Alert>
             </Collapse>
-            <TextButton component={Link} to="/register">Don&#39;t have an account?</TextButton>
-            <TextButton component={Link} to="/register">Forgot password?</TextButton>
+            <CentredBox sx={{flexDirection: 'row'}}>
+              <TextButton component={Link} to="/request_change_password">Forgot password?</TextButton>
+              <Divider orientation="vertical" variant="middle" flexItem/>
+              <TextButton component={Link} to="/register">Don&#39;t have an account?</TextButton>
+            </CentredBox>
           </FormInput>
         </Box>
       </Box>

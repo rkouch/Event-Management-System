@@ -106,3 +106,45 @@ export const getUserData = async (body, setUserData) => {
     console.log(error)
   }
 }
+
+export const passwordCheck = (password) => {
+  var hasUpper = password.match(/[A-Z]/);
+  var hasDigit = password.match(/[0-9]/);
+  var hasSpecial = password.match(/[!@#$%^&*]/);
+  var hasLength = (password.length >= 8);
+
+  var validPassword = true;
+  var errorMsg = 'Password must contain';
+
+  if (!hasUpper) {
+    errorMsg = errorMsg + ' an uppercase character';
+    validPassword = false;
+  } 
+  if (!hasDigit) {
+    if (errorMsg !== 'Password must contain') {
+      errorMsg = errorMsg + ', a digit';
+    } else {
+      errorMsg = errorMsg + ' a digit';
+    }
+    validPassword = false;
+  } 
+  if (!hasSpecial) {
+    if (errorMsg !== 'Password must contain') {
+      errorMsg = errorMsg + ', a special character';
+    } else {
+      errorMsg = errorMsg + ' a special character';
+    }
+    validPassword = false;
+  } 
+
+  if (!hasLength) {
+    if (errorMsg !== 'Password must contain') {
+      errorMsg = errorMsg + ', 8 characters';
+    } else {
+      errorMsg = errorMsg + ' 8 characters';
+    }
+    validPassword = false;
+  } 
+
+  return validPassword
+}

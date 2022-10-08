@@ -52,7 +52,6 @@ export default function AccountMenu() {
   })
 
   React.useEffect(() => {
-    console.log('Getting user data from menu')
     getUserData(`auth_token=${getToken()}`, setUserData)
   }, []);
 
