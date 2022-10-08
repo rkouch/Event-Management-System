@@ -8,6 +8,7 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.TestResponses;
@@ -15,6 +16,8 @@ import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ServerException;
+import tickr.util.Constants;
+import tickr.util.FileHelper;
 
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -55,6 +58,7 @@ public class Server {
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
 
         get("/api/user/profile", TickrController::userGetProfile);
+        put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
     }
 
     /**
@@ -66,6 +70,8 @@ public class Server {
     public static void start (int port, String frontendUrl, DataModel model) {
         dataModel = model;
         gson = new Gson();
+
+        Spark.externalStaticFileLocation(FileHelper.getStaticPath());
 
         Spark.port(port);
         Spark.threadPool(MAX_THREADS, MIN_THREADS, TIMEOUT_MS);
@@ -94,12 +100,16 @@ public class Server {
             logger.error("Uncaught exception: ", exception);
             response.status(500);
             response.body("Internal server error");
+            logger.info("\t500: Internal Server Error");
         });
 
-        Spark.after((request, response) -> {
+        Spark.afterAfter((request, response) -> {
             // Log successful responses
             if (response.status() == 200) {
                 logger.info("\t200 OK");
+                logger.debug(response.body());
+            } else if (response.status() == 404) {
+                logger.info("\t404: Not Found");
             }
         });
 

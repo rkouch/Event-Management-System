@@ -9,12 +9,14 @@ import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -91,7 +93,7 @@ public class User {
         this.isHost = false;
 
         this.description = "";
-        this.profilePicture = null;
+        this.profilePicture = "";
     }
 
     /**
@@ -289,5 +291,34 @@ public class User {
 
     public ViewProfileResponse getProfile () {
         return new ViewProfileResponse(getUsername(), getFirstName(), getLastName(), getProfilePicture(), getEmail(), getDescription());
+    }
+
+    public void editProfile (String username, String firstName, String lastName, String email, String description, String pfpUrl) {
+        if (username != null) {
+            this.username = username;
+        }
+
+        if (firstName != null) {
+            this.firstName = firstName;
+        }
+
+        if (lastName != null) {
+            this.lastName = lastName;
+        }
+
+        if (email != null) {
+            this.email = email;
+        }
+
+        if (description != null) {
+            this.description = description;
+        }
+
+        if (pfpUrl != null) {
+            if (!getProfilePicture().equals("")) {
+                FileHelper.deleteFileAtUrl(getProfilePicture());
+            }
+            this.profilePicture = pfpUrl;
+        }
     }
 }
