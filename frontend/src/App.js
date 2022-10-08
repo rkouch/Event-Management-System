@@ -12,6 +12,8 @@ import {
 import Landing from './Pages/Landing';
 import Profile from './Pages/Profile';
 import PageNotFound from './Pages/PageNotFound';
+import ChangePassword from './Pages/ChangePassword';
+import { getToken, loggedIn } from './Helpers';
 
 
 const router = createBrowserRouter([
@@ -29,8 +31,16 @@ const router = createBrowserRouter([
     element: <Login/>
   },
   {
-    path: "/myProfile",
+    path: "/my_profile",
     element: <Profile editable={true}/>
+  },
+  {
+    path: "/change_password",
+    element: <ChangePassword/>
+  },
+  {
+    path: "error",
+    element: <PageNotFound/>
   }
 ])
 

@@ -15,5 +15,31 @@ export const TickrTheme = createTheme({
         },
       }
     },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#AE759F'
+        }
+      }
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          "&:focused": {
+            color: 'grey'
+          }
+        }
+      }
+    },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          color: "#AE759F",
+          "&.Mui-checked" : {
+            color: "#AE759F",
+          }
+        }
+      }
+    }
   },
 });
