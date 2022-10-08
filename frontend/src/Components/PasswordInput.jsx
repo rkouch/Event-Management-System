@@ -17,19 +17,70 @@ import { Link, useNavigate } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
 
 
-export default function PasswordInput ({state, setState, placeholder='Password'}) {
+export default function PasswordInput ({state, setState, placeholder='Password', requirements=false, setError}) {
+
+  const requirementsCheck = () => {
+    var hasUpper = state.password.match(/[A-Z]/);
+    var hasDigit = state.password.match(/[0-9]/);
+    var hasSpecial = state.password.match(/[!@#$%^&*]/);
+    var hasLength = (state.password.length >= 8);
+
+    var validPassword = true;
+    var errorMsg = 'Password must contain';
+
+    if (!hasUpper) {
+      errorMsg = errorMsg + ' an uppercase character';
+      validPassword = false;
+    } 
+    if (!hasDigit) {
+      if (errorMsg !== 'Password must contain') {
+        errorMsg = errorMsg + ', a digit';
+      } else {
+        errorMsg = errorMsg + ' a digit';
+      }
+      validPassword = false;
+    } 
+    if (!hasSpecial) {
+      if (errorMsg !== 'Password must contain') {
+        errorMsg = errorMsg + ', a special character';
+      } else {
+        errorMsg = errorMsg + ' a special character';
+      }
+      validPassword = false;
+    } 
+
+    if (!hasLength) {
+      if (errorMsg !== 'Password must contain') {
+        errorMsg = errorMsg + ', 8 characters';
+      } else {
+        errorMsg = errorMsg + ' 8 characters';
+      }
+      validPassword = false;
+    } 
+
+    setFieldInState('error', !validPassword, state, setState)
+    if (!validPassword) {
+      setFieldInState('errorMsg', errorMsg, state, setState)
+    } else {
+      setFieldInState('errorMsg', '', state, setState)
+    }
+  }
 
   const handleChange = (e) => {
     setFieldInState('password', e.target.value, state, setState)
+    setFieldInState('error', false, state, setState)
+    setError(false)
+    if (requirements) {
+      requirementsCheck()
+    }
   }
 
   return (
     <OutlinedInput
-      id="password"
       placeholder={placeholder}
       error={state.error}
       type={!state.visibility ? "password" : "text"}
-      onChange={(e) => setFieldInState('password', e.target.value, state, setState)}
+      onChange={handleChange}
       sx={{borderRadius: 2}}
       endAdornment={
         <InputAdornment position="end">

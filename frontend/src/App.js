@@ -14,6 +14,7 @@ import Profile from './Pages/Profile';
 import PageNotFound from './Pages/PageNotFound';
 import ChangePassword from './Pages/ChangePassword';
 import { getToken, loggedIn } from './Helpers';
+import RequestChangePassword from './Pages/RequestChangePassword';
 
 
 const router = createBrowserRouter([
@@ -39,8 +40,16 @@ const router = createBrowserRouter([
     element: <ChangePassword/>
   },
   {
+    path: "/change_password/:resetToken",
+    element: <ChangePassword/>
+  },
+  {
     path: "error",
     element: <PageNotFound/>
+  },
+  {
+    path: "/request_change_password",
+    element: <RequestChangePassword/>
   }
 ])
 

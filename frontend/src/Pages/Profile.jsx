@@ -12,7 +12,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, TextButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState, getToken, getUserData, loggedIn } from '../Helpers';
+import { setFieldInState, getToken, getUserData, loggedIn, apiFetch } from '../Helpers';
 import ShadowInput from '../Components/ShadowInput';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormLabel from '@mui/material/FormLabel';
@@ -37,9 +37,28 @@ export default function Profile({editable = false, id=null}){
     events: []
   })
 
-  const [notifications, setNotification] = React.useState({
-    email: false,
+  const [notifications, setNotifications] = React.useState({
+    reminders: false,
   });
+
+  const setNotificationsVal = (settings) => {
+    for (const option in settings) {
+      console.log(`${option} : ${settings[option]}`)
+      setFieldInState(option, settings[option], notifications, setNotifications)
+    }
+  }
+
+  const getNotifications = async () => {
+    try {
+      const response = await apiFetch('GET', `/api/user/settings?auth_token=${getToken()}`)
+      const settings = response.settings
+      setNotifications(settings)
+    } catch (e) {
+      console.log(e)
+    }
+    
+    return
+  }
 
   const [changePW, setChangePW] = React.useState(false)
 
@@ -48,18 +67,12 @@ export default function Profile({editable = false, id=null}){
   const handleChangePW = (e) => {
     setChangePW(!changePW)
   }
-  
-  const handleChangePWClose = () => {
-    setChangePW(false);
-    setLoading(false)
-  };
 
   React.useEffect(() => {
     if (editable) {
-      console.log('Getting user data from profile page')
+      getNotifications()
       getUserData(`auth_token=${getToken()}`, setProfile)
     } else {
-      console.log('Getting user data from profile page')
       getUserData(`auth_token=${getToken()}`, setProfile)
     }
     
@@ -83,8 +96,21 @@ export default function Profile({editable = false, id=null}){
     setEditMode(!editMode)
   }
 
-  const notificationChange = (e) => {
-    setNotification({...notificationChange, [e.target.name]: e.target.checked})
+  const notificationChange = async (e) => {
+    console.log(notifications)
+    setFieldInState(e.target.name, e.target.checked, notifications, setNotifications)
+    // Send API call
+    try {
+      const body = {
+        auth_token: getToken(),
+        settings: notifications
+      }
+      console.log(notifications)
+      const response = await apiFetch('PUT', '/api/user/settings/update', body)
+      console.log(response)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   const submitPasswordChange = (e) => {
@@ -317,9 +343,9 @@ export default function Profile({editable = false, id=null}){
                           <FormGroup>
                             <FormControlLabel
                               control={
-                                <Checkbox  name="email" checked={notifications.email} onChange={notificationChange}/>
+                                <Checkbox  name="reminders" checked={notifications.reminders} onChange={notificationChange}/>
                               }
-                              label="Enable email notifications"
+                              label="Enable email reminders"
                             />
                           </FormGroup>
                         </FormControl>
