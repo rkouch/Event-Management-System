@@ -32,7 +32,7 @@ const router = createBrowserRouter([
     element: <Login/>
   },
   {
-    path: "/createEvent",
+    path: "/create_event",
     element: <CreateEvent/>
   },
   {

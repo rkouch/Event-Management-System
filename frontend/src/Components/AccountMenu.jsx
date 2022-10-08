@@ -116,7 +116,7 @@ export default function AccountMenu() {
         <MenuItem component={Link} to="/my_profile">
           <Avatar /> View Profile
         </MenuItem>
-        <MenuItem>
+        <MenuItem component={Link} to="/create_event">
           <ListItemIcon>
             <EventIcon fontSize="medium"/>
           </ListItemIcon>
