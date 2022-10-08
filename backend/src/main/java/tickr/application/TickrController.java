@@ -1,13 +1,9 @@
 package tickr.application;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.exception.ConstraintViolationException;
 import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
@@ -54,7 +50,7 @@ public class TickrController {
 
     }
 
-    private User authenticateToken (ModelSession session, String authTokenStr) {
+    private AuthToken getTokenFromStr (ModelSession session, String authTokenStr) {
         AuthToken token;
         try {
             var parsedToken = CryptoHelper.makeJWTParserBuilder()
@@ -72,7 +68,11 @@ public class TickrController {
             throw new UnauthorizedException("Invalid auth token!");
         }
 
-        return token.getUser();
+        return token;
+    }
+
+    private User authenticateToken (ModelSession session, String authTokenStr) {
+        return getTokenFromStr(session, authTokenStr).getUser();
     }
 
     public TestEntity testGet (ModelSession session, Map<String, String> params) {
@@ -191,7 +191,9 @@ public class TickrController {
     }
 
     public void userLogout (ModelSession session, UserLogoutRequest request) {
-
+        var token = getTokenFromStr(session, request.authToken);
+        var user = token.getUser();
+        user.invalidateToken(session, token);
     }
 
     public NotificationManagement.GetResponse userGetSettings (ModelSession session, Map<String, String> params) {
