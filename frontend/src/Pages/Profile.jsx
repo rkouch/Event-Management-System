@@ -1,22 +1,31 @@
 import React from 'react'
 
-import { BackdropNoBG, CentredBox } from '../Styles/HelperStyles'
+import { BackdropNoBG, CentredBox, H3  } from '../Styles/HelperStyles'
 import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
 import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, Divider, OutlinedInput, Typography } from '@mui/material';
+import { Avatar, Button, CircularProgress, Collapse, Divider, OutlinedInput, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
-import { ContrastInput, ContrastInputWrapper, DeleteButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState, getToken, getUserData } from '../Helpers';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, TextButton, TkrButton } from '../Styles/InputStyles';
+import { setFieldInState, getToken, getUserData, loggedIn } from '../Helpers';
 import ShadowInput from '../Components/ShadowInput';
 import LinearProgress from '@mui/material/LinearProgress';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import ConfirmPassword from '../Components/ConfirmPassword';
+
+import { Link } from 'react-router-dom';
 
 export default function Profile({editable = false, id=null}){
+
   const [editMode, setEditMode] = React.useState(false)
 
   const [profile, setProfile] = React.useState({
@@ -28,15 +37,22 @@ export default function Profile({editable = false, id=null}){
     events: []
   })
 
-  const [profileOG, setProfileOG] = React.useState({
-    userName: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    profilePicture: '',
-    profileDescription: '',
-    events: []
-  })
+  const [notifications, setNotification] = React.useState({
+    email: false,
+  });
+
+  const [changePW, setChangePW] = React.useState(false)
+
+  const [loading, setLoading] = React.useState(false)
+
+  const handleChangePW = (e) => {
+    setChangePW(!changePW)
+  }
+  
+  const handleChangePWClose = () => {
+    setChangePW(false);
+    setLoading(false)
+  };
 
   React.useEffect(() => {
     if (editable) {
@@ -67,7 +83,19 @@ export default function Profile({editable = false, id=null}){
     setEditMode(!editMode)
   }
 
+  const notificationChange = (e) => {
+    setNotification({...notificationChange, [e.target.name]: e.target.checked})
+  }
 
+  const submitPasswordChange = (e) => {
+    setLoading(true)
+  }
+
+  const [delAcc, setDelAcc] = React.useState(false)
+
+  const handleDelAcc = (e) => {
+    setDelAcc(!delAcc)
+  }
 
   return (
     <div>
@@ -84,12 +112,13 @@ export default function Profile({editable = false, id=null}){
             marginTop: '50px',
             borderRadius: '15px',
             boxShadow: editMode ? '5' : 0,
+            paddingBottom: 5,
           }}
         >
           {(profile.userName == '')
             ? <Box sx={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '50px', paddingTop: '100px'}}> 
                 <Box sx={{ width: '90%', hieght: 50}}>
-                  <LinearProgress />
+                  <LinearProgress color='secondary'/>
                 </Box>
               </Box>
             : <Grid container spacing={2}>
@@ -101,7 +130,7 @@ export default function Profile({editable = false, id=null}){
                       marginLeft: '30px',
                       display: 'flex',
                       alignItems: 'flex-start',
-                      justifyContent: 'flex-end',
+                      justifyContent: 'center',
                     }}
                   >
                     <CentredBox
@@ -129,7 +158,11 @@ export default function Profile({editable = false, id=null}){
                           </Grid>
                           <Grid item xs={3}>
                             <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
-                              <ShadowInput state={profile} setState={setProfile} defaultValue={profile.userName} field='userName'/>
+                              <ContrastInputWrapper>
+                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
+                                  setFieldInState('userName', e.target.value, profile, setProfile)
+                                }}/>
+                              </ContrastInputWrapper>
                             </Box>
                           </Grid>
                         </Grid>
@@ -156,7 +189,7 @@ export default function Profile({editable = false, id=null}){
                         </Typography>
                       </CentredBox>
                   }
-                  <Divider></Divider>
+                  <Divider/>
                   <br/>
                   <Box 
                     sx={{
@@ -228,7 +261,6 @@ export default function Profile({editable = false, id=null}){
                               {profile.email}
                             </Typography>
                         }
-                        
                       </Grid>
                     </Grid>
                     <br/>
@@ -268,10 +300,70 @@ export default function Profile({editable = false, id=null}){
                     : <div></div>
                   }
                 </Grid>
+                <Grid item xs={4}></Grid>
+                <Grid item xs={6}>
+                  {editable
+                    ? <Box sx={{}}>
+                        <Typography
+                          sx={{
+                            fontSize: '20px',
+                            fontWeight: 'regular'
+                          }}
+                        > Account Settings</Typography>
+                        <Divider/>
+                        <FormControl sx={{paddingTop: 2, width: 250}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Notification</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <FormGroup>
+                            <FormControlLabel
+                              control={
+                                <Checkbox  name="email" checked={notifications.email} onChange={notificationChange}/>
+                              }
+                              label="Enable email notifications"
+                            />
+                          </FormGroup>
+                        </FormControl>
+                        <br/>
+                        <FormControl sx={{paddingTop: 2}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Password Management</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <Box sx={{paddingTop: 1, width: 250}}>
+                            <TkrButton variant='text' sx={{height: 30, fontSize: 20, textTransform: "none"}} onClick={handleChangePW} component={Link} to="/change_password">Change Password</TkrButton>
+                          </Box>
+                        </FormControl>
+                        <br/>
+                        <FormControl sx={{paddingTop: 2, width: 250}} component="fieldset" variant="standard">
+                          <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}}}>Account Management</FormLabel>
+                          <Divider variant="fullWidth"/>
+                          <Box sx={{paddingTop: 1}}>
+                            <DeleteButton 
+                              variant='text'
+                              sx={{
+                                height: 30,
+                                fontSize: 20, 
+                                textTransform: "none", 
+                                textAlign: "left", 
+                                "&:hover": {
+                                  backgroundColour: "#AA4344"
+                                }
+                              }} 
+                              startIcon={<DeleteIcon/>}
+                              onClick = {handleDelAcc}
+                            >
+                              Delete Account
+                            </DeleteButton>
+                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc}/>
+                          </Box>
+                        </FormControl>
+                      </Box>
+                    : <div></div>
+                  }
+                </Grid>
+                <Grid item xs={2}></Grid>
               </Grid>
           }
-          
         </Box>
+        
       </BackdropNoBG>
     </div>
   )

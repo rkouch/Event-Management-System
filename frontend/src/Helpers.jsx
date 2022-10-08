@@ -68,7 +68,7 @@ export const getToken = () => {
   return localStorage.getItem('token');
 }
 
-export const isLoggedIn = () => {
+export const loggedIn = () => {
   return (localStorage.getItem('token') != null)
 }
 

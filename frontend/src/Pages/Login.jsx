@@ -161,6 +161,7 @@ export default function Login({}) {
               <Alert severity="error">{error.msg}</Alert>
             </Collapse>
             <TextButton component={Link} to="/register">Don&#39;t have an account?</TextButton>
+            <TextButton component={Link} to="/register">Forgot password?</TextButton>
           </FormInput>
         </Box>
       </Box>

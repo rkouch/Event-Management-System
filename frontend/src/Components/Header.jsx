@@ -15,7 +15,7 @@ import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import { getToken, getUserData, isLoggedIn } from '../Helpers';
+import { getToken, getUserData, loggedIn } from '../Helpers';
 import AccountMenu from './AccountMenu';
 
 const Search = styled('div')(({ theme }) => ({
@@ -80,7 +80,7 @@ export default function Header({}) {
               </FormControl>
             </CentredBox>
           </Grid>
-          {isLoggedIn()
+          {loggedIn()
             ? <Grid item xs={2}>
                 <Box
                   display = "flex"

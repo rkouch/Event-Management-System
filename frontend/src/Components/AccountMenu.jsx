@@ -12,6 +12,7 @@ import PersonAdd from '@mui/icons-material/PersonAdd';
 import Settings from '@mui/icons-material/Settings';
 import Logout from '@mui/icons-material/Logout';
 import EventIcon from '@mui/icons-material/Event';
+import HomeIcon from '@mui/icons-material/Home';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { getToken, setToken, getUserData } from '../Helpers';
@@ -38,6 +39,7 @@ export default function AccountMenu() {
     setToken(null)
     setIsLoggedIn(false)
     navigate('/')
+    window.location.reload(false);
   };
 
   const [userData, setUserData] = React.useState({
@@ -66,7 +68,7 @@ export default function AccountMenu() {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
           >
-            <Avatar sx={{ width: 35, height: 35 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+            <Avatar sx={{ width: 37, height: 37 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
           </IconButton>
         </Tooltip>
       </Box>
@@ -83,8 +85,8 @@ export default function AccountMenu() {
             filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
             mt: 1.5,
             '& .MuiAvatar-root': {
-              width: 32,
-              height: 32,
+              width: 35,
+              height: 35,
               ml: -0.5,
               mr: 1,
             },
@@ -106,7 +108,13 @@ export default function AccountMenu() {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         disableScrollLock={true}
       >
-        <MenuItem component={Link} to="/myProfile">
+        <MenuItem component={Link} to="/">
+          <ListItemIcon>
+            <HomeIcon fontSize="medium"/>
+          </ListItemIcon>
+          Home
+        </MenuItem>
+        <MenuItem component={Link} to="/my_profile">
           <Avatar /> View Profile
         </MenuItem>
         <MenuItem>
