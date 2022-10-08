@@ -11,8 +11,19 @@ import Tooltip from '@mui/material/Tooltip';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import Settings from '@mui/icons-material/Settings';
 import Logout from '@mui/icons-material/Logout';
+import EventIcon from '@mui/icons-material/Event';
+import HomeIcon from '@mui/icons-material/Home';
+
+import { Link, useNavigate } from 'react-router-dom';
+import { getToken, setToken, getUserData } from '../Helpers';
+
 
 export default function AccountMenu() {
+
+  const navigate = useNavigate()
+
+  const [isLoggedIn, setIsLoggedIn] = React.useState((getToken() == null))
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -21,6 +32,29 @@ export default function AccountMenu() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const doLogout = (e) => {
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+    setToken(null)
+    setIsLoggedIn(false)
+    navigate('/')
+    window.location.reload(false);
+  };
+
+  const [userData, setUserData] = React.useState({
+    firstName: '',
+    lastName: '',
+    userName: '',
+    email: '',
+    profileDescription: '',
+    events: [],
+  })
+
+  React.useEffect(() => {
+    getUserData(`auth_token=${getToken()}`, setUserData)
+  }, []);
+
   return (
     <React.Fragment>
       <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
@@ -33,7 +67,7 @@ export default function AccountMenu() {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
           >
-            <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+            <Avatar sx={{ width: 37, height: 37 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
           </IconButton>
         </Tooltip>
       </Box>
@@ -50,8 +84,8 @@ export default function AccountMenu() {
             filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
             mt: 1.5,
             '& .MuiAvatar-root': {
-              width: 32,
-              height: 32,
+              width: 35,
+              height: 35,
               ml: -0.5,
               mr: 1,
             },
@@ -73,10 +107,23 @@ export default function AccountMenu() {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         disableScrollLock={true}
       >
-        <MenuItem>
+        <MenuItem component={Link} to="/">
+          <ListItemIcon>
+            <HomeIcon fontSize="medium"/>
+          </ListItemIcon>
+          Home
+        </MenuItem>
+        <MenuItem component={Link} to="/my_profile">
           <Avatar /> View Profile
         </MenuItem>
         <MenuItem>
+          <ListItemIcon>
+            <EventIcon fontSize="medium"/>
+          </ListItemIcon>
+          Create Event
+        </MenuItem>
+        <Divider></Divider>
+        <MenuItem onClick={doLogout}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

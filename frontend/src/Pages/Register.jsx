@@ -260,7 +260,7 @@ export default function Register ({}) {
     }
 
     try{
-      const response = await apiFetch('POST', '/api/user/register', null, body)
+      const response = await apiFetch('POST', '/api/user/register', body)
       setToken(response.auth_token)
       navigate("/")
     }
