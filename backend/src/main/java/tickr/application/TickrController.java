@@ -14,6 +14,7 @@ import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
+import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
@@ -187,6 +188,10 @@ public class TickrController {
 
 
         return new AuthTokenResponse(user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY).makeJWT());
+    }
+
+    public void userLogout (ModelSession session, UserLogoutRequest request) {
+
     }
 
     public NotificationManagement.GetResponse userGetSettings (ModelSession session, Map<String, String> params) {
