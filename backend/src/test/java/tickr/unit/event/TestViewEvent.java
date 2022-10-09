@@ -111,7 +111,8 @@ public class TestViewEvent {
         session = TestHelper.commitMakeSession(model, session); 
 
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
-
+        
+        assertEquals(id, response.host_id);
         assertEquals("test event", response.eventName);
         assertNull(response.picture);
         assertEquals(location.streetName, response.location.streetName);
