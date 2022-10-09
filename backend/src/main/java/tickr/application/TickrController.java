@@ -315,7 +315,7 @@ public class TickrController {
             event.addCategory(newCat); 
         }
         for (String admin : request.admins) {
-            var userAdmin = session.getByUnique(User.class, "email", admin)
+            var userAdmin = session.getById(User.class, UUID.fromString(admin))
                 .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
             userAdmin.addHostingEvent(event);
             event.addAdmin(userAdmin);

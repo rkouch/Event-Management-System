@@ -1,6 +1,7 @@
 package tickr.unit.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -184,6 +185,11 @@ public class TestCreateEvent {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        var authToken = CryptoHelper.makeJWTParserBuilder()
+        .build()
+        .parseClaimsJws(authTokenString);
+        var id = authToken.getBody().getSubject();
+        assertNotNull(id);
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
@@ -191,7 +197,7 @@ public class TestCreateEvent {
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
-        admins.add("test1@example.com");
+        admins.add(id);
         Set<String> categories = new HashSet<>();
         categories.add("testcategory");
         Set<String> tags = new HashSet<>();
@@ -212,6 +218,9 @@ public class TestCreateEvent {
         assertEquals(endDate, event.getEventEnd());
         assertEquals("description", event.getEventDescription());
         assertEquals(150, event.getSeatAvailability());
+        // for (Tag tag : event.getTags()) {
+        //     var tagEntity = session.getById(Tag.class, tag);
+        // }
         // List<Tag> tagList = new ArrayList<Tag>(event.getTags());
         // var tag = session.getById(Tag.class, tagList.get(0));
         // assertEquals("testtags", tag.getTags());
@@ -224,6 +233,11 @@ public class TestCreateEvent {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        var authToken = CryptoHelper.makeJWTParserBuilder()
+        .build()
+        .parseClaimsJws(authTokenString);
+        var id = authToken.getBody().getSubject();
+        assertNotNull(id);
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
@@ -231,7 +245,7 @@ public class TestCreateEvent {
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
-        admins.add("test1@example.com");
+        admins.add(id);
         Set<String> categories = new HashSet<>();
         categories.add("testcategory");
         Set<String> tags = new HashSet<>();
