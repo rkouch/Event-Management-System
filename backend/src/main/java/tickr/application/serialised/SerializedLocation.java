@@ -1,9 +1,17 @@
 package tickr.application.serialised;
 
+import com.google.gson.annotations.SerializedName;
+
 public class SerializedLocation {
+    @SerializedName ("street_name")
     public String streetName; 
+
+    @SerializedName ("street_no")
     public int streetNo;
+
+    @SerializedName ("unit_no")
     public String unitNo;
+
     public String postcode; 
     public String state;
     public String country;
