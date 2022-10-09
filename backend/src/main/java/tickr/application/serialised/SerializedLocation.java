@@ -83,7 +83,7 @@ public class SerializedLocation {
         }
 
         public SerializedLocation build () {
-            return new SerializedLocation(streetName, streetNo, unitNo, postcode, state, country, longitude, latitude);
+            return new SerializedLocation(streetName, streetNo, unitNo, suburb, postcode, state, country, longitude, latitude);
         }
     }
 }
