@@ -45,6 +45,7 @@ create table `events` (
     event_end         datetime not null,
     event_description text,
     seat_availability int,
+    event_pic       varchar(255),
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),

@@ -48,8 +48,6 @@ public class CreateEventRequest {
             this.section = section;
             this.availability = availability;
         }
-
-      
     }
 
     public CreateEventRequest (String authToken, String eventName, String picture, SerializedLocation location, String startDate, 

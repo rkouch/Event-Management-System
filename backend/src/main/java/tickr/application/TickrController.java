@@ -17,15 +17,18 @@ import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -43,6 +46,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -293,7 +303,7 @@ public class TickrController {
         session.save(location);
 
         // creating event from request 
-        Event event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        Event event = new Event(request.eventName, request.picture, user, startDate, endDate, request.description, location, request.getSeatAvailability());
         session.save(event);
         // creating seating plan for each section
         for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
@@ -362,6 +372,38 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
 
         return new UserIdResponse(user.getId().toString());
+    }
+
+    public EventViewResponse eventView (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event_id!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Unknown event")); 
+        List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
+                                            
+        List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
+        for (SeatingPlan seats : seatingDetails) {
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats());
+            seatingResponse.add(newSeats);
+        }
+        Set<String> tags = new HashSet<String>();
+        for (Tag tag : event.getTags()) {
+            tags.add(tag.getTags());
+        }
+        Set<String> categories = new HashSet<String>();
+        for (Category category : event.getCategories()) {
+            categories.add(category.getCategory());
+        }
+        Set<String> admins = new HashSet<String>(); 
+        for (User admin : event.getAdmins()) {
+            admins.add(admin.getId().toString()); 
+        }
+        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(),
+        event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
+        
+        return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+                                    admins, categories, tags);
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {

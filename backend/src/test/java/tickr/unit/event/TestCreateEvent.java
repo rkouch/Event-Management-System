@@ -249,6 +249,14 @@ public class TestCreateEvent {
         assertEquals(seatings.get(0).availableSeats, 100);
         assertEquals(seatings.get(1).section, "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
+        assertEquals(event.getLocation().getStreetName(), location.streetName);
+        assertEquals(event.getLocation().getStreetNo(), location.streetNo);
+        assertEquals(event.getLocation().getUnitNo(), location.unitNo);
+        assertEquals(event.getLocation().getPostcode(), location.postcode);
+        assertEquals(event.getLocation().getState(), location.state);
+        assertEquals(event.getLocation().getCountry(), location.country);
+        assertEquals(event.getLocation().getLatitude(), location.latitude);
+        assertEquals(event.getLocation().getLongitude(), location.longitude);
     }
 
     @Test
