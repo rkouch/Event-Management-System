@@ -28,6 +28,7 @@ create table locations (
     street_no    int,
     unit_no      varchar(255),
     street_name  varchar(255),
+    suburb      varchar(255),
     postcode    varchar(255) not null,
     state       char(255) not null,
     country     char(255) not null,
@@ -45,6 +46,7 @@ create table `events` (
     event_end         datetime not null,
     event_description text,
     seat_availability int,
+    event_pic varchar(255) not null,
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),

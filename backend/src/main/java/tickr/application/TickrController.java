@@ -17,23 +17,20 @@ import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
-<<<<<<< HEAD
-import tickr.application.serialised.requests.EditEventRequest;
-=======
 import tickr.application.serialised.requests.CreateEventRequest;
->>>>>>> main
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
-<<<<<<< HEAD
-import tickr.application.serialised.responses.EditEventResponse;
-=======
 import tickr.application.serialised.responses.CreateEventResponse;
->>>>>>> main
+import tickr.application.serialised.responses.EditEventResponse;
+import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -51,6 +48,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -300,8 +304,14 @@ public class TickrController {
                                         request.location.state, request.location.country, request.location.longitude, request.location.latitude);
         session.save(location);
 
-        // creating event from request 
-        Event event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        // creating event from request
+        Event event;
+        if (request.picture == null) {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+        } else {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
+                    FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+        }
         session.save(event);
         // creating seating plan for each section
         for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
@@ -372,10 +382,42 @@ public class TickrController {
         return new UserIdResponse(user.getId().toString());
     }
 
-<<<<<<< HEAD
+    public EventViewResponse eventView (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event_id!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Unknown event"));
+        List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
+
+        List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
+        for (SeatingPlan seats : seatingDetails) {
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats());
+            seatingResponse.add(newSeats);
+        }
+        Set<String> tags = new HashSet<String>();
+        for (Tag tag : event.getTags()) {
+            tags.add(tag.getTags());
+        }
+        Set<String> categories = new HashSet<String>();
+        for (Category category : event.getCategories()) {
+            categories.add(category.getCategory());
+        }
+        Set<String> admins = new HashSet<String>();
+        for (User admin : event.getAdmins()) {
+            admins.add(admin.getId().toString());
+        }
+        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
+        event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
+
+        return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+                                    admins, categories, tags);
+    }
+
     public EditEventResponse editEvent (ModelSession session, EditEventRequest request) {
         return new EditEventResponse();
-=======
+    }
+
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
             throw new BadRequestException("Missing paging parameters!");
@@ -416,6 +458,5 @@ public class TickrController {
                 .collect(Collectors.toList());
 
         return new EventSearch.Response(eventList, numItems.get());
->>>>>>> main
     }
 }

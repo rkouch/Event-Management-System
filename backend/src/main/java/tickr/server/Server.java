@@ -8,11 +8,8 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
-<<<<<<< HEAD
 import tickr.application.serialised.requests.EditEventRequest;
-=======
 import tickr.application.serialised.requests.CreateEventRequest;
->>>>>>> main
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
@@ -69,12 +66,11 @@ public class Server {
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
 
         get("/api/user/search", TickrController::userSearch);
-<<<<<<< HEAD
+
 
         put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
-=======
+        get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
->>>>>>> main
     }
 
     /**
