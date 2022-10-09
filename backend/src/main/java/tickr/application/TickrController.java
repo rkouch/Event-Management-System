@@ -13,6 +13,7 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.Location;
+import tickr.application.entities.ResetToken;
 import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
@@ -22,10 +23,14 @@ import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
@@ -361,6 +366,72 @@ public class TickrController {
                     FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
                             .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
         }
+    }
+
+    public AuthTokenResponse loggedChangePassword (ModelSession session, UserChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!PASS_REGEX.matcher(request.password.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("New password did not match regex!");
+            throw new ForbiddenException("Invalid new password!");
+        }
+ 
+        var user = authenticateToken(session, request.authToken);
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
+ 
+        return new AuthTokenResponse(newAuthToken);
+    }
+ 
+    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest userRequestChangePasswordRequest) {
+        if (!userRequestChangePasswordRequest.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!EMAIL_REGEX.matcher(userRequestChangePasswordRequest.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+ 
+        var user = session.getByUnique(User.class, "email", userRequestChangePasswordRequest.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+        
+        var resetToken = new ResetToken(user, Duration.ofHours(24));
+        session.save(resetToken);
+ 
+        return new RequestChangePasswordResponse(true);
+    }
+ 
+    public AuthTokenResponse unloggedComplete (ModelSession session, UserCompleteChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        var user = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
+ 
+        return new AuthTokenResponse(newAuthToken);
     }
 
     public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {

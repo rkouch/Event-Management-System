@@ -126,6 +126,30 @@ public class User {
         return CryptoHelper.verifyHash(password, getPasswordHash());
     }
 
+    /**
+     * Changes password hash to another password hash
+     * @param newPassword
+     * @return
+     */
+    public void changePassword (ModelSession session, String newPassword) {
+        this.passwordHash = CryptoHelper.hashPassword(newPassword);
+        
+        for (var i : tokens) {
+            session.remove(i);
+        } 
+        tokens.clear();
+        
+    }
+
+    /**
+     * Deletes the user's account
+     * @param 
+     * @return
+     */
+    public void deleteUser () {
+
+    }
+
     public UUID getId () {
         return id;
     }

@@ -39,6 +39,7 @@
         <mapping class="tickr.application.entities.Tag"/>
         <mapping class="tickr.application.entities.Ticket"/>
         <mapping class="tickr.application.entities.User"/>
+        <mapping class="tickr.application.entities.ResetToken"/>
 
         <mapping class="tickr.application.entities.TestEntity"/>
     </session-factory>
