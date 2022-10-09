@@ -16,7 +16,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -320,5 +319,10 @@ public class User {
             }
             this.profilePicture = pfpUrl;
         }
+    }
+
+    public void invalidateToken (ModelSession session, AuthToken token) {
+        getTokens().remove(token);
+        session.remove(token);
     }
 }

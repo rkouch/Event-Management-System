@@ -10,6 +10,7 @@ import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
+import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
@@ -53,12 +54,15 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
 
         get("/api/user/profile", TickrController::userGetProfile);
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
+
+        get("/api/user/search", TickrController::userSearch);
     }
 
     /**
