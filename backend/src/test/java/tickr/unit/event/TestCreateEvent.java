@@ -67,7 +67,7 @@ public class TestCreateEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -132,11 +132,11 @@ public class TestCreateEvent {
         categories.add("testcategory");
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
-        SerializedLocation location1 = new SerializedLocation("test street", 12, null, null, "NSW", "Aus", "", "");
-        SerializedLocation location2 = new SerializedLocation("test street", 12, null, "2000", null, "Aus", "", "");
-        SerializedLocation location3 = new SerializedLocation("test street", 12, null, "2000", "NSW", null, "", "");
-        SerializedLocation location4 = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", null, "");
-        SerializedLocation location5 = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", null);
+        SerializedLocation location1 = new SerializedLocation("test street", 12, null, "Sydney",null, "NSW", "Aus", "", "");
+        SerializedLocation location2 = new SerializedLocation("test street", 12, null, "Sydney","2000", null, "Aus", "", "");
+        SerializedLocation location3 = new SerializedLocation("test street", 12, null, "Sydney","2000", "NSW", null, "", "");
+        SerializedLocation location4 = new SerializedLocation("test street", 12, null, "Sydney","2000", "NSW", "Aus", null, "");
+        SerializedLocation location5 = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", null);
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
             null, location1, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
@@ -156,7 +156,7 @@ public class TestCreateEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -184,7 +184,7 @@ public class TestCreateEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -218,7 +218,7 @@ public class TestCreateEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -274,7 +274,7 @@ public class TestCreateEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -332,7 +332,7 @@ public class TestCreateEvent {
                         "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
 
-        var location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        var location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         var event_id = controller.createEvent(session, new CreateEventRequest(authToken, "test event", FileHelper.readToDataUrl("/test_images/smile.png"),
                 location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", List.of(), Set.of(), Set.of(), Set.of())).event_id;
 

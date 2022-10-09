@@ -28,6 +28,7 @@ create table locations (
     street_no    int,
     unit_no      varchar(255),
     street_name  varchar(255),
+    suburb      varchar(255),
     postcode    varchar(255) not null,
     state       char(255) not null,
     country     char(255) not null,
