@@ -404,7 +404,7 @@ export default function Profile({editable=false}){
                             >
                               Delete Account
                             </DeleteButton>
-                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc}/>
+                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc} method={'DELETE'} route={'/api/user/delete'} navigateTo={'/'}/>
                           </Box>
                         </FormControl>
                       </Box>

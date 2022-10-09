@@ -236,7 +236,7 @@ export default function ViewEvent({}) {
                         </Typography>
                         <Divider sx={{width: "50px"}}/>
                         <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
-                          <UserAvatar userId={event.host_id} size={35}/>
+                          <UserAvatar userId={event.host_id} size={35} host={true}/>
                           {event.admins.map((value, key) => {
                             return (
                               <UserAvatar key={key} userId={value} size={35}/>
