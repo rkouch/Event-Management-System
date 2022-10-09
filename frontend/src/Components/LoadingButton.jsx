@@ -22,7 +22,7 @@ import StandardLogo from "../Components/StandardLogo";
 import PasswordInput from "../Components/PasswordInput";
 
 
-export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null}) {
+export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null}, disabled=false) {
   const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
@@ -35,6 +35,10 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
       if (func != null) {
         func(funcVal)
       }
+      if (state !== null) {
+        setFieldInState('responseStatus', true, state, setState)
+        setFieldInState('response', response, state, setState)
+      }
       setLoading(false)
       if (navigateTo == null) {
         console.log("reload")
@@ -43,7 +47,11 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
         navigate(navigateTo)
       }
     } catch (e) {
-      console.log(e)
+      if (state != null) {
+        setFieldInState('error', true, state, setState)
+        setFieldInState('errorMsg', e.reason, state, setState)
+        setLoading(false)
+      }
     }
   }
 
@@ -51,7 +59,7 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
     <CentredBox sx={{position: 'relative'}}>
       <TkrButton
         variant="contained"
-        disabled={loading}
+        disabled={(loading || disabled)}
         sx={sx}
         onClick={handleSubmit}
         startIcon={startIcon}

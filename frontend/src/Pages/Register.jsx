@@ -368,6 +368,7 @@ export default function Register ({}) {
                     value={DOB}
                     onChange={setDOB}
                     renderInput={(params) => <TextField {...params} />}
+                    disableFuture = {true}
                   />
                 </LocalizationProvider>
               </Grid>

@@ -188,15 +188,15 @@ export default function Profile({editable = false, id=null}){
                     ? <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
                         <Grid container spacing={2}>
                           <Grid item xs={4}>
-                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.firstName} field='firstName'/>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.firstName} field='firstName' placeholder='First Name'/>
                           </Grid>
                           <Grid item xs={4}>
-                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.lastName} field='lastName'/>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.lastName} field='lastName' placeholder='Last Name'/>
                           </Grid>
                           <Grid item xs={3}>
                             <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
                               <ContrastInputWrapper>
-                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
+                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth placeholder='Display Name' onChange={(e) => {
                                   setFieldInState('userName', e.target.value, profile, setProfile)
                                 }}/>
                               </ContrastInputWrapper>
@@ -242,10 +242,10 @@ export default function Profile({editable = false, id=null}){
                           }}
                         > 
                           <ContrastInputWrapper>
-                              <ContrastInput multiline placeholder={'Enter a description'} rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
-                                  setFieldInState('profileDescription', e.target.value, profile, setProfile)
-                                }}/>
-                            </ContrastInputWrapper>
+                            <ContrastInput multiline placeholder={'Enter a description'} rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                                setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                              }}/>
+                          </ContrastInputWrapper>
                         </Box>
                       : <div>
                           {(profile.profileDescription != '')
@@ -288,7 +288,7 @@ export default function Profile({editable = false, id=null}){
                       </Grid>
                       <Grid item xs={9}>
                         {editMode
-                          ? <ShadowInput state={profile} setState={setProfile} defaultValue={profile.email} field='email'/>
+                          ? <ShadowInput state={profile} setState={setProfile} defaultValue={profile.email} field='email' placeholder='Email'/>
                           : <Typography
                               sx={{
                                 fontSize: '20px',
