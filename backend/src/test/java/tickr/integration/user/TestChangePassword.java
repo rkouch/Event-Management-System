@@ -120,9 +120,4 @@ public class TestChangePassword {
         var sent = completeResponse.getBody(RequestChangePasswordResponse.class).success;
         assertEquals(true, sent);
     }
-
-    @Test
-    public void testMatchingResetTokenChangePassword () {
-        var response = httpHelper.post("/api/user/reset/complete", new UserCompleteChangePasswordRequest())
-    }
 }
