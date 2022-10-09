@@ -182,6 +182,21 @@ export function stringToColor(string) {
   return color;
 }
 
-export function doNothing() {
-  
+export const checkIfUser= async (userId) => {
+  try {
+    const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+    const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+    if (userId === response_2.user_id) {
+      return true
+      // navigate(`/my_profile`)
+    } else {
+      // navigate(`/view_profile/${userId}`)
+      return false
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+export function doNothing() {  
 }
