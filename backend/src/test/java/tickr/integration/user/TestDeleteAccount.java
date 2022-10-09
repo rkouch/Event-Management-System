@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import spark.Spark;
 import tickr.TestHelper;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.UserDeleteRequest;
+import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -51,7 +53,54 @@ public class TestDeleteAccount {
     }
 
     @Test
+    public void testBadValues () {
+        var response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(null, null));
+        assertEquals(400, response.getStatus());
+
+        response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(authToken, null));
+        assertEquals(400, response.getStatus());
+
+        response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(null, "Password123!"));
+        assertEquals(401, response.getStatus());
+    }
+
+    @Test
     public void testAccountExists () {
+        var response = httpHelper.post("/api/user/login", new UserLoginRequest ("test@example.com", "Password123!"));
+        assertEquals(200, response.getStatus());
         
+        response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(authToken, "Password123!"));
+        assertEquals(200, response.getStatus());
+
+        response = httpHelper.post("/api/user/login", new UserLoginRequest ("test@example.com", "Password123!"));
+        assertEquals(403, response.getStatus());
+
+        response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(TestHelper.makeFakeJWT(), "Password123!"));
+        assertEquals(401, response.getStatus());
+    }
+
+    @Test
+    public void testRemakeAccount () {
+        var response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(authToken, "Password123!"));
+        assertEquals(200, response.getStatus());
+
+        response = httpHelper.post("/api/user/register", new UserRegisterRequest("TestUsername", "Test", "User", "test@example.com",
+                "Password123!", "2010-10-07"));
+        assertEquals(200, response.getStatus());
+
+        response = httpHelper.post("/api/user/login", new UserLoginRequest ("test@example.com", "Password123!"));
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testAuthTokenRemoved () {
+        var oldAuthToken = authToken;
+        var response = httpHelper.delete("/api/user/delete", new UserDeleteRequest(authToken, "Password123!"));
+        assertEquals(200, response.getStatus());
+        response = httpHelper.post("/api/user/register", new UserRegisterRequest("TestUsername", "Test", "User", "test@example.com",
+                "Password123!", "2010-10-07"));
+        assertEquals(200, response.getStatus());
+        var newAuthToken = response.getBody(AuthTokenResponse.class).authToken;
+        assertNotEquals(oldAuthToken, newAuthToken);
     }
 }

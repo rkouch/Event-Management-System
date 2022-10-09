@@ -462,8 +462,12 @@ public class TickrController {
         }
 
         var token = getTokenFromStr(session, request.authToken);
-        var user = token.getUser();
-        session.
-        user.invalidateToken(session, token);
+        User user = token.getUser();
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        var tokenSet = new HashSet<>(user.getTokens());
+        for (var i : tokenSet) {
+            user.invalidateToken(session, i);
+        }
+        session.remove(user);
     }
 }
