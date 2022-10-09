@@ -51,9 +51,7 @@ public class CreateEventRequest {
             this.availability = availability;
         }
 
-        public boolean isEmpty() {
-            return section.isEmpty() || availability == 0;
-        }
+      
     }
 
     public CreateEventRequest (String authToken, String eventName, String picture, SerializedLocation location, String startDate, 

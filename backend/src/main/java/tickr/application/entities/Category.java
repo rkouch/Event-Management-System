@@ -45,7 +45,7 @@ public class Category {
         this.event = event;
     }
 
-    private String getCategory () {
+    public String getCategory () {
         return category;
     }
 

@@ -315,8 +315,14 @@ public class TickrController {
             event.addCategory(newCat); 
         }
         for (String admin : request.admins) {
-            var userAdmin = session.getById(User.class, UUID.fromString(admin))
+            User userAdmin;
+            try {
+                userAdmin = session.getById(User.class, UUID.fromString(admin))
                 .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+            } catch (IllegalArgumentException e) {
+                throw new ForbiddenException("invalid admin Id");
+            }
+            
             userAdmin.addHostingEvent(event);
             event.addAdmin(userAdmin);
         }        
