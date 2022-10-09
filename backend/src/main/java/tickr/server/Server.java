@@ -60,6 +60,10 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
+        post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestChangePasswordRequest.class);
+        put("/api/user/reset", TickrController::loggedChangePassword, UserChangePasswordRequest.class);
+        put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
         post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
         delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
 

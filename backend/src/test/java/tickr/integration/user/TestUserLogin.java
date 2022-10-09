@@ -8,7 +8,7 @@ import spark.Spark;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -94,7 +94,7 @@ public class TestUserLogin {
         response = httpHelper.post("/api/user/login", new UserLoginRequest("test@example.com", "Password123!"));
         assertEquals(200, response.getStatus());
         var login2Str = response.getBody(AuthTokenResponse.class).authToken;
-
+ 
         assertNotEquals(tokenStr, login1Str);
         assertNotEquals(tokenStr, login2Str);
         assertNotEquals(login1Str, login2Str);

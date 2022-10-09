@@ -2,8 +2,43 @@ import React from 'react'
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 import { fontWeight } from '@mui/system';
+import dayjs from "dayjs";
+import { getEventData } from '../Helpers';
+import { CentredBox, UploadPhoto } from '../Styles/HelperStyles';
+import { useNavigate } from 'react-router-dom';
+import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
 
-export default function EventCard({}) {
+export default function EventCard({event_id}) {
+  const navigate = useNavigate()
+  const [event, setEvent] = React.useState({
+    event_name: "",
+    location: {
+      street_no: "",
+      street_name: "",
+      postcode: "",
+      state: "",
+      country: ""
+    },
+    host_id: '',
+    start_date: dayjs().toISOString(),
+    end_date: dayjs().toISOString(),
+    description: "",
+    tags: [],
+    admins: [],
+    picture: "",
+    host_id: ''
+  })
+
+  React.useEffect(() => {
+    getEventData(event_id, setEvent)
+  },[])
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    navigate(`/view_event/${event_id}`)
+  }
   return (
     <Box
       sx={{
@@ -16,46 +51,60 @@ export default function EventCard({}) {
           cursor: 'pointer',
         },
       }}
-    >
-      <Box 
-        sx={{
-          height: '125px',
-          backgroundColor: '#c9c9c9'
-        }}
-      >
-        This Will be the event photo
-      </Box>
-      <Box
-        sx={{
-          padding: '5px'
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize:"20px",
-            fontWeight: "bold"
-          }}
-        >
-          Event Name
-        </Typography>
-        <Typography
-          sx={{
-            fontSize:"15px",
-            fontWeight: "regular",
-            color: "#AE759F",
-          }}
-        >
-          Event Date
-        </Typography>
-        <Typography
-          sx={{
-            fontSize:"13px",
-            fontWeight: "light",
-          }}
-        >
-          Event Location
-        </Typography>
-      </Box>
+      onClick={handleClick}
+    > 
+      {(event.event_name === "")
+        ? <Stack sx={{width: '100%', height: '100%', p: 1}} spacing={1}>
+            <Skeleton variant="rounded" width={230} height={"125px"} />
+            <Skeleton variant="text" sx={{ fontSize: '2rem', width: 200}} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', width: 200 }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', width: 200 }} />
+          </Stack>
+        : <>
+            <CentredBox
+              sx={{
+                height: '125px',
+                backgroundColor: '#c9c9c9'
+              }}
+            >
+              {(event.picture === '')
+                ? <h3>Event Photo</h3>
+                : <UploadPhoto src={event.picture}/>
+              }
+            </CentredBox>
+            <Box
+              sx={{
+                padding: '5px'
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize:"20px",
+                  fontWeight: "bold"
+                }}
+              >
+                {event.event_name}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize:"13px",
+                  fontWeight: "regular",
+                  color: "#AE759F",
+                }}
+              >
+                {dayjs(event.start_date).format('lll')} - {dayjs(event.end_date).format('lll')}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize:"13px",
+                  fontWeight: "light",
+                }}
+              >
+                {event.location.suburb}, {event.location.state}, {event.location.country}
+              </Typography>
+            </Box>
+          </>
+      }
     </Box>
   )
 }

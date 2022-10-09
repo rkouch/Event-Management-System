@@ -110,6 +110,15 @@ export const getUserData = async (body, setUserData=null) => {
   }
 }
 
+export const getEventData = async (eventId, setEventData=null) => {
+  try {
+    const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
+    setEventData(response)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const passwordCheck = (password) => {
   var hasUpper = password.match(/[A-Z]/);
   var hasDigit = password.match(/[0-9]/);

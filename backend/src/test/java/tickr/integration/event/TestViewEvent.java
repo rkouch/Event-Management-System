@@ -17,7 +17,7 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -79,7 +79,7 @@ public class TestViewEvent {
         assertEquals(200, eventResponse.getStatus());
         var response = httpHelper.get("/api/event/view", Map.of("event_id", eventResponse.getBody(CreateEventResponse.class).event_id)).getBody(EventViewResponse.class);
         assertEquals("test event", response.eventName);
-        assertNull(response.picture);
+        assertEquals("", response.picture);
         assertEquals(location.streetName, response.location.streetName);
         assertEquals(location.streetNo, response.location.streetNo);
         assertEquals(location.unitNo, response.location.unitNo);

@@ -16,7 +16,7 @@ export default function ShadowInput({backgroundColor='#FFFFFF', state, field, se
 
   return (
     <ContrastInputWrapper>
-      <ContrastInput type={type} fullWidth sx={sx} defaultValue={defaultValue} onChange={onChange} placeholder={placeholder}>
+      <ContrastInput type={type} value={state[field]} fullWidth sx={sx} onChange={onChange} placeholder={placeholder}>
       </ContrastInput>
     </ContrastInputWrapper>
   )
