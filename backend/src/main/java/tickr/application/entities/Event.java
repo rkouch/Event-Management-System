@@ -1,6 +1,7 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
 import tickr.application.serialised.responses.EventViewResponse;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -9,6 +10,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -93,7 +95,7 @@ public class Event {
         this.id = id;
     }
 
-    private User getHost () {
+    public User getHost () {
         return host;
     }
 
@@ -207,5 +209,10 @@ public class Event {
 
     private void setEventPicture (String eventPicture) {
         this.eventPicture = eventPicture;
+    }
+
+    public void editEvent (String eventName, String picture, Location location, String startDate, String endDate, String description, 
+                            List<SeatingDetails> seatingDetails, Set<Category> categories, Set<Tag> tags, Set<User> admins) {
+            
     }
 }

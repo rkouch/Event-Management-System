@@ -8,6 +8,8 @@ import com.google.gson.annotations.SerializedName;
 import tickr.application.serialised.SerializedLocation;
 
 public class EventViewResponse {
+    public String host_id; 
+
     @SerializedName("event_name")
     public String eventName; 
 
@@ -43,7 +45,7 @@ public class EventViewResponse {
 
     public EventViewResponse () {}
 
-    public EventViewResponse(String eventName, String picture, SerializedLocation location, String startDate,
+    public EventViewResponse(String host_id, String eventName, String picture, SerializedLocation location, String startDate,
             String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins,
             Set<String> categories, Set<String> tags) {
         this.eventName = eventName;
@@ -56,6 +58,7 @@ public class EventViewResponse {
         this.admins = admins;
         this.categories = categories;
         this.tags = tags;
+        this.host_id = host_id;
     }
 
     
