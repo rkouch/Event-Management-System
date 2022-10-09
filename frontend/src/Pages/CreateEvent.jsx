@@ -2,13 +2,12 @@ import React from "react";
 
 import Header from "../Components/Header";
 import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
-import OutlinedInput from "@mui/material/OutlinedInput";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
-import FormControl, { useFormControl } from "@mui/material/FormControl";
+import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -16,9 +15,9 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Box, FormLabel, List, ListItem } from "@mui/material";
+import { Box, Divider, FormLabel, List, ListItem, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
-import { borderRadius, styled, alpha } from '@mui/system';
+import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
@@ -26,6 +25,13 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import LoadingButton from "../Components/LoadingButton"
 import {CircularProgress} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
@@ -74,6 +80,11 @@ export default function CreateEvent({}) {
     error: false,
   })
 
+  const [suburb, setSuburb] = React.useState({
+    value: '',
+    error: false,
+  })
+
   const [postcode, setPostcode] = React.useState({
     value: '',
     error: false
@@ -108,6 +119,13 @@ export default function CreateEvent({}) {
   const [errorMsg, setErrorMsg] = React.useState('')
 
   const [adminLoading, setAdminLoading] = React.useState(false)
+
+  const [newSection, setNewSection] = React.useState({
+    section: '',
+    availability: 0,
+    error: false,
+    errorMsg: '',
+  });
 
   React.useEffect(()=> {
     if(!errorStatus) {
@@ -151,12 +169,27 @@ export default function CreateEvent({}) {
     }
   };
 
+  const handleSectionChange = (e, index) => {
+    const list = [...seatingList];
+    list[index].sectionName = e.target.value;
+    setSeatingList(list);
+    console.log(seatingList);
+  };
+
+  const handleCapacityChange = (e, index) => {
+    const { name, value } = e.target;
+    const list = [...seatingList];
+    list[index][name] = value;
+    setSeatingList(list);
+    console.log(seatingList);
+  };
+
   const handleNewAdmin = (e) => {
     setFieldInState('error', false, newAdmin, setNewAdmin)
     setFieldInState('errorMsg', '', newAdmin, setNewAdmin)
     setFieldInState('email', e.target.value, newAdmin, setNewAdmin)
   };
-
+  
 
   const addAdmin = async (e) => {
     console.log(adminList)
@@ -215,8 +248,11 @@ export default function CreateEvent({}) {
   };
 
   const addSection = (e) => {
-    setSeatingList([...seatingList, { sectionName: "", sectionCapacity: 0 }]);
-    console.log(seatingList);
+    const sectionList = [...seatingList];
+    sectionList.push(newSection.stateCopy);
+    setSeatingList(sectionList);
+    setFieldInState('section', '', newSection, setNewSection)
+    setFieldInState('availability', 0, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -225,24 +261,8 @@ export default function CreateEvent({}) {
     setSeatingList(list);
   };
 
-  const handleSectionChange = (e, index) => {
-    const list = [...seatingList];
-    list[index].sectionName = e.target.value;
-    setSeatingList(list);
-    console.log(seatingList);
-  };
-
-  const handleCapacityChange = (e, index) => {
-    const { name, value } = e.target;
-    const list = [...seatingList];
-    list[index][name] = value;
-    setSeatingList(list);
-    console.log(seatingList);
-  };
-
   React.useEffect(() => {
     if (newAdmin.response) {
-
     }
   }, [newAdmin.response])
 
@@ -259,10 +279,14 @@ export default function CreateEvent({}) {
       setFieldInState('error', true, address, setAddress)
       error = true
     }
+    if (suburb.value.length === 0) {
+      setFieldInState('error', true, suburb, setSuburb)
+      error = true
+    }
     if (postcode.value.length === 0) {
       setFieldInState('error', true, postcode, setPostcode)
       error = true
-    }
+    } 
     if (state.value.length === 0) {
       setFieldInState('error', true, state, setState)
       error = true
@@ -279,7 +303,31 @@ export default function CreateEvent({}) {
     if (error) {
       setErrorStatus(true)
       setErrorMsg('Please fill in required fields')
-      // return
+      return
+    }
+
+    // Check seating allocations
+    if (seatingList.length === 0) {
+      setErrorStatus(true)
+      setFieldInState('error', true, newSection, setNewSection)
+      setErrorMsg('Please allocate seating')
+      
+    }
+    
+
+    // Check if a valid street address
+    const streetAddress = address.value.split(' ')
+    if (streetAddress.length !== 3) {
+      setFieldInState('error', true, address, setAddress)
+      setErrorStatus(true)
+      setErrorMsg('Please enter a valid street address. "{Street No} {Street Name}"')
+      return
+    }
+    if (isNaN(parseInt(streetAddress[0]))) {
+      setFieldInState('error', true, address, setAddress)
+      setErrorStatus(true)
+      setErrorMsg('Please enter a valid street number. "{Street No} {Street Name}"')
+      return
     }
 
     if (end.end <= start.start) {
@@ -291,18 +339,41 @@ export default function CreateEvent({}) {
         setEndValue
       );
       console.log('start date error')
+      setErrorMsg('End date must be after start date')
     }
 
     const locationBody = {
-      address: address.address,
-      postcode: address.postcode,
-      state: address.state,
-      country: address.country
+      street_no: +streetAddress[0],
+      street_name: streetAddress[1] + streetAddress[2],
+      unitNo: '',
+      postcode: postcode.value,
+      state: state.value,
+      country: country.value,
+      longitude: '',
+      latitude: ''
     };
 
     const body = {
-
+      auth_token: getToken(),
+      event_name: eventName.value,
+      picture: '',
+      location: locationBody,
+      start_date: start.start.toISOString(),
+      end_date: end.end.toISOString(),
+      description: description.value,
+      seating_details: seatingList,
+      categories: [],
+      tags: [],
+      admins: adminList,
     };
+
+    try {
+      const response = await apiFetch('POST', '/api/event/create', body)
+      console.log(response)
+    } catch (e) {
+
+    }
+    console.log(body)
   };
 
   return (
@@ -367,7 +438,7 @@ export default function CreateEvent({}) {
                       setError={setErrorStatus}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid item xs={8}>
                     <ShadowInput 
                       state={address}
                       sx={{
@@ -379,6 +450,21 @@ export default function CreateEvent({}) {
                       defaultValue={address.value}
                       field='value'
                       placeholder="Street Address"
+                      setError={setErrorStatus}
+                    />
+                  </Grid>
+                  <Grid tiem xs={4}>
+                    <ShadowInput 
+                      state={suburb}
+                      sx={{
+                        '.MuiOutlinedInput-notchedOutline': {
+                          borderColor: suburb.error ? "red" : "rgba(0,0,0,0)"
+                        },
+                      }}
+                      setState={setSuburb}
+                      defaultValue={suburb.value}
+                      field='value'
+                      placeholder="Suburb"
                       setError={setErrorStatus}
                     />
                   </Grid>
@@ -427,7 +513,6 @@ export default function CreateEvent({}) {
                       setError={setErrorStatus}
                     />
                   </Grid>
-
                   <LocalizationProvider dateAdapter={AdapterMoment}>
                     <Grid item xs={6}>
                       <FormControl fullWidth={false}>
@@ -540,43 +625,138 @@ export default function CreateEvent({}) {
               <Grid item xs={5}>
                 <Box>
                   <h3> Ticket Allocations </h3>
-                  {/* <OutlinedInput placeholder="Country" variant="outlined" sx={{paddingLeft: '15px', borderRadius: 2}} fullWidth={true}/> */}
-                  <Box>
+                  <Grid container spacing={2}>
+                    <Grid item xs={7}>
+                      <Typography sx={{fontWeight: 'bold'}}>
+                        Section
+                      </Typography>
+                      <Divider/>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography sx={{fontWeight: 'bold'}}>
+                        Availability
+                      </Typography>
+                      <Divider/>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Typography sx={{fontWeight: 'bold'}}>
+                        Delete
+                      </Typography>
+                      <Divider/>
+                    </Grid>
                     {seatingList.map((value, index) => {
                       return (
-                        <div key={index}>
-                          <Grid container spacing={1}>
-                            <Grid item xs={7}>
-                              <ContrastInputWrapper>
-                                <ContrastInput placeholder="Section Name" fullWidth onChange={(e) => handleSectionChange(e, index)}/>
-                              </ContrastInputWrapper>
+                        <Grid item key={index} sx={{width: '100%'}}>
+                          <ContrastInputWrapper>
+                            <Grid container spacing={1}>
+                              <Grid item xs={7}>
+                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                  <Typography
+                                    sx={{
+                                      fontWeight: 'bold',
+                                    }}
+                                  >
+                                    {value.section}
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                              <Grid item xs={3}>
+                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                  <Typography
+                                    sx={{
+                                      fontWeight: 'bold',
+                                    }}
+                                  >
+                                    {value.availability}
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                              <Grid item xs={2}>
+                                <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                  <IconButton
+                                    edge="end"
+                                    aria-label="delete"
+                                    onClick={() => removeSeating(index)}
+                                    sx={{marginRight: 0}}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Box>
+                              </Grid>
                             </Grid>
-                            <Grid item xs={3}>
-                              <ContrastInputWrapper>
-                                <ContrastInput placeholder="Spots" fullWidth onChange={handleCapacityChange}/>
-                              </ContrastInputWrapper>
-                            </Grid>
-                            <Grid item xs={2}>
-                              <ContrastInputWrapper sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <IconButton
-                                  edge="end"
-                                  aria-label="delete"
-                                  onClick={() => removeSeating(index)}
-                                  sx={{marginRight: 0}}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </ContrastInputWrapper>
-                            </Grid>
-                          </Grid>
-                        </div>
+                          </ContrastInputWrapper>
+                        </Grid>
                       );
                     })}
-                  </Box>
-                  <Box sx={{marginRight: 4, pl: 1, width: '100%'}}>
-                    <TkrButton variant="contained" onClick={addSection}>
-                      Add Section
-                    </TkrButton>
+                  </Grid>
+                  <Box sx={{marginRight: 4, width: '100%'}}>
+                    <Grid container spacing={1}>
+                      <Grid item xs={7}>
+                        <ContrastInputWrapper>
+                          <ContrastInput
+                            placeholder={'Section Name'}
+                            fullWidth 
+                            onChange={(e) => {
+                              setFieldInState('section', e.target.value, newSection, setNewSection)
+                              setFieldInState('error', false, newSection, setNewSection)
+                              setErrorStatus(false)
+                            }}
+                            sx={{
+                              '.MuiOutlinedInput-notchedOutline': {
+                                borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                              },
+                            }}
+                            value = {newSection.section}
+                          />
+                        </ContrastInputWrapper>
+                      </Grid>
+                      <Grid item xs={3}>
+                        <ContrastInputWrapper>
+                          <ContrastInput 
+                            type="number"
+                            placeholder="Spots"
+                            fullWidth 
+                            onChange={(e) => {
+                              const val = e.target.value
+                              if (val < 0) {
+                                setFieldInState('availability', 0, newSection, setNewSection)
+                              } else {
+                                setFieldInState('availability', val, newSection, setNewSection)
+                              } 
+                              setFieldInState('error', false, newSection, setNewSection)
+                              setErrorStatus(false)
+                            }}
+                            sx={{
+                              '.MuiOutlinedInput-notchedOutline': {
+                                borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                              },
+                            }}
+                            value = {newSection.availability}
+                          />
+                        </ContrastInputWrapper>
+                      </Grid>
+                      <Grid item xs={2}>
+                        <ContrastInputWrapper 
+                          sx={{
+                            height: "100%",
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
+                          }}
+                        >
+                          <IconButton
+                            edge="end"
+                            onClick={addSection}
+                            sx={{marginRight: 0}}
+                            disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
+                          >
+                            <AddIcon/>
+                          </IconButton>
+                        </ContrastInputWrapper>
+                      </Grid>
+                    </Grid>
                   </Box>
                 </Box>
                 <br/>

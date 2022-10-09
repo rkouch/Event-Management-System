@@ -23,14 +23,17 @@ import PasswordInput from "../Components/PasswordInput";
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null}) {
 =======
 export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null}, disabled=false) {
 >>>>>>> main
+=======
+export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null, disabled=false}) {
+>>>>>>> main
   const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
-  
 
   const handleSubmit = async () => {
     setLoading(true)

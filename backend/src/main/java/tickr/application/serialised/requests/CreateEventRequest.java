@@ -14,8 +14,6 @@ import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 
 public class CreateEventRequest {
-    public static final String SeatingDetails = null;
-
     @SerializedName("auth_token")
     public String authToken; 
 
@@ -50,8 +48,6 @@ public class CreateEventRequest {
             this.section = section;
             this.availability = availability;
         }
-
-      
     }
 
     public CreateEventRequest (String authToken, String eventName, String picture, SerializedLocation location, String startDate, 
@@ -94,5 +90,4 @@ public class CreateEventRequest {
         }
         return count; 
     }
-
 }   
