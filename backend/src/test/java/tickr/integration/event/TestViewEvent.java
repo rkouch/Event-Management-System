@@ -17,7 +17,7 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
