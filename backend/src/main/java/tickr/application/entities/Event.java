@@ -66,6 +66,9 @@ public class Event {
     @Column(name = "seat_availability")
     private int seatAvailability;
 
+    @Column(name = "event_pic")
+    private String eventPicture;
+
     public Event() {}
 
     public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
@@ -181,5 +184,13 @@ public class Event {
 
     private void setSeatAvailability (int seatAvailability) {
         this.seatAvailability = seatAvailability;
+    }
+
+    public String getEventPicture () {
+        return eventPicture;
+    }
+
+    private void setEventPicture (String eventPicture) {
+        this.eventPicture = eventPicture;
     }
 }
