@@ -6,6 +6,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,16 +37,16 @@ public class Event {
     @JoinTable(name = "admins",
             joinColumns = {@JoinColumn(name = "event_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
-    private Set<User> admins;
+    private Set<User> admins = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Ticket> tickets;
+    private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
     private Set<Comment> comments;
@@ -102,12 +103,12 @@ public class Event {
         this.location = location;
     }
 
-    private Set<User> getAdmins () {
+    public Set<User> getAdmins () {
         return admins;
     }
 
-    private void setAdmins (Set<User> admins) {
-        this.admins = admins;
+    public void addAdmin (User admin) {
+        this.admins.add(admin);
     }
 
     private Set<Ticket> getTickets () {
@@ -118,20 +119,20 @@ public class Event {
         this.tickets = tickets;
     }
 
-    private Set<Category> getCategories () {
+    public Set<Category> getCategories () {
         return categories;
     }
 
-    private void setCategories (Set<Category> categories) {
-        this.categories = categories;
+    public void addCategory (Category category) {
+        this.categories.add(category);
     }
 
-    private Set<Tag> getTags () {
+    public Set<Tag> getTags () {
         return tags;
     }
 
-    private void setTags (Set<Tag> tags) {
-        this.tags = tags;
+    public void addTag (Tag tag) {
+        this.tags.add(tag);
     }
 
     private Set<Comment> getComments () {

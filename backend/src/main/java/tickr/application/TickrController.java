@@ -10,9 +10,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import tickr.application.entities.AuthToken;
+import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.Location;
 import tickr.application.entities.SeatingPlan;
+import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
@@ -39,8 +41,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -286,11 +290,30 @@ public class TickrController {
             SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
             session.save(seatingPlan);
         }
-
+        
+        for (String tagStr : request.tags) {
+            Tag newTag = new Tag(tagStr);
+            newTag.setEvent(event);
+            session.save(newTag);
+            event.addTag(newTag);
+        }
+        for (String catStr : request.categories) {
+            Category newCat = new Category(catStr);
+            newCat.setEvent(event);
+            session.save(newCat);
+            event.addCategory(newCat); 
+        }
+        for (String admin : request.admins) {
+            var userAdmin = session.getByUnique(User.class, "email", admin)
+                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+            userAdmin.addHostingEvent(event);
+            event.addAdmin(userAdmin);
+        }        
         event.setLocation(location);
 
         return new CreateEventResponse(event.getId().toString());
     }
+
     public void userEditProfile (ModelSession session, EditProfileRequest request) {
         var user = authenticateToken(session, request.authToken);
 

@@ -52,10 +52,9 @@ create table `events` (
 );
 
 create table admins (
-    id          varchar(36) not null,
     event_id     varchar(36) not null,
     user_id      varchar(36) not null,
-    primary key (id),
+    primary key (event_id, user_id),
     foreign key (event_id) references `events` (id),
     foreign key (user_id) references users(id)
 );
@@ -154,11 +153,10 @@ create table reactions (
 );
 
 create table group_users (
-    id varchar(36) not null,
     group_id varchar(36) not null,
     user_id varchar(36) not null,
 
-    primary key (id),
+    primary key (group_id, user_id),
     foreign key (group_id) references `groups`(id),
     foreign key (user_id) references users(id)
 );

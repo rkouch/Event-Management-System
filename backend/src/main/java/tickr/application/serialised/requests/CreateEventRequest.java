@@ -2,10 +2,15 @@ package tickr.application.serialised.requests;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import com.google.gson.annotations.SerializedName;
 
+import tickr.application.entities.Category;
 import tickr.application.entities.Location;
+import tickr.application.entities.Tag;
+import tickr.application.entities.Location;
+import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 
 public class CreateEventRequest {
@@ -32,6 +37,12 @@ public class CreateEventRequest {
     @SerializedName("seating_details")
     public List<SeatingDetails> seatingDetails; 
 
+    public Set<String> admins; 
+
+    public Set<String> categories;
+
+    public Set<String> tags;
+
     public static class SeatingDetails {
         public String section;
         public int availability; 
@@ -46,7 +57,7 @@ public class CreateEventRequest {
     }
 
     public CreateEventRequest (String authToken, String eventName, String picture, SerializedLocation location, String startDate, 
-    String endDate, String description, List<SeatingDetails> seatingDetails) {
+    String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags) {
         this.authToken = authToken;
         this.eventName = eventName;
         this.picture = picture; 
@@ -55,12 +66,19 @@ public class CreateEventRequest {
         this.endDate = endDate; 
         this.description = description; 
         this.seatingDetails = seatingDetails; 
+        this.admins = admins;
+        this.categories = categories;
+        this.tags = tags; 
     }
 
     public boolean isValid() {
-        return authToken != null && !authToken.isEmpty() && eventName != null && !eventName.isEmpty() && picture != null && !picture.isEmpty()
+        return authToken != null && !authToken.isEmpty() && eventName != null && !eventName.isEmpty()
                 && location != null &&  startDate != null && endDate != null;
     }
+
+    // public boolean isSeatingDetailsValid() {
+
+    // }
 
     public int getSeatAvailability() {
         int count = 0;
