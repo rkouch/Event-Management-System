@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tickr.application.entities.AuthToken;
+import tickr.application.entities.ResetToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
@@ -259,8 +260,20 @@ public class TickrController {
         if (!request.isValid()) {
             throw new BadRequestException("Invalid request!");
         }
+
+        if (!PASS_REGEX.matcher(request.password.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("New password did not match regex!");
+            throw new ForbiddenException("Invalid new password!");
+        }
  
-        authenticateToken(session, request.authToken);
+        var user = authenticateToken(session, request.authToken);
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        user.changePassword(request.newPassword);
  
         return new AuthTokenResponse(request.authToken);
     }
@@ -269,10 +282,19 @@ public class TickrController {
         if (!request.isValid()) {
             throw new BadRequestException("Invalid request!");
         }
+
+        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
  
-        // email is good? if not bad response
-        session.getByUnique(User.class, "email", request.email)
+        var user = session.getByUnique(User.class, "email", request.email)
                 .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+        
+        var resetToken = new ResetToken(user, Duration.ofHours(24));
+        session.save(resetToken);
+
+        
  
         return new RequestChangePasswordResponse(true);
     }
@@ -281,9 +303,21 @@ public class TickrController {
         if (!request.isValid()) {
             throw new BadRequestException("Invalid request!");
         }
-        authenticateToken(session, request.resetToken);
+
+        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        var user = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
  
-        return new AuthTokenResponse(request.resetToken);
+        return new AuthTokenResponse(user.authenticatePassword(session, request.newPassword, AUTH_TOKEN_EXPIRY).makeJWT());
     }
 
 }

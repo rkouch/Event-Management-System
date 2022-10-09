@@ -127,13 +127,23 @@ public class User {
     }
 
     /**
-     * @para newPassword
+     * Changes password hash to another password hash
+     * @param newPassword
      * @return
      */
     public void changePassword (String newPassword) {
         if (!verifyPassword(newPassword)) {
             this.passwordHash = CryptoHelper.hashPassword(newPassword);
         }
+    }
+
+    /**
+     * Deletes the user's account
+     * @param 
+     * @return
+     */
+    public void deleteUser () {
+
     }
 
     public UUID getId () {

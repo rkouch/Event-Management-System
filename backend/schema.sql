@@ -162,6 +162,15 @@ create table group_users (
     foreign key (user_id) references users(id)
 );
 
+create table reset_tokens (
+    id varchar(36) not null,
+    user_id varchar(36) not null,
+    expiry_time timestamp not null,
+
+    primary key (id),
+    foreign key (user_id) references users(id)
+);
+
 create table TestTable
 (
     id    varchar(36),

@@ -5,7 +5,6 @@ public class UserChangePasswordRequest {
     @SerializedName("auth_token")
     public String authToken = "";
 
-    @SerializedName("password")
     public String password;
 
     @SerializedName("new_password")

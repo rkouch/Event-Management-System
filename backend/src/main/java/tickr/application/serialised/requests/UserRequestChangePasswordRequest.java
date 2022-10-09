@@ -11,7 +11,7 @@ public class UserRequestChangePasswordRequest {
 
     }
 
-    UserRequestChangePasswordRequest(String email){
+    public UserRequestChangePasswordRequest(String email){
         this.email = email;
     }
 }
