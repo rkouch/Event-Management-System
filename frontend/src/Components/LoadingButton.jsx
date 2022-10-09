@@ -22,11 +22,10 @@ import StandardLogo from "../Components/StandardLogo";
 import PasswordInput from "../Components/PasswordInput";
 
 
-export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null}, disabled=false) {
+export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null, disabled=false}) {
   const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
-  
 
   const handleSubmit = async () => {
     setLoading(true)

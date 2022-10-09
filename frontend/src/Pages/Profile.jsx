@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
 import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, CircularProgress, Collapse, Divider, OutlinedInput, Typography } from '@mui/material';
+import { Avatar, Button, CircularProgress, Collapse, Divider, fabClasses, OutlinedInput, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -22,10 +22,12 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import ConfirmPassword from '../Components/ConfirmPassword';
 
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import LoadingButton from '../Components/LoadingButton';
 
-export default function Profile({editable = false, id=null}){
+export default function Profile({editable=false}){
+  const params = useParams()
+  const navigate = useNavigate()
 
   const [editMode, setEditMode] = React.useState(false)
 
@@ -74,7 +76,7 @@ export default function Profile({editable = false, id=null}){
       getNotifications()
       getUserData(`auth_token=${getToken()}`, setProfile)
     } else {
-      getUserData(`auth_token=${getToken()}`, setProfile)
+      getUserData(`user_id=${params.user_id}`, setProfile)
     }
     
   }, [editMode])
@@ -311,20 +313,26 @@ export default function Profile({editable = false, id=null}){
                       marginTop: '20px'
                     }}
                   >
-                    {editMode
-                      ? <LoadingButton
-                          label={"Save"}
-                          method={'PUT'}
-                          sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
-                          startIcon={<SaveIcon/>}
-                          route={"/api/user/editprofile"}
-                          body={packageBody()}
-                          func={setEditMode} 
-                          funcVal={false}
-                        />
-                      : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
-                          Edit
-                        </TkrButton>
+                    {editable
+                      ? <>
+                          {(editMode)
+                            ? <LoadingButton
+                                label={"Save"}
+                                method={'PUT'}
+                                sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
+                                startIcon={<SaveIcon/>}
+                                route={"/api/user/editprofile"}
+                                body={packageBody()}
+                                func={setEditMode} 
+                                funcVal={false}
+                              />
+                            : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
+                                Edit
+                              </TkrButton>
+                          }
+                        </>
+                      : <></>
+
                     }
                   </Box>
                   {editMode

@@ -14,7 +14,6 @@ import UserAvatar from "./UserAvatar";
 import AdminItem from "./AdminItem";
 
 export default function AdminsBar ({adminsList, editable=false, removeAdmin=null}) {
-
   return (
     <>
     {(adminsList.length !== 0)
@@ -35,10 +34,14 @@ export default function AdminsBar ({adminsList, editable=false, removeAdmin=null
                 })}
               </List>
             </>
-            : <></>
-
-          }
-  
+            : <>
+              {adminsList.map((value, key) => {
+                return (
+                  <UserAvatar key={key} userId={value} size={35}/>
+                );
+              })}
+            </>
+          } 
         </div>
       : <></>
     } 
