@@ -13,6 +13,7 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.Location;
+import tickr.application.entities.ResetToken;
 import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
@@ -22,10 +23,14 @@ import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
@@ -299,7 +304,7 @@ public class TickrController {
         var user = authenticateToken(session, request.authToken); 
         // creating location from request 
         Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                                        request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+                                        request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
         session.save(location);
 
         // creating event from request
@@ -363,6 +368,72 @@ public class TickrController {
         }
     }
 
+    public AuthTokenResponse loggedChangePassword (ModelSession session, UserChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!PASS_REGEX.matcher(request.password.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("New password did not match regex!");
+            throw new ForbiddenException("Invalid new password!");
+        }
+ 
+        var user = authenticateToken(session, request.authToken);
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
+ 
+        return new AuthTokenResponse(newAuthToken);
+    }
+ 
+    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest userRequestChangePasswordRequest) {
+        if (!userRequestChangePasswordRequest.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!EMAIL_REGEX.matcher(userRequestChangePasswordRequest.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+ 
+        var user = session.getByUnique(User.class, "email", userRequestChangePasswordRequest.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+        
+        var resetToken = new ResetToken(user, Duration.ofHours(24));
+        session.save(resetToken);
+ 
+        return new RequestChangePasswordResponse(true);
+    }
+ 
+    public AuthTokenResponse unloggedComplete (ModelSession session, UserCompleteChangePasswordRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+            logger.debug("Email did not match regex!");
+            throw new ForbiddenException("Invalid email!");
+        }
+
+        if (!PASS_REGEX.matcher(request.newPassword.trim()).matches()) {
+            logger.debug("Password did not match regex!");
+            throw new ForbiddenException("Invalid password!");
+        }
+
+        var user = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
+ 
+        return new AuthTokenResponse(newAuthToken);
+    }
+
     public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("email")) {
             throw new BadRequestException("Missing email parameter!");
@@ -408,7 +479,7 @@ public class TickrController {
         SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
-        return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
                                     admins, categories, tags);
     }
 

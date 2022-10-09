@@ -26,6 +26,7 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
   const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
+  
 
   const handleSubmit = async () => {
     setLoading(true)

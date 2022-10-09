@@ -13,6 +13,10 @@ import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
@@ -55,6 +59,10 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
+        post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestChangePasswordRequest.class);
+        put("/api/user/reset", TickrController::loggedChangePassword, UserChangePasswordRequest.class);
+        put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
         post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
         delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
 
