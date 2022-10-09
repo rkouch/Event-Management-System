@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.EventViewResponse;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -185,6 +187,18 @@ public class Event {
 
     private void setSeatAvailability (int seatAvailability) {
         this.seatAvailability = seatAvailability;
+    }
+
+    public void setAdmins(Set<User> admins) {
+        this.admins = admins;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
     }
 
     public String getEventPicture () {

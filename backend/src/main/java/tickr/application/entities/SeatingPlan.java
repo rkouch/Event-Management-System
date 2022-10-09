@@ -69,7 +69,7 @@ public class SeatingPlan {
         this.location = location;
     }
 
-    private String getSection () {
+    public String getSection () {
         return section;
     }
 
@@ -77,7 +77,7 @@ public class SeatingPlan {
         this.section = section;
     }
 
-    private int getAvailableSeats () {
+    public int getAvailableSeats () {
         return availableSeats;
     }
 
