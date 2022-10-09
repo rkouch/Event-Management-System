@@ -2,13 +2,12 @@ import React from "react";
 
 import Header from "../Components/Header";
 import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
-import OutlinedInput from "@mui/material/OutlinedInput";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
-import FormControl, { useFormControl } from "@mui/material/FormControl";
+import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import { checkValidEmail, setFieldInState } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -18,11 +17,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import { Box, FormLabel, List, ListItem } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
-import { borderRadius, styled, alpha } from '@mui/system';
+import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
@@ -320,7 +318,7 @@ export default function CreateEvent({}) {
                       setError={setErrorStatus}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid item xs={8}>
                     <ShadowInput 
                       state={address}
                       sx={{
@@ -332,6 +330,21 @@ export default function CreateEvent({}) {
                       defaultValue={address.value}
                       field='value'
                       placeholder="Street Address"
+                      setError={setErrorStatus}
+                    />
+                  </Grid>
+                  <Grid tiem xs={4}>
+                    <ShadowInput 
+                      state={address}
+                      sx={{
+                        '.MuiOutlinedInput-notchedOutline': {
+                          borderColor: address.error ? "red" : "rgba(0,0,0,0)"
+                        },
+                      }}
+                      setState={setAddress}
+                      defaultValue={address.value}
+                      field='value'
+                      placeholder="Suburb"
                       setError={setErrorStatus}
                     />
                   </Grid>

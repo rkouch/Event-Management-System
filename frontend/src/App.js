@@ -16,6 +16,7 @@ import ChangePassword from './Pages/ChangePassword';
 import { getToken, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
 import CreateEvent from './Pages/CreateEvent';
+import ViewEvent from './Pages/ViewEvent';
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
   {
     path: "/request_change_password",
     element: <RequestChangePassword/>
+  },
+  {
+    path: "/view_event/:eventID",
+    element: <ViewEvent/>
   }
 ])
 
