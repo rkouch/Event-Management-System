@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { checkValidEmail, setFieldInState } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -21,9 +21,14 @@ import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import LoadingButton from "../Components/LoadingButton"
+import {CircularProgress} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
+import AdminsBar from "../Components/AdminBar";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -86,7 +91,9 @@ export default function CreateEvent({}) {
   const [newAdmin, setNewAdmin] = React.useState({
     email: '',
     error: false,
-    errorMsg: ''
+    errorMsg: '',
+    responseState: false,
+    response: '',
   });
 
   const [adminList, setAdminList] = React.useState([]);
@@ -98,6 +105,8 @@ export default function CreateEvent({}) {
   const [errorStatus, setErrorStatus] = React.useState(false)
 
   const [errorMsg, setErrorMsg] = React.useState('')
+
+  const [adminLoading, setAdminLoading] = React.useState(false)
 
   React.useEffect(()=> {
     if(!errorStatus) {
@@ -147,7 +156,10 @@ export default function CreateEvent({}) {
     setFieldInState('email', e.target.value, newAdmin, setNewAdmin)
   };
 
-  const addAdmin = (e) => {
+
+  const addAdmin = async (e) => {
+    console.log(adminList)
+
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
 
@@ -158,11 +170,41 @@ export default function CreateEvent({}) {
       return
     }
 
+    setAdminLoading(true)
+    // Check if you are adding yourself to an event or user already is in event
+    try {
+      const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+      if (newAdmin.email === response.email) {
+        setFieldInState('error', true, newAdmin, setNewAdmin)
+        setFieldInState('errorMsg', 'Cannot add yourself as admin', newAdmin, setNewAdmin)
+        setAdminLoading(false)
+        return
+      }
+    } catch (e) {
+      console.log(e)
+    }
+
     // Check if user exists
-    const adminList_t = [...adminList];
-    adminList_t.push({ admin: newAdmin.email });
-    setAdminList(adminList_t);
-    setFieldInState('email', '', newAdmin, setNewAdmin)
+    try {
+      const response = await apiFetch('GET', `/api/user/search?email=${newAdmin.email}`, null)
+      console.log(response)
+      // Check if user already added as an admin
+      if (adminList.includes(response.user_id)) {
+        setFieldInState('email', '', newAdmin, setNewAdmin)
+        setAdminLoading(false)
+        return
+      }
+      const adminList_t = [...adminList];
+      adminList_t.push(response.user_id);
+      setAdminList(adminList_t);
+      setFieldInState('email', '', newAdmin, setNewAdmin)
+      setAdminLoading(false)
+    } catch (error) {
+      console.log('error')
+      setFieldInState('error', true, newAdmin, setNewAdmin)
+      setFieldInState('errorMsg', error.reason, newAdmin, setNewAdmin)
+      setAdminLoading(false)
+    }
   };
 
   const removeAdmin = (index) => {
@@ -196,6 +238,12 @@ export default function CreateEvent({}) {
     setSeatingList(list);
     console.log(seatingList);
   };
+
+  React.useEffect(() => {
+    if (newAdmin.response) {
+
+    }
+  }, [newAdmin.response])
 
   const submitEvent = async (e) => {
     // Check fields
@@ -432,7 +480,7 @@ export default function CreateEvent({}) {
                   </LocalizationProvider>
 
                   <Grid item xs={8}>
-                    <FormControl>
+                    <FormControl fullWidth={true}>
                       <ContrastInputWrapper>
                         <ContrastInput 
                           value = {newAdmin.email}
@@ -451,40 +499,33 @@ export default function CreateEvent({}) {
                     </FormControl>
                   </Grid>
                   <Grid item xs={4}>
-                    <TkrButton variant="contained" disabled={(newAdmin.email.length > 0) ? false : true} onClick={addAdmin} sx={{mt: 1, fontSize: 15}}>
-                      Add Admin
-                    </TkrButton>
+                    <CentredBox sx={{position: 'relative'}}>
+                      <TkrButton
+                        variant="contained"
+                        disabled={(adminLoading || (newAdmin.email.length <= 0))}
+                        sx={{mt: 1, fontSize: 15}}
+                        onClick={addAdmin}
+                        startIcon={<AddIcon/>}
+                      >
+                        Add Admin
+                      </TkrButton>
+                      {adminLoading && (
+                        <CircularProgress 
+                          size={24}
+                          sx={{
+                            color: "#AE759F",
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            marginTop: '-12px',
+                            marginLeft: '-12px',
+                          }}
+                        />
+                      )}
+                    </CentredBox>
                   </Grid>
                   <Grid item xs={7}>
-                    {(adminList.length !== 0)
-                      ? <div>
-                          <h3>Admin List:</h3>
-                          <List>
-                            {adminList.map((value, key) => {
-                              return (
-                                <div key={key}>
-                                  <ContrastInputWrapper >
-                                    <ListItem secondaryAction={
-                                      <IconButton
-                                        edge="end"
-                                        aria-label="delete"
-                                        onClick={() => removeAdmin(key)}
-                                      >
-                                        <DeleteIcon />
-                                      </IconButton>
-                                    }>
-                                      <ListItemText primary={`@${value.admin}`}/>
-                                    </ListItem>
-                                  </ContrastInputWrapper>
-                                  <br/>
-                                </div>
-                              );
-                            })}
-                          </List>
-                      </div>
-                      : <div></div>
-                    }
-                    
+                    <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin}/>
                   </Grid>
                   <Grid item xs={5}/>
                   <Grid item xs={12}>

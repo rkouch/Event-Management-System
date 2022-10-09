@@ -89,7 +89,7 @@ export function fileToDataUrl (file) {
   return dataUrlPromise;
 }
 
-export const getUserData = async (body, setUserData) => {
+export const getUserData = async (body, setUserData=null) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?${body}`)
     const ret = {
@@ -100,8 +100,11 @@ export const getUserData = async (body, setUserData) => {
       email: response.email,
       events: response.events
     }
-    console.log(ret)
-    setUserData(ret)
+    if (setUserData != null) {
+      setUserData(ret)
+    } else {
+      return ret
+    }
   } catch (error) {
     console.log(error)
   }
@@ -155,6 +158,11 @@ export const checkValidEmail = (email) => {
 }
 
 export function stringToColor(string) {
+  // Custom colouring
+  if (string === "food") {
+    return "#eb7e63"
+  }
+
   let hash = 0;
   let i;
 

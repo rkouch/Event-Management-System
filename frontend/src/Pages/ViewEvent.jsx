@@ -56,11 +56,12 @@ export default function ViewEvent({}) {
       state: "NSW",
       country: "Australia"
     },
+    host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
     start_date: testDate1.toISOString(),
     end_date: testDate2.toISOString(),
     description: "This is going to be a party",
     tags: ["music", "festival", "food"],
-    admins: [],
+    admins: ['8fa85163-5fe7-4183-8026-9b5ff174ee4c'],
   }
 
   React.useEffect(()=> {
