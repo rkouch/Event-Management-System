@@ -8,8 +8,11 @@ import { Box, Divider, Typography } from "@mui/material";
 import { styled, alpha } from '@mui/system';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AvatarGroup from '@mui/material/AvatarGroup';
 
 import TagsBar from "../Components/TagsBar";
+import UserAvatar from "../Components/UserAvatar";
+import AdminsBar from "../Components/AdminBar";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -40,6 +43,7 @@ export default function ViewEvent({}) {
       state: "",
       country: ""
     },
+    host_id: '',
     start_date: dayjs().toISOString(),
     end_date: dayjs().toISOString(),
     description: "",
@@ -61,11 +65,12 @@ export default function ViewEvent({}) {
     end_date: testDate2.toISOString(),
     description: "This is going to be a party",
     tags: ["music", "festival", "food"],
-    admins: ['8fa85163-5fe7-4183-8026-9b5ff174ee4c'],
+    admins: ["8fa85163-5fe7-4183-8026-9b5ff174ee4c"],
   }
 
   React.useEffect(()=> {
     setEvent(testEvent)
+    console.log(event)
   },[])
 
   console.log(event.start_date)
@@ -157,30 +162,6 @@ export default function ViewEvent({}) {
                       </Grid>
                     </Grid>
                   </Grid>
-                  {/* <Grid item xs={7}>
-                    <h3>Admin List:</h3>
-                    <List>
-                      {event.admins.map((value, key) => {
-                        return (
-                          <div key={key}>
-                            <ContrastInputWrapper >
-                              <ListItem secondaryAction={
-                                <IconButton
-                                  edge="end"
-                                  aria-label="delete"
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              }>
-                                <ListItemText primary={`@${value.admin}`}/>
-                              </ListItem>
-                            </ContrastInputWrapper>
-                            <br/>
-                          </div>
-                        );
-                      })}
-                    </List>
-                  </Grid> */}
                   <Grid item xs={12}>
                     <br/>
                     <Typography
@@ -206,8 +187,16 @@ export default function ViewEvent({}) {
                         Hosts
                       </Typography>
                       <Divider sx={{width: "50px"}}/>
+                      <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
+                        <UserAvatar userId={event.host_id} size={35}/>
+                        {event.admins.map((value, key) => {
+                          return (
+                            <UserAvatar key={key} userId={value} size={35}/>
+                          );
+                        })}
+                      </AvatarGroup>
                     </Box>
-                    
+                    <br/>
                   </Grid>
                   <Grid item xs={12}>
                     <br/>

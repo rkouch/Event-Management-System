@@ -13,7 +13,7 @@ import Landing from './Pages/Landing';
 import Profile from './Pages/Profile';
 import PageNotFound from './Pages/PageNotFound';
 import ChangePassword from './Pages/ChangePassword';
-import { getToken, loggedIn } from './Helpers';
+import { apiFetch, getToken, getUserData, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
 import CreateEvent from './Pages/CreateEvent';
 import ViewEvent from './Pages/ViewEvent';
@@ -59,6 +59,10 @@ const router = createBrowserRouter([
   {
     path: "/view_event/:eventID",
     element: <ViewEvent/>
+  },
+  {
+    path: "/view_profile/:user_id",
+    element: <Profile editable={false}/>
   }
 ])
 
