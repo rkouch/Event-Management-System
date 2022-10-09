@@ -21,18 +21,19 @@ import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
+import SaveIcon from '@mui/icons-material/Save';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import LoadingButton from "../Components/LoadingButton"
 import {CircularProgress} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Tooltip from '@mui/material/Tooltip';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import Button from '@mui/material/Button';
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+
+import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
-import { useNavigate } from "react-router-dom";
-import UploadButtons from "../Components/InputTest";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -47,9 +48,7 @@ export const EventForm = styled("div")({
   gap: "10px",
 });
 
-export default function CreateEvent({}) {
-  const navigate = useNavigate()
-
+export default function EditEvent({}) {
   // States
   const [start, setStartValue] = React.useState({
     start: dayjs("2014-08-18T21:11:54"),
@@ -124,12 +123,57 @@ export default function CreateEvent({}) {
     error: false,
     errorMsg: '',
   });
-
-  const [loading, setLoading] = React.useState(false)
-
   const [eventPicture, setEventPicture] = React.useState('')
 
   const [toggleUpload, setToggleUpload] = React.useState(true)
+
+  const [published, setPublished] = React.useState(false)
+
+  const testDate1 = dayjs().add(7, 'day')
+  const testDate2 = testDate1.add(7, 'hour')
+
+  const testEvent = {
+    event_name: "Welcome Back Ray",
+    location: {
+      street_no: "1",
+      street_name: "Station St",
+      suburb: 'Strathfield',
+      postcode: "2135",
+      state: "NSW",
+      country: "Australia"
+    },
+    host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
+    start_date: testDate1.toISOString(),
+    end_date: testDate2.toISOString(),
+    description: "This is going to be a party",
+    tags: ["music", "festival", "food"],
+    admins: ["21738066-4b4d-4c7c-98df-d486f58b0c6c"],
+    seating_details: [{
+      section: "A",
+      availability: 10,
+    }]
+  }
+
+  // Set Values
+  React.useEffect(() => {
+    const response = testEvent
+    console.log(response)
+    setFieldInState('value', response.event_name, eventName, setEventName)
+    setFieldInState('value', response.description, description, setDescription)
+    const eventLocation = response.location
+    setFieldInState('value', eventLocation.street_no.toString() + ' ' + eventLocation.street_name, address, setAddress)
+    setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
+    setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
+    setFieldInState('value', eventLocation.state, state, setState)
+    setFieldInState('value', eventLocation.country, country, setCountry)
+    setAdminList(response.admins)
+    setTags(response.tags)
+    setFieldInState('start', dayjs(response.start_date), start, setStartValue)
+    setFieldInState('end', dayjs(response.end_date), end, setEndValue)
+    setSeatingList(response.seating_details)
+    // setPublished(response.published)
+  }, [])
+
 
   React.useEffect(()=> {
     if(!errorStatus) {
@@ -271,7 +315,6 @@ export default function CreateEvent({}) {
   }, [newAdmin.response])
 
   const submitEvent = async (e) => {
-    setLoading(true)
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
@@ -308,7 +351,6 @@ export default function CreateEvent({}) {
     if (error) {
       setErrorStatus(true)
       setErrorMsg('Please fill in required fields')
-      setLoading(false)
       return
     }
 
@@ -317,8 +359,7 @@ export default function CreateEvent({}) {
       setErrorStatus(true)
       setFieldInState('error', true, newSection, setNewSection)
       setErrorMsg('Please allocate seating')
-      setLoading(false)
-      return
+      
     }
     
 
@@ -352,7 +393,6 @@ export default function CreateEvent({}) {
     const locationBody = {
       street_no: +streetAddress[0],
       street_name: streetAddress[1] + streetAddress[2],
-      suburb: suburb.value,
       unitNo: '',
       postcode: postcode.value,
       state: state.value,
@@ -364,23 +404,20 @@ export default function CreateEvent({}) {
     const body = {
       auth_token: getToken(),
       event_name: eventName.value,
+      picture: '',
       location: locationBody,
       start_date: start.start.toISOString(),
       end_date: end.end.toISOString(),
       description: description.value,
       seating_details: seatingList,
       categories: [],
-      tags: tags,
+      tags: [],
       admins: adminList,
-      picture: eventPicture,
     };
 
     try {
-      const response = await apiFetch('POST', '/api/event/create', body)
-      console.log(response)
-      // Navigate to event
-      navigate(`/view_event/${response.event_id}`)
-      setLoading(false)
+      // const response = await apiFetch('POST', '/api/event/edit', body)
+      // console.log(response)
     } catch (e) {
 
     }
@@ -404,7 +441,18 @@ export default function CreateEvent({}) {
           paddingTop: 1,
         }}
       >
-        <H3 sx={{ fontSize: "30px" }}>Create Event</H3>
+        <Grid container spacing={2}>
+          <Grid item xs={3}>
+          </Grid>
+          <Grid item xs={6}>
+            <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
+          </Grid>
+          <Grid item xs={3}>
+            <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
+              <FormControlLabel control={<Checkbox defaultChecked sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+            </Box>
+          </Grid>
+        </Grid>
         <div>
           <EventForm>
             <Grid
@@ -418,7 +466,7 @@ export default function CreateEvent({}) {
               }}
             >
               <Grid item xs={12}>
-                <ContrastInputWrapper>
+              <ContrastInputWrapper>
                   <CentredBox
                     sx={{
                       height: 200,
@@ -817,33 +865,33 @@ export default function CreateEvent({}) {
               </Grid>
             </Grid>
           </EventForm>
-          <FormInput>
-            <CentredBox sx={{position: 'relative'}}>
-              <TkrButton
-                variant="contained"
-                onClick={submitEvent}
-                disabled={loading}
-              >
-                Create Event
-              </TkrButton>
-              {loading && (
-                <CircularProgress 
-                  size={24}
-                  sx={{
-                    color: "#AE759F",
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    marginTop: '-12px',
-                    marginLeft: '-12px',
-                  }}
-                />
-              )}
-            </CentredBox>
-            <Collapse in={errorStatus}>
-              <Alert severity="error">{errorMsg}.</Alert>
-            </Collapse>
-          </FormInput>
+          <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
+            <Grid item xs={3}>
+              <FormInput>
+                <CentredBox>
+                  <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
+                    Delete
+                  </DeleteButton>
+                </CentredBox>
+              </FormInput>
+            </Grid>
+            <Grid item xs={6}>
+            </Grid> 
+            <Grid item xs={3}>
+              <FormInput>
+                <CentredBox>
+                  <TkrButton variant="contained" onClick={submitEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
+                </CentredBox>
+                <Collapse in={errorStatus}>
+                  <Alert severity="error">{errorMsg}.</Alert>
+                </Collapse>
+              </FormInput>
+            </Grid>
+          </Grid>
+          <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+            
+            
+          </Box>
         </div>
       </Box>
     </BackdropNoBG>
