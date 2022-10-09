@@ -141,7 +141,7 @@ public class TestEventSearch {
         private String text = null;
 
         public OptionsBuilder addLocation (String streetName, int streetNo, String unitNo, String suburb, String postcode, String state, String country, String longitude, String latitude) {
-            this.location = new SerializedLocation(streetName, streetNo, unitNo, postcode, state, country, longitude, latitude);
+            this.location = new SerializedLocation(streetName, streetNo, unitNo, suburb, postcode, state, country, longitude, latitude);
 
             return this;
         }

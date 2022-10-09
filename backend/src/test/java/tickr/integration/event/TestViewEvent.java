@@ -1,8 +1,5 @@
 package tickr.integration.event;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +22,8 @@ import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 import tickr.util.CryptoHelper;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestViewEvent {
     private DataModel hibernateModel;
@@ -64,7 +63,7 @@ public class TestViewEvent {
         CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
         CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
@@ -74,13 +73,13 @@ public class TestViewEvent {
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
 
-        var eventResponse = httpHelper.post("/api/event/create", new CreateEventRequest(authTokenString, "test event", "test picture", location
+        var eventResponse = httpHelper.post("/api/event/create", new CreateEventRequest(authTokenString, "test event", null, location
         , "2011-12-03T10:15:30", 
         "2011-12-04T10:15:30", "description", seats, admins, categories, tags));
         assertEquals(200, eventResponse.getStatus());
         var response = httpHelper.get("/api/event/view", Map.of("event_id", eventResponse.getBody(CreateEventResponse.class).event_id)).getBody(EventViewResponse.class);
         assertEquals("test event", response.eventName);
-        assertEquals("test picture", response.picture);
+        assertNull(response.picture);
         assertEquals(location.streetName, response.location.streetName);
         assertEquals(location.streetNo, response.location.streetNo);
         assertEquals(location.unitNo, response.location.unitNo);

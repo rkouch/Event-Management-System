@@ -21,6 +21,9 @@ public class Location {
     @Column(name = "street_name")
     private String streetName;
 
+    @Column
+    private String suburb;
+
     @Column(name = "unit_no")
     private String unitNo;
 
@@ -127,5 +130,9 @@ public class Location {
 
     public void setStreetName(String streetName) {
         this.streetName = streetName;
+    }
+
+    public String getSuburb () {
+        return suburb;
     }
 }

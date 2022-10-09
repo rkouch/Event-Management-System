@@ -73,8 +73,8 @@ public class Event {
 
     public Event() {}
 
-    public Event(String eventName, String eventPicture, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
-            String eventDescription, Location location, int seatAvailability) {
+    public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
+            String eventDescription, Location location, int seatAvailability, String eventPicture) {
         this.location = location;
         this.eventName = eventName;
         this.eventStart = eventStart;
@@ -188,7 +188,7 @@ public class Event {
     private void setSeatAvailability (int seatAvailability) {
         this.seatAvailability = seatAvailability;
     }
-    
+
     public void setAdmins(Set<User> admins) {
         this.admins = admins;
     }
@@ -201,11 +201,11 @@ public class Event {
         this.tags = tags;
     }
 
-    public String getEventPicture() {
+    public String getEventPicture () {
         return eventPicture;
     }
 
-    public void setEventPicture(String eventPicture) {
+    private void setEventPicture (String eventPicture) {
         this.eventPicture = eventPicture;
     }
 }

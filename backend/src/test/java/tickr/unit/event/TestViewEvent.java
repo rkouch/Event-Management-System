@@ -1,9 +1,5 @@
 package tickr.unit.event;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +20,8 @@ import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestViewEvent {
     private DataModel model;
@@ -59,7 +57,7 @@ public class TestViewEvent {
         seats.add(seats1);
         seats.add(seats2);
 
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         
         Set<String> admins = new HashSet<>();
         admins.add(id);
@@ -70,7 +68,7 @@ public class TestViewEvent {
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
 
-        var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", "test picture", location
+        var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2011-12-03T10:15:30", 
                                             "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
@@ -96,7 +94,7 @@ public class TestViewEvent {
         seats.add(seats1);
         seats.add(seats2);
 
-        SerializedLocation location = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", "");
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         
         Set<String> admins = new HashSet<>();
         admins.add(id);
@@ -107,7 +105,7 @@ public class TestViewEvent {
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
 
-        var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", "test picture", location
+        var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2011-12-03T10:15:30", 
                                             "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
@@ -115,7 +113,7 @@ public class TestViewEvent {
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
 
         assertEquals("test event", response.eventName);
-        assertEquals("test picture", response.picture);
+        assertNull(response.picture);
         assertEquals(location.streetName, response.location.streetName);
         assertEquals(location.streetNo, response.location.streetNo);
         assertEquals(location.unitNo, response.location.unitNo);

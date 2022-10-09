@@ -302,8 +302,14 @@ public class TickrController {
                                         request.location.state, request.location.country, request.location.longitude, request.location.latitude);
         session.save(location);
 
-        // creating event from request 
-        Event event = new Event(request.eventName, request.picture, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        // creating event from request
+        Event event;
+        if (request.picture == null) {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+        } else {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
+                    FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+        }
         session.save(event);
         // creating seating plan for each section
         for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
@@ -379,9 +385,9 @@ public class TickrController {
             throw new BadRequestException("Missing event_id!");
         }
         Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
-                        .orElseThrow(() -> new ForbiddenException("Unknown event")); 
+                        .orElseThrow(() -> new ForbiddenException("Unknown event"));
         List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
-                                            
+
         List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
         for (SeatingPlan seats : seatingDetails) {
             EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats());
@@ -395,13 +401,13 @@ public class TickrController {
         for (Category category : event.getCategories()) {
             categories.add(category.getCategory());
         }
-        Set<String> admins = new HashSet<String>(); 
+        Set<String> admins = new HashSet<String>();
         for (User admin : event.getAdmins()) {
-            admins.add(admin.getId().toString()); 
+            admins.add(admin.getId().toString());
         }
-        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(),
+        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
-        
+
         return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
                                     admins, categories, tags);
     }
