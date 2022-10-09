@@ -326,14 +326,14 @@ public class TickrController {
         for (String tagStr : request.tags) {
             Tag newTag = new Tag(tagStr);
             newTag.setEvent(event);
-            session.save(newTag);
             event.addTag(newTag);
+            session.save(newTag);
         }
         for (String catStr : request.categories) {
             Category newCat = new Category(catStr);
             newCat.setEvent(event);
-            session.save(newCat);
             event.addCategory(newCat); 
+            session.save(newCat);
         }
         for (String admin : request.admins) {
             User userAdmin;
@@ -344,7 +344,7 @@ public class TickrController {
                 throw new ForbiddenException("invalid admin Id");
             }
             
-            userAdmin.addHostingEvent(event);
+            userAdmin.addAdminEvents(event);
             event.addAdmin(userAdmin);
         }        
         event.setLocation(location);
@@ -453,6 +453,22 @@ public class TickrController {
     }
 
     public void editEvent (ModelSession session, EditEventRequest request) {
+        Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
+                        .orElseThrow(() -> new ForbiddenException("Invalid event"));
+
+        if (request.picture == null) {
+            event.editEvent(session, request.getEventName(), null, request.getLocation(),
+         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+        } else {
+            event.editEvent(session, request.getEventName(), request.getPicture(), request.getLocation(),
+         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+        }
+        
+        event.editEvent(session, request.getEventName(), request.getPicture(), request.getLocation(),
+         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
         return;
     }
 
