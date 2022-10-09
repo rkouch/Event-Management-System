@@ -4,6 +4,7 @@ import tickr.application.entities.TestEntity;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Interface representing a single session of a data source. The semantics of this interface
@@ -20,6 +21,7 @@ public interface ModelSession {
      * @param <T>
      */
     <T> List<T> getAll (Class<T> entityClass);
+    <T> Stream<T> getAllStream (Class<T> entityClass);
 
     /**
      * Gets all entities with a column equal to a given object

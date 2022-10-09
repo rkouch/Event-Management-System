@@ -4,17 +4,34 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.exception.ConstraintViolationException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import tickr.application.entities.AuthToken;
+import tickr.application.entities.Category;
+import tickr.application.entities.Event;
+import tickr.application.entities.Location;
+import tickr.application.entities.SeatingPlan;
+import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 
 import tickr.application.serialised.responses.AuthTokenResponse;
+import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.TestResponses;
+import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -26,13 +43,21 @@ import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Class encapsulating business logic. Is created once per user session, which is distinct to ModelSession instances -
@@ -235,6 +260,93 @@ public class TickrController {
         return user.getProfile();
     }
 
+    public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
+        if (request.authToken == null) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+
+        if (!request.isValid() ) {
+            logger.debug("Missing parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isSeatingDetailsValid()) {
+            logger.debug("Missing seating parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isLocationValid()) {
+            logger.debug("Missing location parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        try {
+            startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
+            endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
+        } catch (DateTimeParseException e) {
+            logger.debug("Date is in incorrect format!");
+            throw new ForbiddenException("Invalid date time string!");
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new BadRequestException("Event start time is later than event end time!");
+        }
+
+
+        // getting user from token
+        var user = authenticateToken(session, request.authToken); 
+        // creating location from request 
+        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
+                                        request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+        session.save(location);
+
+        // creating event from request
+        Event event;
+        if (request.picture == null) {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+        } else {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
+                    FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+        }
+        session.save(event);
+        // creating seating plan for each section
+        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
+            session.save(seatingPlan);
+        }
+        
+        for (String tagStr : request.tags) {
+            Tag newTag = new Tag(tagStr);
+            newTag.setEvent(event);
+            session.save(newTag);
+            event.addTag(newTag);
+        }
+        for (String catStr : request.categories) {
+            Category newCat = new Category(catStr);
+            newCat.setEvent(event);
+            session.save(newCat);
+            event.addCategory(newCat); 
+        }
+        for (String admin : request.admins) {
+            User userAdmin;
+            try {
+                userAdmin = session.getById(User.class, UUID.fromString(admin))
+                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+            } catch (IllegalArgumentException e) {
+                throw new ForbiddenException("invalid admin Id");
+            }
+            
+            userAdmin.addHostingEvent(event);
+            event.addAdmin(userAdmin);
+        }        
+        event.setLocation(location);
+
+        return new CreateEventResponse(event.getId().toString());
+    }
+
     public void userEditProfile (ModelSession session, EditProfileRequest request) {
         var user = authenticateToken(session, request.authToken);
 
@@ -250,5 +362,96 @@ public class TickrController {
                     FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
                             .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
         }
+    }
+
+    public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email parameter!");
+        }
+
+        var email = params.get("email");
+
+        if (!EMAIL_REGEX.matcher(email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid email!");
+        }
+
+        var user = session.getByUnique(User.class, "email", email.toLowerCase())
+                .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
+
+        return new UserIdResponse(user.getId().toString());
+    }
+
+    public EventViewResponse eventView (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event_id!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Unknown event"));
+        List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
+
+        List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
+        for (SeatingPlan seats : seatingDetails) {
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats());
+            seatingResponse.add(newSeats);
+        }
+        Set<String> tags = new HashSet<String>();
+        for (Tag tag : event.getTags()) {
+            tags.add(tag.getTags());
+        }
+        Set<String> categories = new HashSet<String>();
+        for (Category category : event.getCategories()) {
+            categories.add(category.getCategory());
+        }
+        Set<String> admins = new HashSet<String>();
+        for (User admin : event.getAdmins()) {
+            admins.add(admin.getId().toString());
+        }
+        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
+        event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
+
+        return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+                                    admins, categories, tags);
+    }
+
+    public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging parameters!");
+        }
+        int pageStart;
+        int maxResults;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging parameters!");
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging parameters!");
+        }
+
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        }
+
+        EventSearch.Options options = null;
+        if (params.containsKey("search_options")) {
+            options = EventSearch.fromParams(params.get("search_options"));
+        }
+
+        var eventStream = session.getAllStream(Event.class);
+
+        var numItems = new AtomicInteger();
+        var eventList = eventStream
+                .peek(x -> numItems.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        return new EventSearch.Response(eventList, numItems.get());
     }
 }

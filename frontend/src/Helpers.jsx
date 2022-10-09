@@ -89,7 +89,7 @@ export function fileToDataUrl (file) {
   return dataUrlPromise;
 }
 
-export const getUserData = async (body, setUserData) => {
+export const getUserData = async (body, setUserData=null) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?${body}`)
     const ret = {
@@ -100,8 +100,11 @@ export const getUserData = async (body, setUserData) => {
       email: response.email,
       events: response.events
     }
-    console.log(ret)
-    setUserData(ret)
+    if (setUserData != null) {
+      setUserData(ret)
+    } else {
+      return ret
+    }
   } catch (error) {
     console.log(error)
   }
@@ -147,4 +150,53 @@ export const passwordCheck = (password) => {
   } 
 
   return validPassword
+}
+
+export const checkValidEmail = (email) => {
+  var validEmail = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+  return email.match(validEmail)
+}
+
+export function stringToColor(string) {
+  // Custom colouring
+  if (string === "food") {
+    return "#eb7e63"
+  }
+
+  let hash = 0;
+  let i;
+
+  /* eslint-disable no-bitwise */
+  for (i = 0; i < string.length; i += 1) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let color = '#';
+
+  for (i = 0; i < 3; i += 1) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += `00${value.toString(16)}`.slice(-2);
+  }
+  /* eslint-enable no-bitwise */
+
+  return color;
+}
+
+export const checkIfUser= async (userId) => {
+  try {
+    const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+    const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+    if (userId === response_2.user_id) {
+      return true
+      // navigate(`/my_profile`)
+    } else {
+      // navigate(`/view_profile/${userId}`)
+      return false
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+export function doNothing() {  
 }

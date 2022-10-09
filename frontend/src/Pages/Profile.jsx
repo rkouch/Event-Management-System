@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
 import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, CircularProgress, Collapse, Divider, OutlinedInput, Typography } from '@mui/material';
+import { Avatar, Button, CircularProgress, Collapse, Divider, fabClasses, OutlinedInput, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -22,10 +22,12 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import ConfirmPassword from '../Components/ConfirmPassword';
 
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import LoadingButton from '../Components/LoadingButton';
 
-export default function Profile({editable = false, id=null}){
+export default function Profile({editable=false}){
+  const params = useParams()
+  const navigate = useNavigate()
 
   const [editMode, setEditMode] = React.useState(false)
 
@@ -74,7 +76,7 @@ export default function Profile({editable = false, id=null}){
       getNotifications()
       getUserData(`auth_token=${getToken()}`, setProfile)
     } else {
-      getUserData(`auth_token=${getToken()}`, setProfile)
+      getUserData(`user_id=${params.user_id}`, setProfile)
     }
     
   }, [editMode])
@@ -188,15 +190,15 @@ export default function Profile({editable = false, id=null}){
                     ? <CentredBox sx={{justifyContent: 'flex-start', gap: '10px', height: '60px', alignItems: 'baseline'}}>
                         <Grid container spacing={2}>
                           <Grid item xs={4}>
-                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.firstName} field='firstName'/>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.firstName} field='firstName' placeholder='First Name'/>
                           </Grid>
                           <Grid item xs={4}>
-                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.lastName} field='lastName'/>
+                            <ShadowInput sx={{fontWeight: 'bold'}} state={profile} setState={setProfile} defaultValue={profile.lastName} field='lastName' placeholder='Last Name'/>
                           </Grid>
                           <Grid item xs={3}>
                             <Box sx={{display: 'flex', height: '100%', alignItems: 'flex-end'}}>
                               <ContrastInputWrapper>
-                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth onChange={(e) => {
+                                <ContrastInput size='small' defaultValue={profile.userName} startAdornment={<div>@</div>} fullWidth placeholder='Display Name' onChange={(e) => {
                                   setFieldInState('userName', e.target.value, profile, setProfile)
                                 }}/>
                               </ContrastInputWrapper>
@@ -242,10 +244,10 @@ export default function Profile({editable = false, id=null}){
                           }}
                         > 
                           <ContrastInputWrapper>
-                              <ContrastInput multiline placeholder={'Enter a description'} rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
-                                  setFieldInState('profileDescription', e.target.value, profile, setProfile)
-                                }}/>
-                            </ContrastInputWrapper>
+                            <ContrastInput multiline placeholder={'Enter a description'} rows={4} defaultValue={profile.profileDescription} fullWidth onChange={(e) => {
+                                setFieldInState('profileDescription', e.target.value, profile, setProfile)
+                              }}/>
+                          </ContrastInputWrapper>
                         </Box>
                       : <div>
                           {(profile.profileDescription != '')
@@ -288,7 +290,7 @@ export default function Profile({editable = false, id=null}){
                       </Grid>
                       <Grid item xs={9}>
                         {editMode
-                          ? <ShadowInput state={profile} setState={setProfile} defaultValue={profile.email} field='email'/>
+                          ? <ShadowInput state={profile} setState={setProfile} defaultValue={profile.email} field='email' placeholder='Email'/>
                           : <Typography
                               sx={{
                                 fontSize: '20px',
@@ -311,20 +313,26 @@ export default function Profile({editable = false, id=null}){
                       marginTop: '20px'
                     }}
                   >
-                    {editMode
-                      ? <LoadingButton
-                          label={"Save"}
-                          method={'PUT'}
-                          sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
-                          startIcon={<SaveIcon/>}
-                          route={"/api/user/editprofile"}
-                          body={packageBody()}
-                          func={setEditMode} 
-                          funcVal={false}
-                        />
-                      : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
-                          Edit
-                        </TkrButton>
+                    {editable
+                      ? <>
+                          {(editMode)
+                            ? <LoadingButton
+                                label={"Save"}
+                                method={'PUT'}
+                                sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}}
+                                startIcon={<SaveIcon/>}
+                                route={"/api/user/editprofile"}
+                                body={packageBody()}
+                                func={setEditMode} 
+                                funcVal={false}
+                              />
+                            : <TkrButton variant='text' startIcon={<EditIcon/>} sx={{height: 30, width: 90, fontSize: 20, textTransform: "none", textAlign: "left"}} onClick={editModeChange}>
+                                Edit
+                              </TkrButton>
+                          }
+                        </>
+                      : <></>
+
                     }
                   </Box>
                   {editMode

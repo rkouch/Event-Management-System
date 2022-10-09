@@ -18,6 +18,12 @@ public class Location {
     @Column(name = "street_no")
     private int streetNo;
 
+    @Column(name = "street_name")
+    private String streetName;
+
+    @Column
+    private String suburb;
+
     @Column(name = "unit_no")
     private String unitNo;
 
@@ -33,7 +39,20 @@ public class Location {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "location")
     private Event event;
 
-    private UUID getId () {
+    public Location() {}
+
+    public Location(int streetNo, String streetName, String unitNo, String postcode, String state, String country, String longitude, String latitude) {
+        this.streetNo = streetNo;
+        this.streetName = streetName;
+        this.unitNo = unitNo;
+        this.postcode = postcode;
+        this.state = state;
+        this.country = country;
+        this.longitude = longitude;
+        this.latitude = latitude;
+    }
+
+    public UUID getId () {
         return id;
     }
 
@@ -41,7 +60,7 @@ public class Location {
         this.id = id;
     }
 
-    private int getStreetNo () {
+    public int getStreetNo () {
         return streetNo;
     }
 
@@ -49,7 +68,7 @@ public class Location {
         this.streetNo = streetNo;
     }
 
-    private String getUnitNo () {
+    public String getUnitNo () {
         return unitNo;
     }
 
@@ -57,7 +76,7 @@ public class Location {
         this.unitNo = unitNo;
     }
 
-    private String getPostcode () {
+    public String getPostcode () {
         return postcode;
     }
 
@@ -65,7 +84,7 @@ public class Location {
         this.postcode = postcode;
     }
 
-    private String getState () {
+    public String getState () {
         return state;
     }
 
@@ -73,7 +92,7 @@ public class Location {
         this.state = state;
     }
 
-    private String getCountry () {
+    public String getCountry () {
         return country;
     }
 
@@ -81,7 +100,7 @@ public class Location {
         this.country = country;
     }
 
-    private String getLongitude () {
+    public String getLongitude () {
         return longitude;
     }
 
@@ -89,7 +108,7 @@ public class Location {
         this.longitude = longitude;
     }
 
-    private String getLatitude () {
+    public String getLatitude () {
         return latitude;
     }
 
@@ -103,5 +122,17 @@ public class Location {
 
     private void setEvent (Event event) {
         this.event = event;
+    }
+
+    public String getStreetName() {
+        return streetName;
+    }
+
+    public void setStreetName(String streetName) {
+        this.streetName = streetName;
+    }
+
+    public String getSuburb () {
+        return suburb;
     }
 }

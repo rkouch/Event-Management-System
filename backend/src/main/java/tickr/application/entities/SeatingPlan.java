@@ -28,13 +28,22 @@ public class SeatingPlan {
     @JoinColumn(name = "location_id")
     private Location location;
 
-    private String section;
+    public String section;
 
     @Column(name = "available_seats")
-    private int availableSeats;
+    public int availableSeats;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
     private Set<Ticket> tickets;
+
+    public SeatingPlan () {}    
+
+    public SeatingPlan(Event event, Location location, String section, int availableSeats) {
+        this.event = event;
+        this.location = location;
+        this.section = section;
+        this.availableSeats = availableSeats;
+    }
 
     private UUID getId () {
         return id;
@@ -60,7 +69,7 @@ public class SeatingPlan {
         this.location = location;
     }
 
-    private String getSection () {
+    public String getSection () {
         return section;
     }
 
@@ -68,7 +77,7 @@ public class SeatingPlan {
         this.section = section;
     }
 
-    private int getAvailableSeats () {
+    public int getAvailableSeats () {
         return availableSeats;
     }
 

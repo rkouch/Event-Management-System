@@ -1,11 +1,14 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.EventViewResponse;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,16 +39,16 @@ public class Event {
     @JoinTable(name = "admins",
             joinColumns = {@JoinColumn(name = "event_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
-    private Set<User> admins;
+    private Set<User> admins = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Ticket> tickets;
+    private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
-    private Set<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
     private Set<Comment> comments;
@@ -53,8 +56,11 @@ public class Event {
     @Column(name = "event_name")
     private String eventName;
 
-    @Column(name = "event_date")
-    private LocalDateTime eventDate;
+    @Column(name = "event_start")
+    private LocalDateTime eventStart;
+
+    @Column(name = "event_end")
+    private LocalDateTime eventEnd;
 
     @Column(name = "event_description")
     private String eventDescription;
@@ -62,7 +68,24 @@ public class Event {
     @Column(name = "seat_availability")
     private int seatAvailability;
 
-    private UUID getId () {
+    @Column(name = "event_pic")
+    private String eventPicture;
+
+    public Event() {}
+
+    public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
+            String eventDescription, Location location, int seatAvailability, String eventPicture) {
+        this.location = location;
+        this.eventName = eventName;
+        this.eventStart = eventStart;
+        this.eventEnd = eventEnd;
+        this.eventDescription = eventDescription;
+        this.seatAvailability = seatAvailability;
+        this.host = host;
+        this.eventPicture = eventPicture;
+    }
+
+    public UUID getId () {
         return id;
     }
 
@@ -78,20 +101,20 @@ public class Event {
         this.host = host;
     }
 
-    private Location getLocation () {
+    public Location getLocation () {
         return location;
     }
 
-    private void setLocation (Location location) {
+    public void setLocation (Location location) {
         this.location = location;
     }
 
-    private Set<User> getAdmins () {
+    public Set<User> getAdmins () {
         return admins;
     }
 
-    private void setAdmins (Set<User> admins) {
-        this.admins = admins;
+    public void addAdmin (User admin) {
+        this.admins.add(admin);
     }
 
     private Set<Ticket> getTickets () {
@@ -102,20 +125,20 @@ public class Event {
         this.tickets = tickets;
     }
 
-    private Set<Category> getCategories () {
+    public Set<Category> getCategories () {
         return categories;
     }
 
-    private void setCategories (Set<Category> categories) {
-        this.categories = categories;
+    public void addCategory (Category category) {
+        this.categories.add(category);
     }
 
-    private Set<Tag> getTags () {
+    public Set<Tag> getTags () {
         return tags;
     }
 
-    private void setTags (Set<Tag> tags) {
-        this.tags = tags;
+    public void addTag (Tag tag) {
+        this.tags.add(tag);
     }
 
     private Set<Comment> getComments () {
@@ -126,7 +149,7 @@ public class Event {
         this.comments = comments;
     }
 
-    private String getEventName () {
+    public String getEventName () {
         return eventName;
     }
 
@@ -134,15 +157,23 @@ public class Event {
         this.eventName = eventName;
     }
 
-    private LocalDateTime getEventDate () {
-        return eventDate;
+    public LocalDateTime getEventStart () {
+        return eventStart;
+    }
+    
+    private void setEventStart (LocalDateTime eventStart) {
+        this.eventStart = eventStart;
     }
 
-    private void setEventDate (LocalDateTime eventDate) {
-        this.eventDate = eventDate;
+    public LocalDateTime getEventEnd () {
+        return eventEnd;
     }
 
-    private String getEventDescription () {
+    private void setEventEnd (LocalDateTime eventEnd) {
+        this.eventEnd = eventEnd;
+    }
+
+    public String getEventDescription () {
         return eventDescription;
     }
 
@@ -150,11 +181,31 @@ public class Event {
         this.eventDescription = eventDescription;
     }
 
-    private int getSeatAvailability () {
+    public int getSeatAvailability () {
         return seatAvailability;
     }
 
     private void setSeatAvailability (int seatAvailability) {
         this.seatAvailability = seatAvailability;
+    }
+
+    public void setAdmins(Set<User> admins) {
+        this.admins = admins;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public String getEventPicture () {
+        return eventPicture;
+    }
+
+    private void setEventPicture (String eventPicture) {
+        this.eventPicture = eventPicture;
     }
 }
