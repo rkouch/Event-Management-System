@@ -12,6 +12,8 @@ import tickr.application.entities.TestEntity;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HibernateSession implements ModelSession {
     static final Logger logger = LogManager.getLogger();
@@ -27,6 +29,11 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public <T> List<T> getAll (Class<T> entityClass) {
+        return getAllStream(entityClass).collect(Collectors.toList());
+    }
+
+    @Override
+    public <T> Stream<T> getAllStream (Class<T> entityClass) {
         // Create query for entity class
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
@@ -37,8 +44,7 @@ public class HibernateSession implements ModelSession {
 
         // Make query
         Query<T> query = session.createQuery(criteriaQuery);
-
-        return query.getResultList();
+        return query.getResultStream();
     }
 
     @Override
