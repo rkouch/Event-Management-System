@@ -21,7 +21,6 @@ public class Location {
     @Column(name = "street_name")
     private String streetName;
 
-    @Column
     private String suburb;
 
     @Column(name = "unit_no")
@@ -41,7 +40,7 @@ public class Location {
 
     public Location() {}
 
-    public Location(int streetNo, String streetName, String unitNo, String postcode, String state, String country, String longitude, String latitude) {
+    public Location(int streetNo, String streetName, String unitNo, String postcode, String suburb, String state, String country, String longitude, String latitude) {
         this.streetNo = streetNo;
         this.streetName = streetName;
         this.unitNo = unitNo;
@@ -50,6 +49,7 @@ public class Location {
         this.country = country;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.suburb = suburb;
     }
 
     public UUID getId () {
