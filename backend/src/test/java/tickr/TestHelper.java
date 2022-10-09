@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;

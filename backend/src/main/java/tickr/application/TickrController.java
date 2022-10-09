@@ -17,6 +17,7 @@ import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
@@ -42,11 +43,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -363,5 +360,9 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
 
         return new UserIdResponse(user.getId().toString());
+    }
+
+    public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
+        return new EventSearch.Response(List.of(), 0);
     }
 }
