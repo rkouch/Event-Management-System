@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.EventViewResponse;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -66,10 +68,13 @@ public class Event {
     @Column(name = "seat_availability")
     private int seatAvailability;
 
+    @Column(name = "event_pic")
+    private String eventPicture;
+
     public Event() {}
 
     public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
-            String eventDescription, Location location, int seatAvailability) {
+            String eventDescription, Location location, int seatAvailability, String eventPicture) {
         this.location = location;
         this.eventName = eventName;
         this.eventStart = eventStart;
@@ -77,6 +82,7 @@ public class Event {
         this.eventDescription = eventDescription;
         this.seatAvailability = seatAvailability;
         this.host = host;
+        this.eventPicture = eventPicture;
     }
 
     public UUID getId () {
@@ -181,5 +187,25 @@ public class Event {
 
     private void setSeatAvailability (int seatAvailability) {
         this.seatAvailability = seatAvailability;
+    }
+
+    public void setAdmins(Set<User> admins) {
+        this.admins = admins;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public String getEventPicture () {
+        return eventPicture;
+    }
+
+    private void setEventPicture (String eventPicture) {
+        this.eventPicture = eventPicture;
     }
 }

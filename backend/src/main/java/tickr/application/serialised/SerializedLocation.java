@@ -1,10 +1,19 @@
 package tickr.application.serialised;
 
+import com.google.gson.annotations.SerializedName;
+
 public class SerializedLocation {
-    public String streetName; 
+    @SerializedName ("street_name")
+    public String streetName;
+
+    @SerializedName ("street_no")
     public int streetNo;
+
+    @SerializedName ("unit_no")
     public String unitNo;
-    public String postcode; 
+    public String suburb;
+
+    public String postcode;
     public String state;
     public String country;
     public String longitude;
@@ -13,10 +22,11 @@ public class SerializedLocation {
     public SerializedLocation() {
     }
 
-    public SerializedLocation(String streetName, int streetNo, String unitNo, String postcode, String state, String country, String longitude, String latitude) {
+    public SerializedLocation(String streetName, int streetNo, String unitNo, String suburb, String postcode, String state, String country, String longitude, String latitude) {
         this.streetName = streetName;
         this.streetNo = streetNo;
         this.unitNo = unitNo;
+        this.suburb = suburb;
         this.postcode = postcode;
         this.state = state;
         this.country = country;
@@ -81,7 +91,7 @@ public class SerializedLocation {
         }
 
         public SerializedLocation build () {
-            return new SerializedLocation(streetName, streetNo, unitNo, postcode, state, country, longitude, latitude);
+            return new SerializedLocation(streetName, streetNo, unitNo, suburb, postcode, state, country, longitude, latitude);
         }
     }
 }
