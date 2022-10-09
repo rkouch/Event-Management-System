@@ -114,7 +114,7 @@ public class TestViewEvent {
         
         assertEquals(id, response.host_id);
         assertEquals("test event", response.eventName);
-        assertNull(response.picture);
+        assertEquals("", response.picture);
         assertEquals(location.streetName, response.location.streetName);
         assertEquals(location.streetNo, response.location.streetNo);
         assertEquals(location.unitNo, response.location.unitNo);
