@@ -253,6 +253,19 @@ public class TickrController {
     }
 
     public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
-        return new UserIdResponse(UUID.randomUUID().toString());
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email parameter!");
+        }
+
+        var email = params.get("email");
+
+        if (!EMAIL_REGEX.matcher(email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid email!");
+        }
+
+        var user = session.getByUnique(User.class, "email", email)
+                .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
+
+        return new UserIdResponse(user.getId().toString());
     }
 }
