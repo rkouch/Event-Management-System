@@ -23,6 +23,12 @@ public class Tag {
 
     private String tags;
 
+    public Tag () {}
+
+    public Tag (String tag) {
+        this.tags = tag;
+    }
+
     private UUID getId () {
         return id;
     }
@@ -35,11 +41,11 @@ public class Tag {
         return event;
     }
 
-    private void setEvent (Event event) {
+    public void setEvent (Event event) {
         this.event = event;
     }
 
-    private String getTags () {
+    public String getTags () {
         return tags;
     }
 

@@ -18,6 +18,9 @@ public class Location {
     @Column(name = "street_no")
     private int streetNo;
 
+    @Column(name = "street_name")
+    private String streetName;
+
     @Column(name = "unit_no")
     private String unitNo;
 
@@ -33,7 +36,20 @@ public class Location {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "location")
     private Event event;
 
-    private UUID getId () {
+    public Location() {}
+
+    public Location(int streetNo, String streetName, String unitNo, String postcode, String state, String country, String longitude, String latitude) {
+        this.streetNo = streetNo;
+        this.streetName = streetName;
+        this.unitNo = unitNo;
+        this.postcode = postcode;
+        this.state = state;
+        this.country = country;
+        this.longitude = longitude;
+        this.latitude = latitude;
+    }
+
+    public UUID getId () {
         return id;
     }
 

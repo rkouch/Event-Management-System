@@ -4,15 +4,27 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.exception.ConstraintViolationException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import tickr.application.entities.AuthToken;
+import tickr.application.entities.Category;
+import tickr.application.entities.Event;
+import tickr.application.entities.Location;
+import tickr.application.entities.SeatingPlan;
+import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
+import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -26,11 +38,14 @@ import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -233,6 +248,87 @@ public class TickrController {
         }
 
         return user.getProfile();
+    }
+
+    public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
+        if (request.authToken == null) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+
+        if (!request.isValid() ) {
+            logger.debug("Missing parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isSeatingDetailsValid()) {
+            logger.debug("Missing seating parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isLocationValid()) {
+            logger.debug("Missing location parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        try {
+            startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
+            endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
+        } catch (DateTimeParseException e) {
+            logger.debug("Date is in incorrect format!");
+            throw new ForbiddenException("Invalid date time string!");
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new BadRequestException("Event start time is later than event end time!");
+        }
+
+
+        // getting user from token
+        var user = authenticateToken(session, request.authToken); 
+        // creating location from request 
+        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
+                                        request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+        session.save(location);
+
+        // creating event from request 
+        Event event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        session.save(event);
+        // creating seating plan for each section
+        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
+            session.save(seatingPlan);
+        }
+        
+        for (String tagStr : request.tags) {
+            Tag newTag = new Tag(tagStr);
+            newTag.setEvent(event);
+            session.save(newTag);
+            event.addTag(newTag);
+        }
+        for (String catStr : request.categories) {
+            Category newCat = new Category(catStr);
+            newCat.setEvent(event);
+            session.save(newCat);
+            event.addCategory(newCat); 
+        }
+        for (String admin : request.admins) {
+            User userAdmin;
+            try {
+                userAdmin = session.getById(User.class, UUID.fromString(admin))
+                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+            } catch (IllegalArgumentException e) {
+                throw new ForbiddenException("invalid admin Id");
+            }
+            
+            userAdmin.addHostingEvent(event);
+            event.addAdmin(userAdmin);
+        }        
+        event.setLocation(location);
+
+        return new CreateEventResponse(event.getId().toString());
     }
 
     public void userEditProfile (ModelSession session, EditProfileRequest request) {
