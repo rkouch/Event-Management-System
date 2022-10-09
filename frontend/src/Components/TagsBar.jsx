@@ -47,51 +47,54 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
           </>
         : <></>
       }
-      <Box 
-        sx={{
-          backgroundColor: editable ? alpha('#6A7B8A', 0.3) : "rgba(0,0,0,0)",
-          padding: '10px',
-          borderRadius: 3,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px'
-        }}
-      >
-        {editable
-          ? <>
-              {tags.map((data, key) => {
-                return (
-                  <Chip
-                    key={key}
-                    icon={<CentredBox ><TagIcon sx={{color: "#FFFFFF"}}/></CentredBox>}
-                    label={data}
-                    onDelete={handleDelete(data, key)}
-                    sx={{
-                      backgroundColor: stringToColor(data),
-                      color: "#FFFFFF"
-                    }}
-                  />
-                );
-              })}
-            </>
-          : <>
-              {tags.map((data, key) => {
-                return (
-                  <Chip
-                    key={key}
-                    icon={<CentredBox ><TagIcon sx={{color: "#FFFFFF"}}/></CentredBox>}
-                    label={data}
-                    sx={{
-                      backgroundColor: stringToColor(data),
-                      color: "#FFFFFF"
-                    }}
-                  />
-                );
-              })}
-            </>
-        }
-        
-      </Box>
+      {(tags.length > 0)
+        ? <Box 
+            sx={{
+              backgroundColor: editable ? alpha('#6A7B8A', 0.3) : "rgba(0,0,0,0)",
+              padding: '10px',
+              borderRadius: 3,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}
+          >
+            {editable
+              ? <>
+                  {tags.map((data, key) => {
+                    return (
+                      <Chip
+                        key={key}
+                        icon={<CentredBox ><TagIcon sx={{color: "#FFFFFF"}}/></CentredBox>}
+                        label={data}
+                        onDelete={handleDelete(data, key)}
+                        sx={{
+                          backgroundColor: stringToColor(data),
+                          color: "#FFFFFF"
+                        }}
+                      />
+                    );
+                  })}
+                </>
+              : <>
+                  {tags.map((data, key) => {
+                    return (
+                      <Chip
+                        key={key}
+                        icon={<CentredBox ><TagIcon sx={{color: "#FFFFFF"}}/></CentredBox>}
+                        label={data}
+                        sx={{
+                          backgroundColor: stringToColor(data),
+                          color: "#FFFFFF"
+                        }}
+                      />
+                    );
+                  })}
+                </>
+            }
+          </Box>
+          : <></>
+      }
+      
     </Box>
   )
 }
