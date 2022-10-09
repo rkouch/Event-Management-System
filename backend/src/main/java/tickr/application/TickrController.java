@@ -29,7 +29,6 @@ import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
-import tickr.application.serialised.responses.EditEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
@@ -382,6 +381,10 @@ public class TickrController {
         return new UserIdResponse(user.getId().toString());
     }
 
+    public void editEvent (ModelSession session, EditEventRequest request) {
+        return;
+    }
+
     public EventViewResponse eventView (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("event_id")) {
             throw new BadRequestException("Missing event_id!");
@@ -412,10 +415,6 @@ public class TickrController {
 
         return new EventViewResponse(event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
                                     admins, categories, tags);
-    }
-
-    public EditEventResponse editEvent (ModelSession session, EditEventRequest request) {
-        return new EditEventResponse();
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
