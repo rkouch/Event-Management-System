@@ -61,6 +61,8 @@ public class Server {
 
         get("/api/user/profile", TickrController::userGetProfile);
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
+
+        get("/api/user/search", TickrController::userSearch);
     }
 
     /**

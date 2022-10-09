@@ -263,7 +263,7 @@ public class TickrController {
             throw new BadRequestException("Invalid email!");
         }
 
-        var user = session.getByUnique(User.class, "email", email)
+        var user = session.getByUnique(User.class, "email", email.toLowerCase())
                 .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
 
         return new UserIdResponse(user.getId().toString());

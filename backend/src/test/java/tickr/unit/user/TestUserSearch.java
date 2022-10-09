@@ -66,6 +66,9 @@ public class TestUserSearch {
         var searchId = controller.userSearch(session, Map.of("email", "test@example.com")).userId;
 
         assertEquals(userId, searchId);
+
+        var searchId2 = controller.userSearch(session, Map.of("email", "TEsT@eXamPLe.cOm")).userId;
+        assertEquals(userId, searchId2);
     }
 
     @Test
