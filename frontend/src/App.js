@@ -15,7 +15,7 @@ import PageNotFound from './Pages/PageNotFound';
 import ChangePassword from './Pages/ChangePassword';
 import { getToken, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
-
+import CreateEvent from './Pages/CreateEvent';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +30,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login/>
+  },
+  {
+    path: "/create_event",
+    element: <CreateEvent/>
   },
   {
     path: "/my_profile",
