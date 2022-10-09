@@ -26,6 +26,7 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.TestResponses;
+import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -339,5 +340,22 @@ public class TickrController {
                     FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
                             .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
         }
+    }
+
+    public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email parameter!");
+        }
+
+        var email = params.get("email");
+
+        if (!EMAIL_REGEX.matcher(email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid email!");
+        }
+
+        var user = session.getByUnique(User.class, "email", email.toLowerCase())
+                .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
+
+        return new UserIdResponse(user.getId().toString());
     }
 }
