@@ -17,6 +17,7 @@ import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
+import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 <<<<<<< HEAD
 import tickr.application.serialised.requests.EditEventRequest;
@@ -50,12 +51,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Class encapsulating business logic. Is created once per user session, which is distinct to ModelSession instances -
@@ -373,7 +372,50 @@ public class TickrController {
         return new UserIdResponse(user.getId().toString());
     }
 
+<<<<<<< HEAD
     public EditEventResponse editEvent (ModelSession session, EditEventRequest request) {
         return new EditEventResponse();
+=======
+    public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging parameters!");
+        }
+        int pageStart;
+        int maxResults;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging parameters!");
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging parameters!");
+        }
+
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        }
+
+        EventSearch.Options options = null;
+        if (params.containsKey("search_options")) {
+            options = EventSearch.fromParams(params.get("search_options"));
+        }
+
+        var eventStream = session.getAllStream(Event.class);
+
+        var numItems = new AtomicInteger();
+        var eventList = eventStream
+                .peek(x -> numItems.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        return new EventSearch.Response(eventList, numItems.get());
+>>>>>>> main
     }
 }
