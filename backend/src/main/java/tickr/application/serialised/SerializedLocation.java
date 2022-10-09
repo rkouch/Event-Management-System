@@ -26,5 +26,64 @@ public class SerializedLocation {
         this.latitude = latitude;
     } 
 
+    public static class Builder {
+        private String streetName = "High St";
+        private int streetNo = 11;
+        private String unitNo = "";
+        private String suburb = "Kensington";
+        private String postcode = "2052";
+        private String state = "NSW";
+        private String country = "Australia";
+        private String longitude = "1.18231";
+        private String latitude = "15.12731";
 
+        public Builder withStreetName (String streetName) {
+            this.streetName = streetName;
+            return this;
+        }
+
+        public Builder withStreetNo (int streetNo) {
+            this.streetNo = streetNo;
+            return this;
+        }
+
+        public Builder withUnitNo (String unitNo) {
+            this.unitNo = unitNo;
+            return this;
+        }
+
+        public Builder withSuburb (String suburb) {
+            this.suburb = suburb;
+            return this;
+        }
+
+        public Builder withPostcode (String postcode) {
+            this.postcode = postcode;
+            return this;
+        }
+
+        public Builder withState (String state) {
+            this.state = state;
+            return this;
+        }
+
+        public Builder withCountry (String country) {
+            this.country = country;
+            return this;
+        }
+
+        public Builder withLongitude (String longitude) {
+            this.longitude = longitude;
+            return this;
+        }
+
+        public Builder withLatitude (String latitude) {
+            this.latitude = latitude;
+            return this;
+        }
+
+        public SerializedLocation build () {
+            return new SerializedLocation(streetName, streetNo, unitNo, postcode, state, country, longitude, latitude);
+        }
+    }
 }

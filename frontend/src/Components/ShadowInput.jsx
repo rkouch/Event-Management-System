@@ -2,7 +2,7 @@ import React from  'react'
 import { setFieldInState } from '../Helpers'
 import { ContrastInput, ContrastInputWrapper } from '../Styles/InputStyles'
 
-export default function ShadowInput({backgroundColor='#FFFFFF', state, field, setState, sx={}, defaultValue='', placeholder='', setError=null}) {
+export default function ShadowInput({backgroundColor='#FFFFFF', state, field, setState, sx={}, defaultValue='', placeholder='', setError=null, type='text'}) {
 
   const onChange = (e) => {
     setFieldInState(field, e.target.value, state, setState)
@@ -16,7 +16,7 @@ export default function ShadowInput({backgroundColor='#FFFFFF', state, field, se
 
   return (
     <ContrastInputWrapper>
-      <ContrastInput fullWidth sx={sx} defaultValue={defaultValue} onChange={onChange} placeholder={placeholder}>
+      <ContrastInput type={type} fullWidth sx={sx} defaultValue={defaultValue} onChange={onChange} placeholder={placeholder}>
       </ContrastInput>
     </ContrastInputWrapper>
   )

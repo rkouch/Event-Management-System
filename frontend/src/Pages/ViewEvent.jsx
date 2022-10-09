@@ -2,30 +2,17 @@ import React from "react";
 
 import Header from "../Components/Header";
 import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
-import FormControl, { useFormControl } from "@mui/material/FormControl";
-import FormHelperText from "@mui/material/FormHelperText";
-import { checkValidEmail, setFieldInState } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
-import { H3 } from "../Styles/HelperStyles";
-import ListItemText from "@mui/material/ListItemText";
-import DeleteIcon from "@mui/icons-material/Delete";
-import IconButton from "@mui/material/IconButton";
-import { Box, FormLabel, List, ListItem, Typography } from "@mui/material";
-import ShadowInput from "../Components/ShadowInput";
-import { borderRadius, styled, alpha } from '@mui/system';
-import EmailIcon from '@mui/icons-material/Email';
-import Alert from '@mui/material/Alert';
-import Collapse from '@mui/material/Collapse';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import { Box, Divider, Typography } from "@mui/material";
+import { styled, alpha } from '@mui/system';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AvatarGroup from '@mui/material/AvatarGroup';
 
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
+import UserAvatar from "../Components/UserAvatar";
+import AdminsBar from "../Components/AdminBar";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -41,8 +28,28 @@ export const EventForm = styled("div")({
 });
 
 export default function ViewEvent({}) {
+  var calendar = require('dayjs/plugin/calendar')
+  dayjs.extend(calendar)
   
-  const [event, setEvent] = React.useState({})
+  const testDate1 = dayjs().add(7, 'day')
+  const testDate2 = testDate1.add(7, 'hour')
+
+  const [event, setEvent] = React.useState({
+    event_name: "",
+    location: {
+      street_no: "",
+      street_name: "",
+      postcode: "",
+      state: "",
+      country: ""
+    },
+    host_id: '',
+    start_date: dayjs().toISOString(),
+    end_date: dayjs().toISOString(),
+    description: "",
+    tags: [],
+    admins: [],
+  })
 
   const testEvent = {
     event_name: "Welcome Back Ray",
@@ -54,17 +61,19 @@ export default function ViewEvent({}) {
       country: "Australia"
     },
     host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
-    start_date: dayjs(),
-    end_date: dayjs(),
+    start_date: testDate1.toISOString(),
+    end_date: testDate2.toISOString(),
     description: "This is going to be a party",
     tags: ["music", "festival", "food"],
-    admins: ['8fa85163-5fe7-4183-8026-9b5ff174ee4c'],
+    admins: ["8fa85163-5fe7-4183-8026-9b5ff174ee4c"],
   }
 
   React.useEffect(()=> {
     setEvent(testEvent)
-  })
+    console.log(event)
+  },[])
 
+  console.log(event.start_date)
   return (
     <BackdropNoBG>
       <Header />
@@ -82,7 +91,6 @@ export default function ViewEvent({}) {
           paddingTop: 1,
         }}
       >
-        <H3 sx={{ fontSize: "30px" }}>Create Event</H3>
         <div>
           <EventForm>
             <Grid
@@ -109,83 +117,106 @@ export default function ViewEvent({}) {
                 </CentredBox>
               </Grid>
               <Grid item xs={6}>
-                <Grid container spacing={2}>
+                <Grid container spacing={0}>
                   <Grid item xs={12}>
-                    <Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 40,
+                        fontWeight: 'bold',
+                      }}
+                    >
                       {event.event_name}
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography>
-                      {event.location.street_no} {event.location.street_name}, {event.location.postcode}, {event.location.state}, {event.location.country}
-                    </Typography>
-                  </Grid>
-
-                  <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth={false}>
-                        <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}, color: "#999999"}}>Start Time</FormLabel>
-                        <ContrastInputWrapper>
-                          <DateTimePicker
-                            value={event.start_date}
-                            inputFormat="DD/MM/YYYY HH:mm"
-                            renderInput={(params) => <TextField {...params} />}
-                            disabled
-                          />
-                        </ContrastInputWrapper>
-                      </FormControl>
+                    <Grid container>
+                      <Grid item xs={1} sx={{display: 'flex', alignItems: 'center'}}>
+                        <CentredBox sx={{gap: '5px', justifyContent: 'flex-start'}}>
+                          <CalendarMonthIcon sx={{color: '#AE759F'}}/>
+                          
+                        </CentredBox>
+                      </Grid>
+                      <Grid item xs={11}>
+                        <Typography
+                          sx={{
+                            fontSize: 17,
+                            color: "#AE759F",
+                          }}
+                        >
+                          {dayjs(event.start_date).format('llll')} - {dayjs(event.end_date).format('llll')}
+                        </Typography>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth={false}>
-                        <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}, color: "#999999"}}>Start Time</FormLabel>
-                        <ContrastInputWrapper>
-                          <DateTimePicker
-                            value={event.end_date}
-                            inputFormat="DD/MM/YYYY HH:mm"
-                            renderInput={(params) => <TextField {...params} />}
-                            disabled
-                          />
-                        </ContrastInputWrapper>
-                      </FormControl>
-                    </Grid>
-                  </LocalizationProvider>
-                  <Grid item xs={7}>
-                    <h3>Admin List:</h3>
-                    <List>
-                      {event.admins.map((value, key) => {
-                        return (
-                          <div key={key}>
-                            <ContrastInputWrapper >
-                              <ListItem secondaryAction={
-                                <IconButton
-                                  edge="end"
-                                  aria-label="delete"
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              }>
-                                <ListItemText primary={`@${value.admin}`}/>
-                              </ListItem>
-                            </ContrastInputWrapper>
-                            <br/>
-                          </div>
-                        );
-                      })}
-                    </List>
-                    
                   </Grid>
-                  <Grid item xs={5}/>
                   <Grid item xs={12}>
-                    <Typography>
+                    <Grid container>
+                      <Grid item xs={1} sx={{display: 'flex', alignItems: 'center'}}>
+                        <CentredBox sx={{gap: '5px', justifyContent: 'flex-start'}}>
+                          <LocationOnIcon sx={{color: '#000000'}}/>
+                        </CentredBox>
+                      </Grid>
+                      <Grid item xs={11}>
+                        <Typography>
+                          {event.location.street_no} {event.location.street_name}, {event.location.postcode}, {event.location.state}, {event.location.country}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <br/>
+                    <Typography
+                      sx={{
+                        color: "#999999"
+                      }}
+                    >
+                      About this event
+                    </Typography>
+                    <Divider/>
+                    <Typography sx={{pt: 2}}>
                       {event.description}
                     </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <br/>
+                    <Box>
+                      <Typography
+                        sx={{
+                          color: "#999999"
+                        }}
+                      >
+                        Hosts
+                      </Typography>
+                      <Divider sx={{width: "50px"}}/>
+                      <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
+                        <UserAvatar userId={event.host_id} size={35}/>
+                        {event.admins.map((value, key) => {
+                          return (
+                            <UserAvatar key={key} userId={value} size={35}/>
+                          );
+                        })}
+                      </AvatarGroup>
+                    </Box>
+                    <br/>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <br/>
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Tags
+                      </Typography>
+                      <TagsBar tags={event.tags} editable={false}/>
+                    </Box>
                   </Grid>
                 </Grid>
               </Grid>
               <Grid item xs={1}></Grid>
               <Grid item xs={5}>
                 <Box>
-                  <h3> Ticket Allocations </h3>
+                  <h3> Tickets </h3>
                   {/* <Box>
                     {seatingList.map((value, index) => {
                       return (
@@ -220,10 +251,6 @@ export default function ViewEvent({}) {
                   </Box> */}
                 </Box>
                 <br/>
-                <Box>
-                  <h3> Tags </h3>
-                  <TagsBar tags={event.tags} editable={false}/>
-                </Box>
               </Grid>
             </Grid>
           </EventForm>
