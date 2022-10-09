@@ -9,6 +9,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.entities.AuthToken;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
@@ -406,6 +408,13 @@ public class TickrController {
         
         var resetToken = new ResetToken(user, Duration.ofHours(24));
         session.save(resetToken);
+
+        // localhost:3000/change_password/{email}/{reset_token}
+        var resetUrl = String.format("localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
+
+        var messageString = String.format("Please reset your Tickr account password here: %s\n", resetUrl);
+
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(user.getEmail(), "Tickr account password reset", messageString);
  
         return new RequestChangePasswordResponse(true);
     }
