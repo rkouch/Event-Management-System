@@ -304,13 +304,13 @@ public class TickrController {
         var user = authenticateToken(session, request.authToken); 
         // creating location from request 
         Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                                        request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+                                        request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
         session.save(location);
 
         // creating event from request
         Event event;
         if (request.picture == null) {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), "");
         } else {
             event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
                     FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
