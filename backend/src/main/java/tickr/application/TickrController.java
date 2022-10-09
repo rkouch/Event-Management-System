@@ -385,9 +385,10 @@ public class TickrController {
  
         var user = authenticateToken(session, request.authToken);
         user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
-        user.changePassword(request.newPassword);
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
  
-        return new AuthTokenResponse(request.authToken);
+        return new AuthTokenResponse(newAuthToken);
     }
  
     public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest userRequestChangePasswordRequest) {
@@ -427,9 +428,10 @@ public class TickrController {
         var user = session.getByUnique(User.class, "email", request.email)
                 .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
 
-        user.changePassword(request.newPassword);
+        user.changePassword(session, request.newPassword);
+        var newAuthToken = user.makeToken(session, AUTH_TOKEN_EXPIRY).makeJWT();
  
-        return new AuthTokenResponse(user.authenticatePassword(session, request.newPassword, AUTH_TOKEN_EXPIRY).makeJWT());
+        return new AuthTokenResponse(newAuthToken);
     }
 
     public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {

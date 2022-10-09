@@ -91,9 +91,6 @@ public class TestChangePassword {
         var response = httpHelper.put("/api/user/reset", new UserChangePasswordRequest("Testing123!", "Newpassword123!", authToken));
         assertEquals(200, response.getStatus());
 
-        response = httpHelper.delete("/api/user/logout", new UserLogoutRequest(authToken));
-        assertEquals(200, response.getStatus());
-        
         assertEquals(200, httpHelper.post("/api/user/login",
                 new UserLoginRequest("test@example.com", "Newpassword123!")).getStatus());
     }

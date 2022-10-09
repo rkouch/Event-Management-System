@@ -131,10 +131,14 @@ public class User {
      * @param newPassword
      * @return
      */
-    public void changePassword (String newPassword) {
-        if (!verifyPassword(newPassword)) {
-            this.passwordHash = CryptoHelper.hashPassword(newPassword);
-        }
+    public void changePassword (ModelSession session, String newPassword) {
+        this.passwordHash = CryptoHelper.hashPassword(newPassword);
+        
+        for (var i : tokens) {
+            session.remove(i);
+        } 
+        tokens.clear();
+        
     }
 
     /**
