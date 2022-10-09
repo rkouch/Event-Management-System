@@ -23,6 +23,7 @@ import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.EventViewRequest;
+import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -453,5 +454,16 @@ public class TickrController {
                 .collect(Collectors.toList());
 
         return new EventSearch.Response(eventList, numItems.get());
+    }
+
+    public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var token = getTokenFromStr(session, request.authToken);
+        var user = token.getUser();
+        session.
+        user.invalidateToken(session, token);
     }
 }
