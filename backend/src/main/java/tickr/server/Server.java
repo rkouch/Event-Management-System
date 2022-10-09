@@ -8,6 +8,7 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
@@ -63,6 +64,8 @@ public class Server {
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
 
         get("/api/user/search", TickrController::userSearch);
+
+        put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
     }
 
     /**

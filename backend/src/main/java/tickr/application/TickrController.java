@@ -8,11 +8,13 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.TestEntity;
 import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
+import tickr.application.serialised.responses.EditEventResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -267,5 +269,9 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("There is no user with email " + email + "."));
 
         return new UserIdResponse(user.getId().toString());
+    }
+
+    public EditEventResponse editEvent (ModelSession session, EditEventRequest request) {
+        return new EditEventResponse();
     }
 }
