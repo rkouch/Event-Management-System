@@ -41,7 +41,7 @@ export default function EventCardsBar({filterKeys=[], filterValues=[]}) {
   const getEventIds = async () => {
     try {
       const response = await apiFetch('GET', `/api/event/search?${searchParams}`, null)
-      console.log(response)
+      setEventIds(response.event_ids)
     } catch (error) {
       console.log(error)
     }
@@ -53,7 +53,11 @@ export default function EventCardsBar({filterKeys=[], filterValues=[]}) {
 
   return (
     <CardsBar>
-      Hi
+      {eventIds.map((value, key) => {
+        return (
+          <EventCard key={key} event_id={value}/>
+        )
+      })}
     </CardsBar>
   )
 }

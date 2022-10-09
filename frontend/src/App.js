@@ -66,7 +66,7 @@ const router = createBrowserRouter([
     element: <Profile editable={false}/>
   },
   {
-    path: "/edit_event",
+    path: "/edit_event/:event_id",
     element: <EditEvent/>
   }
 ])

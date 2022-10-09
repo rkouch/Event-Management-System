@@ -1,10 +1,10 @@
 import React from "react";
 
 import Header from "../Components/Header";
-import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
+import { BackdropNoBG, CentredBox, UploadPhoto } from "../Styles/HelperStyles";
 import dayjs from "dayjs";
 import Grid from "@mui/material/Unstable_Grid2";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import { styled, alpha } from '@mui/system';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -13,8 +13,15 @@ import LinearProgress from '@mui/material/LinearProgress';
 import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
-import { useParams } from "react-router-dom";
-import { getEventData } from "../Helpers";
+import { useNavigate, useParams } from "react-router-dom";
+import { checkIfUser, getEventData } from "../Helpers";
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import EditIcon from '@mui/icons-material/Edit';
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -31,7 +38,8 @@ export const EventForm = styled("div")({
 
 export default function ViewEvent({}) {
   const params = useParams()
-
+  const navigate = useNavigate()
+  const [editable, setEditable] = React.useState()
   var calendar = require('dayjs/plugin/calendar')
   dayjs.extend(calendar)
   
@@ -76,10 +84,15 @@ export default function ViewEvent({}) {
 
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
-    console.log(event)
+    setEditable(checkIfUser())
   },[])
 
-  console.log(event.start_date)
+  const goEdit = (e) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    navigate(`/edit_event/${params.event_id}`)
+  }
+
   return (
     <BackdropNoBG>
       <Header />
@@ -123,29 +136,41 @@ export default function ViewEvent({}) {
                       borderRadius: 5,
                     }}
                   >
-                    <h3>
-                      Event cover photo
-                    </h3>
+                    {(event.picture === '')
+                      ? <h3>
+                          Event cover photo
+                        </h3>
+                      : <UploadPhoto src={event.picture}/>
+                    }
                   </CentredBox>
                 </Grid>
                 <Grid item xs={6}>
                   <Grid container spacing={0}>
                     <Grid item xs={12}>
-                      <Typography
-                        sx={{
-                          fontSize: 40,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {event.event_name}
-                      </Typography>
+                      <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                        <Typography
+                          sx={{
+                            fontSize: 40,
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {event.event_name}
+                        </Typography>
+                        {(editable)
+                          ? <Tooltip title="Edit Event">
+                              <IconButton onClick={goEdit}>
+                                <EditIcon/>
+                              </IconButton>
+                            </Tooltip>
+                          : <></>
+                        }
+                      </Box>
                     </Grid>
                     <Grid item xs={12}>
                       <Grid container>
                         <Grid item xs={1} sx={{display: 'flex', alignItems: 'center'}}>
                           <CentredBox sx={{gap: '5px', justifyContent: 'flex-start'}}>
                             <CalendarMonthIcon sx={{color: '#AE759F'}}/>
-                            
                           </CentredBox>
                         </Grid>
                         <Grid item xs={11}>
@@ -155,7 +180,7 @@ export default function ViewEvent({}) {
                               color: "#AE759F",
                             }}
                           >
-                            {dayjs(event.start_date).format('llll')} - {dayjs(event.end_date).format('llll')}
+                            {dayjs(event.start_date).format('LLLL')} - {dayjs(event.end_date).format('LLLL')}
                           </Typography>
                         </Grid>
                       </Grid>
@@ -169,7 +194,7 @@ export default function ViewEvent({}) {
                         </Grid>
                         <Grid item xs={11}>
                           <Typography>
-                            {event.location.street_no} {event.location.street_name}, {event.location.postcode}, {event.location.state}, {event.location.country}
+                            {event.location.street_no} {event.location.street_name}, {event.location.suburb}, {event.location.postcode}, {event.location.state}, {event.location.country}
                           </Typography>
                         </Grid>
                       </Grid>
@@ -228,7 +253,35 @@ export default function ViewEvent({}) {
                 <Grid item xs={1}></Grid>
                 <Grid item xs={5}>
                   <Box>
-                    <h3> Tickets </h3>
+                    <Typography
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: 35,
+                        pt: 2,
+                      }}
+                    >
+                      Tickets
+                    </Typography>
+                    <TableContainer>
+                      <Table stickyHeader sx={{maxHeight: 300}}>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}}>Section</TableCell>
+                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Availability</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {event.seating_details.map((section, key) => {
+                            return (
+                              <TableRow key={key}>
+                                <TableCell>{section.section}</TableCell>
+                                <TableCell align="center">{section.availability}</TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
                     {/* <Box>
                       {seatingList.map((value, index) => {
                         return (

@@ -25,13 +25,6 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import LoadingButton from "../Components/LoadingButton"
 import {CircularProgress} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import Button from '@mui/material/Button';
@@ -377,16 +370,16 @@ export default function CreateEvent({}) {
       description: description.value,
       seating_details: seatingList,
       categories: [],
-      tags: [],
+      tags: tags,
       admins: adminList,
+      picture: eventPicture,
     };
 
     try {
       const response = await apiFetch('POST', '/api/event/create', body)
-      // View event
-      // Navigate to event
-      // navigate(`/view_event/${response.event_id}`)
       console.log(response)
+      // Navigate to event
+      navigate(`/view_event/${response.event_id}`)
       setLoading(false)
     } catch (e) {
 

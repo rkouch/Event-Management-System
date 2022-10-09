@@ -33,13 +33,18 @@ export default function AccountMenu() {
     setAnchorEl(null);
   };
 
-  const doLogout = (e) => {
+  const doLogout = async (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
-    setToken(null)
-    setIsLoggedIn(false)
-    navigate('/')
-    window.location.reload(false);
+    try {
+      const response = await('DELETE', '/api/user/logout', {auth_token: getToken()})
+      setToken(null)
+      setIsLoggedIn(false)
+      navigate('/')
+      window.location.reload(false);
+    } catch (e) {
+      console.log(e)
+    }
   };
 
   const [userData, setUserData] = React.useState({

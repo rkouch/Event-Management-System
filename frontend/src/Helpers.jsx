@@ -113,7 +113,6 @@ export const getUserData = async (body, setUserData=null) => {
 export const getEventData = async (eventId, setEventData=null) => {
   try {
     const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
-    console.log(response)
     setEventData(response)
   } catch (error) {
     console.log(error)

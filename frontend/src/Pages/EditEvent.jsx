@@ -1,7 +1,7 @@
 import React from "react";
 
 import Header from "../Components/Header";
-import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
+import { BackdropNoBG, CentredBox, UploadPhoto } from "../Styles/HelperStyles";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -21,17 +21,15 @@ import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
+import SaveIcon from '@mui/icons-material/Save';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import LoadingButton from "../Components/LoadingButton"
 import {CircularProgress} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import Button from '@mui/material/Button';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
@@ -125,6 +123,11 @@ export default function EditEvent({}) {
     error: false,
     errorMsg: '',
   });
+  const [eventPicture, setEventPicture] = React.useState('')
+
+  const [toggleUpload, setToggleUpload] = React.useState(true)
+
+  const [published, setPublished] = React.useState(false)
 
   const testDate1 = dayjs().add(7, 'day')
   const testDate2 = testDate1.add(7, 'hour')
@@ -158,7 +161,7 @@ export default function EditEvent({}) {
     setFieldInState('value', response.event_name, eventName, setEventName)
     setFieldInState('value', response.description, description, setDescription)
     const eventLocation = response.location
-    setFieldInState('value', eventLocation.street_no + eventLocation.street_name, address, setAddress)
+    setFieldInState('value', eventLocation.street_no.toString() + ' ' + eventLocation.street_name, address, setAddress)
     setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
     setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
     setFieldInState('value', eventLocation.state, state, setState)
@@ -168,6 +171,7 @@ export default function EditEvent({}) {
     setFieldInState('start', dayjs(response.start_date), start, setStartValue)
     setFieldInState('end', dayjs(response.end_date), end, setEndValue)
     setSeatingList(response.seating_details)
+    // setPublished(response.published)
   }, [])
 
 
@@ -412,8 +416,8 @@ export default function EditEvent({}) {
     };
 
     try {
-      const response = await apiFetch('POST', '/api/event/create', body)
-      console.log(response)
+      // const response = await apiFetch('POST', '/api/event/edit', body)
+      // console.log(response)
     } catch (e) {
 
     }
@@ -437,7 +441,18 @@ export default function EditEvent({}) {
           paddingTop: 1,
         }}
       >
-        <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
+        <Grid container spacing={2}>
+          <Grid item xs={3}>
+          </Grid>
+          <Grid item xs={6}>
+            <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
+          </Grid>
+          <Grid item xs={3}>
+            <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
+              <FormControlLabel control={<Checkbox defaultChecked sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+            </Box>
+          </Grid>
+        </Grid>
         <div>
           <EventForm>
             <Grid
@@ -451,17 +466,56 @@ export default function EditEvent({}) {
               }}
             >
               <Grid item xs={12}>
-                <CentredBox
-                  sx={{
-                    height: 200,
-                    backgroundColor: alpha('#6A7B8A', 0.3),
-                    borderRadius: 5,
-                  }}
-                >
-                  <h3>
-                    Event cover photo
-                  </h3>
-                </CentredBox>
+              <ContrastInputWrapper>
+                  <CentredBox
+                    sx={{
+                      height: 200,
+                      borderRadius: 5,
+                    }}
+                    onMouseOver={() => {
+                      setToggleUpload(false);
+                    }}
+                    onMouseOut={() => {
+                      setToggleUpload(true);
+                    }}
+                  > 
+                    {!toggleUpload
+                      ? <Button 
+                          sx={{
+                            backgroundColor: "#92C5DD",
+                            "&:hover": {
+                              backgroundColor: "#73B5D3"
+                            },
+                            color: 'white'
+                          }}
+                          variant="contained"
+                          component="label"
+                          startIcon={<PhotoCamera/>
+                        }>
+                          Upload Event Photo
+                          <input
+                            hidden
+                            accept="image/*"
+                            multiple
+                            type="file" 
+                            onChange={async (e) => {
+                              const image = await fileToDataUrl(e.target.files[0])
+                              setEventPicture(image)
+                              console.log("uploaded image")
+                            }}
+                          />
+                        </Button>
+                      : <>
+                          {(eventPicture === '')
+                            ? <h3>
+                                Event cover photo
+                              </h3>
+                            : <UploadPhoto src={eventPicture}/>
+                          }
+                        </>                      
+                    }
+                  </CentredBox>
+                </ContrastInputWrapper>
               </Grid>
               <Grid item xs={6}>
                 <h3> Event Details </h3>
@@ -811,14 +865,33 @@ export default function EditEvent({}) {
               </Grid>
             </Grid>
           </EventForm>
-          <FormInput>
-            <CentredBox>
-              <TkrButton variant="contained" onClick={submitEvent}>Create Event</TkrButton>
-            </CentredBox>
-            <Collapse in={errorStatus}>
-              <Alert severity="error">{errorMsg}.</Alert>
-            </Collapse>
-          </FormInput>
+          <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
+            <Grid item xs={3}>
+              <FormInput>
+                <CentredBox>
+                  <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
+                    Delete
+                  </DeleteButton>
+                </CentredBox>
+              </FormInput>
+            </Grid>
+            <Grid item xs={6}>
+            </Grid> 
+            <Grid item xs={3}>
+              <FormInput>
+                <CentredBox>
+                  <TkrButton variant="contained" onClick={submitEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
+                </CentredBox>
+                <Collapse in={errorStatus}>
+                  <Alert severity="error">{errorMsg}.</Alert>
+                </Collapse>
+              </FormInput>
+            </Grid>
+          </Grid>
+          <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+            
+            
+          </Box>
         </div>
       </Box>
     </BackdropNoBG>

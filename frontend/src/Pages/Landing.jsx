@@ -109,12 +109,6 @@ export default function Landing({}) {
             </SectionHeading>
             <TabPanel value="1" sx={{padding: 0}}>
               <EventCardsBar/>
-              <CardsBar>
-                <EventCard/>
-                <EventCard/>
-                <EventCard/>
-                <EventCard/>
-              </CardsBar>
             </TabPanel>
             <TabPanel value="2" sx={{padding: 0}}>
               <CardsBar>
