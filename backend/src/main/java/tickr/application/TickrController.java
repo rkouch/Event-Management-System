@@ -25,17 +25,18 @@ import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventViewRequest;
+import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -532,5 +533,20 @@ public class TickrController {
                 .collect(Collectors.toList());
 
         return new EventSearch.Response(eventList, numItems.get());
+    }
+
+    public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var token = getTokenFromStr(session, request.authToken);
+        User user = token.getUser();
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        var tokenSet = new HashSet<>(user.getTokens());
+        for (var i : tokenSet) {
+            user.invalidateToken(session, i);
+        }
+        session.remove(user);
     }
 }
