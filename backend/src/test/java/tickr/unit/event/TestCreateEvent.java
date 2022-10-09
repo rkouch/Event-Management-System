@@ -80,6 +80,52 @@ public class TestCreateEvent {
             "test picture", location, null, "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
             "test picture", location, "2011-12-03T10:15:30", null, "description", seats, admins, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, null, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, null, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, null)));
+        CreateEventRequest.SeatingDetails invalidSeats1 = new CreateEventRequest.SeatingDetails("", 100);
+        CreateEventRequest.SeatingDetails invalidSeats2 = new CreateEventRequest.SeatingDetails(null, 50);
+        List<CreateEventRequest.SeatingDetails> invalidSeats = new ArrayList<CreateEventRequest.SeatingDetails>();
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeats, admins, categories, tags)));
+    }
+
+    @Test 
+    public void testMissingLocationParamaters () {
+        var session = model.makeSession();
+        var authTokenString = controller.userRegister(session,
+        new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                "Password123!", "2022-04-14")).authToken;
+        // session = TestHelper.commitMakeSession(model, session);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
+        List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
+        seats.add(seats1);
+        seats.add(seats2);
+        Set<String> admins = new HashSet<>();
+        admins.add("test1@example.com");
+        Set<String> categories = new HashSet<>();
+        categories.add("testcategory");
+        Set<String> tags = new HashSet<>();
+        tags.add("testtags");
+        SerializedLocation location1 = new SerializedLocation("test street", 12, null, null, "NSW", "Aus", "", "");
+        SerializedLocation location2 = new SerializedLocation("test street", 12, null, "2000", null, "Aus", "", "");
+        SerializedLocation location3 = new SerializedLocation("test street", 12, null, "2000", "NSW", null, "", "");
+        SerializedLocation location4 = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", null, "");
+        SerializedLocation location5 = new SerializedLocation("test street", 12, null, "2000", "NSW", "Aus", "", null);
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location1, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location2, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location3, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location4, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "", 
+            "test picture", location5, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, tags)));
     }
 
     @Test 

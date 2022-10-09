@@ -73,12 +73,21 @@ public class CreateEventRequest {
 
     public boolean isValid() {
         return authToken != null && !authToken.isEmpty() && eventName != null && !eventName.isEmpty()
-                && location != null &&  startDate != null && endDate != null;
+                && location != null &&  startDate != null && endDate != null && admins != null && categories != null && tags != null;
     }
 
-    // public boolean isSeatingDetailsValid() {
+    public boolean isSeatingDetailsValid() {
+        for (SeatingDetails seats : seatingDetails) {
+            if (seats.section == null || seats.section.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    // }
+    public boolean isLocationValid() {
+        return location.postcode != null && location.state != null && location.country != null && location.longitude != null && location.latitude != null;
+    }
 
     public int getSeatAvailability() {
         int count = 0;

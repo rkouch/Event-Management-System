@@ -254,8 +254,18 @@ public class TickrController {
             throw new UnauthorizedException("Missing auth token!");
         }
 
-        if (!request.isValid()) {
+        if (!request.isValid() ) {
             logger.debug("Missing parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isSeatingDetailsValid()) {
+            logger.debug("Missing seating parameters!");
+            throw new BadRequestException("Invalid event request!");
+        }
+
+        if (!request.isLocationValid()) {
+            logger.debug("Missing location parameters!");
             throw new BadRequestException("Invalid event request!");
         }
 
