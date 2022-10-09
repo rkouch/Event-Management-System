@@ -22,18 +22,11 @@ import StandardLogo from "../Components/StandardLogo";
 import PasswordInput from "../Components/PasswordInput";
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null}) {
-=======
 export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null}, disabled=false) {
->>>>>>> main
-=======
-export default function LoadingButton({label, method, sx={}, route, body, navigateTo=null, func = null, funcVal = null, startIcon=null, state=null, setState=null, disabled=false}) {
->>>>>>> main
   const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
+  
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -42,13 +35,10 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
       if (func != null) {
         func(funcVal)
       }
-<<<<<<< HEAD
-=======
       if (state !== null) {
         setFieldInState('responseStatus', true, state, setState)
         setFieldInState('response', response, state, setState)
       }
->>>>>>> main
       setLoading(false)
       if (navigateTo == null) {
         console.log("reload")
@@ -57,15 +47,11 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
         navigate(navigateTo)
       }
     } catch (e) {
-<<<<<<< HEAD
-      console.log(e)
-=======
       if (state != null) {
         setFieldInState('error', true, state, setState)
         setFieldInState('errorMsg', e.reason, state, setState)
         setLoading(false)
       }
->>>>>>> main
     }
   }
 
@@ -73,11 +59,7 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
     <CentredBox sx={{position: 'relative'}}>
       <TkrButton
         variant="contained"
-<<<<<<< HEAD
-        disabled={loading}
-=======
         disabled={(loading || disabled)}
->>>>>>> main
         sx={sx}
         onClick={handleSubmit}
         startIcon={startIcon}
