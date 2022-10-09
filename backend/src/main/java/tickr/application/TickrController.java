@@ -4,16 +4,6 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-<<<<<<< HEAD
-import tickr.application.entities.AuthToken;
-import tickr.application.entities.ResetToken;
-import tickr.application.entities.TestEntity;
-import tickr.application.entities.User;
-import tickr.application.serialised.combined.NotificationManagement;
-import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-=======
 import org.hibernate.exception.ConstraintViolationException;
 
 import com.google.gson.Gson;
@@ -23,6 +13,7 @@ import tickr.application.entities.AuthToken;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.Location;
+import tickr.application.entities.ResetToken;
 import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Tag;
 import tickr.application.entities.TestEntity;
@@ -30,7 +21,8 @@ import tickr.application.entities.User;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
->>>>>>> main
+import tickr.application.serialised.requests.UserChangePasswordRequest;
+import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -263,8 +255,6 @@ public class TickrController {
         return user.getProfile();
     }
 
-<<<<<<< HEAD
-=======
     public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
         if (request.authToken == null) {
             throw new UnauthorizedException("Missing auth token!");
@@ -346,7 +336,6 @@ public class TickrController {
         return new CreateEventResponse(event.getId().toString());
     }
 
->>>>>>> main
     public void userEditProfile (ModelSession session, EditProfileRequest request) {
         var user = authenticateToken(session, request.authToken);
 
@@ -364,7 +353,6 @@ public class TickrController {
         }
     }
 
-<<<<<<< HEAD
     public AuthTokenResponse loggedChangePassword (ModelSession session, UserChangePasswordRequest request) {
         if (!request.isValid()) {
             throw new BadRequestException("Invalid request!");
@@ -387,23 +375,21 @@ public class TickrController {
         return new AuthTokenResponse(request.authToken);
     }
  
-    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest request) {
-        if (!request.isValid()) {
+    public RequestChangePasswordResponse unloggedChangePassword (ModelSession session, UserRequestChangePasswordRequest userRequestChangePasswordRequest) {
+        if (!userRequestChangePasswordRequest.isValid()) {
             throw new BadRequestException("Invalid request!");
         }
 
-        if (!EMAIL_REGEX.matcher(request.email.trim()).matches()) {
+        if (!EMAIL_REGEX.matcher(userRequestChangePasswordRequest.email.trim()).matches()) {
             logger.debug("Email did not match regex!");
             throw new ForbiddenException("Invalid email!");
         }
  
-        var user = session.getByUnique(User.class, "email", request.email)
+        var user = session.getByUnique(User.class, "email", userRequestChangePasswordRequest.email)
                 .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
         
         var resetToken = new ResetToken(user, Duration.ofHours(24));
         session.save(resetToken);
-
-        
  
         return new RequestChangePasswordResponse(true);
     }
@@ -425,11 +411,12 @@ public class TickrController {
 
         var user = session.getByUnique(User.class, "email", request.email)
                 .orElseThrow(() -> new ForbiddenException(String.format("Account does not exist.")));
+
+        user.changePassword(request.newPassword);
  
         return new AuthTokenResponse(user.authenticatePassword(session, request.newPassword, AUTH_TOKEN_EXPIRY).makeJWT());
     }
 
-=======
     public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("email")) {
             throw new BadRequestException("Missing email parameter!");
@@ -446,5 +433,4 @@ public class TickrController {
 
         return new UserIdResponse(user.getId().toString());
     }
->>>>>>> main
 }

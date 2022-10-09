@@ -2,8 +2,6 @@ package tickr.integration.user;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.Duration;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
@@ -26,7 +24,6 @@ public class TestChangePassword {
     private HTTPHelper httpHelper;
 
     private String authToken;
-    private String resetToken;
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
@@ -72,7 +69,6 @@ public class TestChangePassword {
         assertEquals(403, httpHelper.put("/api/user/reset", new UserChangePasswordRequest("Wrongone123!", "Newpassword123!", authToken)).getStatus());
 
         assertEquals(400, httpHelper.put("/api/user/reset", new UserChangePasswordRequest(null, "Newpassword123!", authToken)).getStatus());
-
     }
 
     @Test
@@ -100,24 +96,5 @@ public class TestChangePassword {
         
         assertEquals(200, httpHelper.post("/api/user/login",
                 new UserLoginRequest("test@example.com", "Newpassword123!")).getStatus());
-    }
-
-    @Test
-    public void testNoMatchingResetTokenChangePassword () {
-        var response = httpHelper.post("/api/user/reset/request", new UserRequestChangePasswordRequest("test@example.com"));
-        assertEquals(200, response.getStatus());
-        var resetTokenString = response.getBody(ResetToken.class).getId();
-
-        var response2 = httpHelper.post("/api/user/register", new UserRegisterRequest("test_username1", "TestFirst1",
-                "TestLast1", "test1@example.com", "Testing123!", "2022-03-14"));
-        
-        assertEquals(200, httpHelper.post("/api/user/reset/request", new UserRequestChangePasswordRequest("test1@example.com")).getStatus());
-        var resetTokenString2 = response2.getBody(ResetToken.class).getId();
-        assertEquals(resetTokenString, null);
-
-        //assertNotEquals(resetTokenString, resetTokenString2);
-        var completeResponse = httpHelper.put("/api/user/reset/complete", new UserCompleteChangePasswordRequest("test@example.com", "Testing123!", resetTokenString.toString()));
-        var sent = completeResponse.getBody(RequestChangePasswordResponse.class).success;
-        assertEquals(true, sent);
     }
 }
