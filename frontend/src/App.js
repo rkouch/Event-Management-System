@@ -10,12 +10,13 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Landing from './Pages/Landing';
+import CreateEvent from './Pages/CreateEvent';
 import Profile from './Pages/Profile';
 import PageNotFound from './Pages/PageNotFound';
 import ChangePassword from './Pages/ChangePassword';
 import { getToken, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
-import CreateEvent from './Pages/CreateEvent';
+
 
 const router = createBrowserRouter([
   {
