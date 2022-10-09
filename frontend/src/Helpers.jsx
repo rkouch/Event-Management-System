@@ -191,16 +191,18 @@ export function stringToColor(string) {
   return color;
 }
 
-export const checkIfUser= async (userId) => {
+export const checkIfUser= async (userId, setState) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
     const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+    console.log(response_2)
+    console.log(userId)
     if (userId === response_2.user_id) {
-      return true
+      setState(true)
       // navigate(`/my_profile`)
     } else {
       // navigate(`/view_profile/${userId}`)
-      return false
+      setState(false)
     }
   } catch (e) {
     console.log(e)

@@ -14,7 +14,7 @@ import { FormInput, TkrButton} from '../Styles/InputStyles';
 
 import '../App.css';
 
-import { apiFetch, getToken, loggedIn, passwordCheck, setFieldInState } from '../Helpers';
+import { apiFetch, getToken, loggedIn, passwordCheck, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -24,6 +24,7 @@ import PasswordInput from "../Components/PasswordInput";
 
 export default function ChangePassword({}) {
   const navigate = useNavigate()
+  const params = useParams()
 
   const [currentPW, setCurrentPW] = React.useState({
     password: '',
@@ -48,12 +49,6 @@ export default function ChangePassword({}) {
   const [error, setError] = React.useState(false)
   const [errorMsg, setErrorMsg] = React.useState("")
   const [loading, setLoading] = React.useState(false)
-
-  const params = useParams()
-  var resetToken = ''
-  if (!loggedIn()) {
-    resetToken = params.resetToken
-  }
 
   const PasswordChange = (e) => {
     setFieldInState('password', e.target.value, newPW, setNewPW);
@@ -123,7 +118,7 @@ export default function ChangePassword({}) {
     }
   }, [error])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     // Set loading until request completes'
 
     setLoading(true)
@@ -153,6 +148,15 @@ export default function ChangePassword({}) {
       validForm = false
     } 
 
+    if (confirmNewPW.password !== newPW.password) {
+      setLoading(false)
+      setError(true)
+      setErrorMsg("Passwords do not match")
+      setFieldInState('error', true, newPW, setNewPW)
+      setFieldInState('error', true, confirmNewPW, setConfirmNewPW)
+      validForm = false
+    }
+
     if (!validForm) {
       return
     }
@@ -176,16 +180,55 @@ export default function ChangePassword({}) {
       return
     }
 
+    if ((newPW.password === currentPW.password) && loggedIn()) {
+      setLoading(false)
+      setError(true)
+      setErrorMsg("New password can not be the old password.")
+      setFieldInState('error', true, currentPW, setCurrentPW)
+      setFieldInState('error', true, newPW, setNewPW)
+      setFieldInState('error', true, confirmNewPW, setConfirmNewPW)
+      return
+    }
+
     // Send api call
     try {
       // Split if a reset token is required
       if (loggedIn()) {
         console.log("success")
-        navigate("/")
+        const body = {
+          password: currentPW.password,
+          new_password: newPW.password,
+          auth_token: getToken()
+        }
+        try {
+          const response = await apiFetch('PUT', '/api/user/reset', body)
+          setToken(response.auth_token)
+          navigate("/my_profile")
+        } catch (error) {
+          setLoading(false)
+          setError(true)
+          setErrorMsg("Current password does not match records.")
+          setFieldInState('error', true, currentPW, setCurrentPW)
+        }
+        // navigate("/")
       } else {
-        console.log(resetToken)
+        const resetToken = params.resetToken
+        const email = params.email
+        const body = {
+          reset_token: resetToken,
+          email: email,
+          new_password: newPW.password
+        }
+        try {
+          const response = await apiFetch('PUT', '/api/user/reset/complete', body)
+          navigate("/login")
+        } catch (e) {
+          setLoading(false)
+          setError(true)
+          setErrorMsg(e.reason)
+          setFieldInState('error', true, currentPW, setCurrentPW)
+        }
       }
-      
     } catch (e) {
       console.log("sucess")
     }

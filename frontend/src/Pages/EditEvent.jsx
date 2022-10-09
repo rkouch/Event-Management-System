@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -34,6 +34,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
+import { useNavigate, useParams } from "react-router-dom";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -49,6 +50,8 @@ export const EventForm = styled("div")({
 });
 
 export default function EditEvent({}) {
+  const params = useParams()
+  const navigate = useNavigate()
   // States
   const [start, setStartValue] = React.useState({
     start: dayjs("2014-08-18T21:11:54"),
@@ -154,25 +157,47 @@ export default function EditEvent({}) {
     }]
   }
 
+  const [event, setEvent] = React.useState({
+    event_name: "",
+    location: {
+      street_no: "",
+      street_name: "",
+      postcode: "",
+      state: "",
+      country: ""
+    },
+    host_id: '',
+    start_date: dayjs().toISOString(),
+    end_date: dayjs().toISOString(),
+    description: "",
+    tags: [],
+    admins: [],
+    picture: "",
+    host_id: ''
+  })
+  
+  React.useState(() => {
+    getEventData(params.event_id, setEvent)
+  }, [])
+
   // Set Values
   React.useEffect(() => {
-    const response = testEvent
-    console.log(response)
-    setFieldInState('value', response.event_name, eventName, setEventName)
-    setFieldInState('value', response.description, description, setDescription)
-    const eventLocation = response.location
+    console.log(event)
+    setFieldInState('value', event.event_name, eventName, setEventName)
+    setFieldInState('value', event.description, description, setDescription)
+    const eventLocation = event.location
     setFieldInState('value', eventLocation.street_no.toString() + ' ' + eventLocation.street_name, address, setAddress)
     setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
     setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
     setFieldInState('value', eventLocation.state, state, setState)
     setFieldInState('value', eventLocation.country, country, setCountry)
-    setAdminList(response.admins)
-    setTags(response.tags)
-    setFieldInState('start', dayjs(response.start_date), start, setStartValue)
-    setFieldInState('end', dayjs(response.end_date), end, setEndValue)
-    setSeatingList(response.seating_details)
+    setAdminList(event.admins)
+    setTags(event.tags)
+    setFieldInState('start', dayjs(event.start_date), start, setStartValue)
+    setFieldInState('end', dayjs(event.end_date), end, setEndValue)
+    setSeatingList(event.seating_details)
     // setPublished(response.published)
-  }, [])
+  }, [event])
 
 
   React.useEffect(()=> {
@@ -314,7 +339,7 @@ export default function EditEvent({}) {
     }
   }, [newAdmin.response])
 
-  const submitEvent = async (e) => {
+  const saveEvent = async (e) => {
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
@@ -415,13 +440,14 @@ export default function EditEvent({}) {
       admins: adminList,
     };
 
+    navigate(`/view_event/${params.event_id}`)
+
     try {
       // const response = await apiFetch('POST', '/api/event/edit', body)
       // console.log(response)
     } catch (e) {
 
     }
-    console.log(body)
   };
 
   return (
@@ -441,458 +467,460 @@ export default function EditEvent({}) {
           paddingTop: 1,
         }}
       >
-        <Grid container spacing={2}>
-          <Grid item xs={3}>
-          </Grid>
-          <Grid item xs={6}>
-            <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
-          </Grid>
-          <Grid item xs={3}>
-            <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
-              <FormControlLabel control={<Checkbox defaultChecked sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
-            </Box>
-          </Grid>
-        </Grid>
-        <div>
-          <EventForm>
-            <Grid
-              container
-              spacing={2}
-              sx={{
-                marginLeft: 5,
-                marginRight: 5,
-                maxWidth: "1200px",
-                width: "100%",
-              }}
-            >
-              <Grid item xs={12}>
-              <ContrastInputWrapper>
-                  <CentredBox
-                    sx={{
-                      height: 200,
-                      borderRadius: 5,
-                    }}
-                    onMouseOver={() => {
-                      setToggleUpload(false);
-                    }}
-                    onMouseOut={() => {
-                      setToggleUpload(true);
-                    }}
-                  > 
-                    {!toggleUpload
-                      ? <Button 
-                          sx={{
-                            backgroundColor: "#92C5DD",
-                            "&:hover": {
-                              backgroundColor: "#73B5D3"
-                            },
-                            color: 'white'
-                          }}
-                          variant="contained"
-                          component="label"
-                          startIcon={<PhotoCamera/>
-                        }>
-                          Upload Event Photo
-                          <input
-                            hidden
-                            accept="image/*"
-                            multiple
-                            type="file" 
-                            onChange={async (e) => {
-                              const image = await fileToDataUrl(e.target.files[0])
-                              setEventPicture(image)
-                              console.log("uploaded image")
-                            }}
-                          />
-                        </Button>
-                      : <>
-                          {(eventPicture === '')
-                            ? <h3>
-                                Event cover photo
-                              </h3>
-                            : <UploadPhoto src={eventPicture}/>
-                          }
-                        </>                      
-                    }
-                  </CentredBox>
-                </ContrastInputWrapper>
+        {(eventName.value !== '')
+          ? <>
+            <Grid container spacing={2}>
+              <Grid item xs={3}>
               </Grid>
               <Grid item xs={6}>
-                <h3> Event Details </h3>
-                <Grid container spacing={2}>
+                <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
+              </Grid>
+              <Grid item xs={3}>
+                <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
+                  <FormControlLabel control={<Checkbox defaultChecked sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                </Box>
+              </Grid>
+            </Grid>
+            <div>
+              <EventForm>
+                <Grid
+                  container
+                  spacing={2}
+                  sx={{
+                    marginLeft: 5,
+                    marginRight: 5,
+                    maxWidth: "1200px",
+                    width: "100%",
+                  }}
+                >
                   <Grid item xs={12}>
-                    <ShadowInput
-                      sx={{
-                        fontWeight: 'bold',
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: eventName.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      state={eventName}
-                      setState={setEventName}
-                      defaultValue={eventName.value}
-                      field='value'
-                      placeholder="Event Name"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <Grid item xs={8}>
-                    <ShadowInput 
-                      state={address}
-                      sx={{
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: address.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      setState={setAddress}
-                      defaultValue={address.value}
-                      field='value'
-                      placeholder="Street Address"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <Grid tiem xs={4}>
-                    <ShadowInput 
-                      state={suburb}
-                      sx={{
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: suburb.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      setState={setSuburb}
-                      defaultValue={suburb.value}
-                      field='value'
-                      placeholder="Suburb"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <Grid item xs={3}>
-                    <ShadowInput 
-                      state={postcode} 
-                      setState={setPostcode} 
-                      sx={{
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: postcode.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      defaultValue={postcode.value} 
-                      field='value' 
-                      placeholder="Postcode"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                  <ShadowInput 
-                      state={state} 
-                      setState={setState} 
-                      sx={{
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: state.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      defaultValue={state.value} 
-                      field='value' 
-                      placeholder="State"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <Grid item xs={5}>
-                    <ShadowInput 
-                      state={country} 
-                      setState={setCountry} 
-                      sx={{
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: country.error ? "red" : "rgba(0,0,0,0)"
-                        },
-                      }}
-                      defaultValue={state.value} 
-                      field='value' 
-                      placeholder="Country"
-                      setError={setErrorStatus}
-                    />
-                  </Grid>
-                  <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth={false}>
-                        <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}, color: start.error ? "red" : "#999999"}}>Start Time</FormLabel>
-                        <ContrastInputWrapper>
-                          <DateTimePicker
-                            value={start.start}
-                            onChange={handleStartChange}
-                            inputFormat="DD/MM/YYYY HH:mm"
-                            renderInput={(params) => <TextField {...params} />}
-                            disablePast = {true}
-                            sx={{
-                              '.MuiOutlinedInput-notchedOutline': {
-                                borderColor: country.error ? "red" : "rgba(0,0,0,0)"
-                              },
-                            }}
-                          />
-                        </ContrastInputWrapper>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth={false}>
-                        <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) ',}, color: end.error ? "red" : "#999999"}}>End Time</FormLabel>
-                        <ContrastInputWrapper>
-                          <DateTimePicker
-                            value={end.end}
-                            onChange={handleEndChange}
-                            inputFormat="DD/MM/YYYY HH:mm"
-                            renderInput={(params) => <TextField {...params} />}
-                            disablePast = {true}
-                          />
-                        </ContrastInputWrapper>
-                        <FormHelperText>{end.errorMsg}</FormHelperText>
-                      </FormControl>
-                    </Grid>
-                  </LocalizationProvider>
-
-                  <Grid item xs={8}>
-                    <FormControl fullWidth={true}>
-                      <ContrastInputWrapper>
-                        <ContrastInput 
-                          value = {newAdmin.email}
-                          placeholder="New Admin" 
-                          startAdornment={<CentredBox sx={{pr: 1}}><EmailIcon sx={{color: "rgba(0,0,0,0.45)"}}/></CentredBox>} 
-                          fullWidth 
-                          onChange={handleNewAdmin}
-                          sx={{
-                            '.MuiOutlinedInput-notchedOutline': {
-                              borderColor: newAdmin.error ? "red" : "rgba(0,0,0,0)"
-                            },
-                          }}
-                        />
-                      </ContrastInputWrapper>
-                      <FormHelperText>{newAdmin.errorMsg}</FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <CentredBox sx={{position: 'relative'}}>
-                      <TkrButton
-                        variant="contained"
-                        disabled={(adminLoading || (newAdmin.email.length <= 0))}
-                        sx={{mt: 1, fontSize: 15}}
-                        onClick={addAdmin}
-                        startIcon={<AddIcon/>}
-                      >
-                        Add Admin
-                      </TkrButton>
-                      {adminLoading && (
-                        <CircularProgress 
-                          size={24}
-                          sx={{
-                            color: "#AE759F",
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            marginTop: '-12px',
-                            marginLeft: '-12px',
-                          }}
-                        />
-                      )}
-                    </CentredBox>
-                  </Grid>
-                  <Grid item xs={7}>
-                    <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin}/>
-                  </Grid>
-                  <Grid item xs={5}/>
-                  <Grid item xs={12}>
-                    <ContrastInputWrapper>
-                      <ContrastInput
-                        multiline
-                        placeholder={'Enter a description'}
-                        rows={4}
-                        defaultValue={description.value}
-                        fullWidth onChange={(e) => {
-                          setFieldInState('value', e.target.value, description, setDescription)
-                          setFieldInState('error', false, description, setDescription)
-                          setErrorStatus(false)
-                        }}
+                  <ContrastInputWrapper>
+                      <CentredBox
                         sx={{
-                          '.MuiOutlinedInput-notchedOutline': {
-                            borderColor: description.error ? "red" : "rgba(0,0,0,0)"
-                          },
+                          height: 200,
+                          borderRadius: 5,
                         }}
-                      />
+                        onMouseOver={() => {
+                          setToggleUpload(false);
+                        }}
+                        onMouseOut={() => {
+                          setToggleUpload(true);
+                        }}
+                      > 
+                        {!toggleUpload
+                          ? <Button 
+                              sx={{
+                                backgroundColor: "#92C5DD",
+                                "&:hover": {
+                                  backgroundColor: "#73B5D3"
+                                },
+                                color: 'white'
+                              }}
+                              variant="contained"
+                              component="label"
+                              startIcon={<PhotoCamera/>
+                            }>
+                              Upload Event Photo
+                              <input
+                                hidden
+                                accept="image/*"
+                                multiple
+                                type="file" 
+                                onChange={async (e) => {
+                                  const image = await fileToDataUrl(e.target.files[0])
+                                  setEventPicture(image)
+                                  console.log("uploaded image")
+                                }}
+                              />
+                            </Button>
+                          : <>
+                              {(eventPicture === '')
+                                ? <h3>
+                                    Event cover photo
+                                  </h3>
+                                : <UploadPhoto src={eventPicture}/>
+                              }
+                            </>                      
+                        }
+                      </CentredBox>
                     </ContrastInputWrapper>
                   </Grid>
-                </Grid>
-              </Grid>
-              <Grid item xs={1}></Grid>
-              <Grid item xs={5}>
-                <Box>
-                  <h3> Ticket Allocations </h3>
-                  <Grid container spacing={2}>
-                    <Grid item xs={7}>
-                      <Typography sx={{fontWeight: 'bold'}}>
-                        Section
-                      </Typography>
-                      <Divider/>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography sx={{fontWeight: 'bold'}}>
-                        Availability
-                      </Typography>
-                      <Divider/>
-                    </Grid>
-                    <Grid item xs={2}>
-                      <Typography sx={{fontWeight: 'bold'}}>
-                        Delete
-                      </Typography>
-                      <Divider/>
-                    </Grid>
-                    {seatingList.map((value, index) => {
-                      return (
-                        <Grid item key={index} sx={{width: '100%'}}>
-                          <ContrastInputWrapper>
-                            <Grid container spacing={1}>
-                              <Grid item xs={7}>
-                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                  <Typography
-                                    sx={{
-                                      fontWeight: 'bold',
-                                    }}
-                                  >
-                                    {value.section}
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                              <Grid item xs={3}>
-                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                  <Typography
-                                    sx={{
-                                      fontWeight: 'bold',
-                                    }}
-                                  >
-                                    {value.availability}
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                              <Grid item xs={2}>
-                                <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                  <IconButton
-                                    edge="end"
-                                    aria-label="delete"
-                                    onClick={() => removeSeating(index)}
-                                    sx={{marginRight: 0}}
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </Box>
-                              </Grid>
-                            </Grid>
-                          </ContrastInputWrapper>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                  <Box sx={{marginRight: 4, width: '100%'}}>
-                    <Grid container spacing={1}>
-                      <Grid item xs={7}>
-                        <ContrastInputWrapper>
-                          <ContrastInput
-                            placeholder={'Section Name'}
-                            fullWidth 
-                            onChange={(e) => {
-                              setFieldInState('section', e.target.value, newSection, setNewSection)
-                              setFieldInState('error', false, newSection, setNewSection)
-                              setErrorStatus(false)
-                            }}
-                            sx={{
-                              '.MuiOutlinedInput-notchedOutline': {
-                                borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                              },
-                            }}
-                            value = {newSection.section}
-                          />
-                        </ContrastInputWrapper>
+                  <Grid item xs={6}>
+                    <h3> Event Details </h3>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <ShadowInput
+                          sx={{
+                            fontWeight: 'bold',
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: eventName.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          state={eventName}
+                          setState={setEventName}
+                          defaultValue={eventName.value}
+                          field='value'
+                          placeholder="Event Name"
+                          setError={setErrorStatus}
+                        />
+                      </Grid>
+                      <Grid item xs={8}>
+                        <ShadowInput 
+                          state={address}
+                          sx={{
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: address.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          setState={setAddress}
+                          defaultValue={address.value}
+                          field='value'
+                          placeholder="Street Address"
+                          setError={setErrorStatus}
+                        />
+                      </Grid>
+                      <Grid tiem xs={4}>
+                        <ShadowInput 
+                          state={suburb}
+                          sx={{
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: suburb.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          setState={setSuburb}
+                          defaultValue={suburb.value}
+                          field='value'
+                          placeholder="Suburb"
+                          setError={setErrorStatus}
+                        />
                       </Grid>
                       <Grid item xs={3}>
+                        <ShadowInput 
+                          state={postcode} 
+                          setState={setPostcode} 
+                          sx={{
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: postcode.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          defaultValue={postcode.value} 
+                          field='value' 
+                          placeholder="Postcode"
+                          setError={setErrorStatus}
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                      <ShadowInput 
+                          state={state} 
+                          setState={setState} 
+                          sx={{
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: state.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          defaultValue={state.value} 
+                          field='value' 
+                          placeholder="State"
+                          setError={setErrorStatus}
+                        />
+                      </Grid>
+                      <Grid item xs={5}>
+                        <ShadowInput 
+                          state={country} 
+                          setState={setCountry} 
+                          sx={{
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: country.error ? "red" : "rgba(0,0,0,0)"
+                            },
+                          }}
+                          defaultValue={state.value} 
+                          field='value' 
+                          placeholder="Country"
+                          setError={setErrorStatus}
+                        />
+                      </Grid>
+                      <LocalizationProvider dateAdapter={AdapterMoment}>
+                        <Grid item xs={6}>
+                          <FormControl fullWidth={false}>
+                            <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) '}, color: start.error ? "red" : "#999999"}}>Start Time</FormLabel>
+                            <ContrastInputWrapper>
+                              <DateTimePicker
+                                value={start.start}
+                                onChange={handleStartChange}
+                                inputFormat="DD/MM/YYYY HH:mm"
+                                renderInput={(params) => <TextField {...params} />}
+                                disablePast = {true}
+                                sx={{
+                                  '.MuiOutlinedInput-notchedOutline': {
+                                    borderColor: country.error ? "red" : "rgba(0,0,0,0)"
+                                  },
+                                }}
+                              />
+                            </ContrastInputWrapper>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <FormControl fullWidth={false}>
+                            <FormLabel sx={{"&.Mui-focused": {color: 'rgba(0, 0, 0, 0.6) ',}, color: end.error ? "red" : "#999999"}}>End Time</FormLabel>
+                            <ContrastInputWrapper>
+                              <DateTimePicker
+                                value={end.end}
+                                onChange={handleEndChange}
+                                inputFormat="DD/MM/YYYY HH:mm"
+                                renderInput={(params) => <TextField {...params} />}
+                                disablePast = {true}
+                              />
+                            </ContrastInputWrapper>
+                            <FormHelperText>{end.errorMsg}</FormHelperText>
+                          </FormControl>
+                        </Grid>
+                      </LocalizationProvider>
+                      <Grid item xs={8}>
+                        <FormControl fullWidth={true}>
+                          <ContrastInputWrapper>
+                            <ContrastInput 
+                              value = {newAdmin.email}
+                              placeholder="New Admin" 
+                              startAdornment={<CentredBox sx={{pr: 1}}><EmailIcon sx={{color: "rgba(0,0,0,0.45)"}}/></CentredBox>} 
+                              fullWidth 
+                              onChange={handleNewAdmin}
+                              sx={{
+                                '.MuiOutlinedInput-notchedOutline': {
+                                  borderColor: newAdmin.error ? "red" : "rgba(0,0,0,0)"
+                                },
+                              }}
+                            />
+                          </ContrastInputWrapper>
+                          <FormHelperText>{newAdmin.errorMsg}</FormHelperText>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <CentredBox sx={{position: 'relative'}}>
+                          <TkrButton
+                            variant="contained"
+                            disabled={(adminLoading || (newAdmin.email.length <= 0))}
+                            sx={{mt: 1, fontSize: 15}}
+                            onClick={addAdmin}
+                            startIcon={<AddIcon/>}
+                          >
+                            Add Admin
+                          </TkrButton>
+                          {adminLoading && (
+                            <CircularProgress 
+                              size={24}
+                              sx={{
+                                color: "#AE759F",
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                marginTop: '-12px',
+                                marginLeft: '-12px',
+                              }}
+                            />
+                          )}
+                        </CentredBox>
+                      </Grid>
+                      <Grid item xs={7}>
+                        <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin}/>
+                      </Grid>
+                      <Grid item xs={5}/>
+                      <Grid item xs={12}>
                         <ContrastInputWrapper>
-                          <ContrastInput 
-                            type="number"
-                            placeholder="Spots"
-                            fullWidth 
-                            onChange={(e) => {
-                              const val = e.target.value
-                              if (val < 0) {
-                                setFieldInState('availability', 0, newSection, setNewSection)
-                              } else {
-                                setFieldInState('availability', val, newSection, setNewSection)
-                              } 
-                              setFieldInState('error', false, newSection, setNewSection)
+                          <ContrastInput
+                            multiline
+                            placeholder={'Enter a description'}
+                            rows={4}
+                            defaultValue={description.value}
+                            fullWidth onChange={(e) => {
+                              setFieldInState('value', e.target.value, description, setDescription)
+                              setFieldInState('error', false, description, setDescription)
                               setErrorStatus(false)
                             }}
                             sx={{
                               '.MuiOutlinedInput-notchedOutline': {
-                                borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                borderColor: description.error ? "red" : "rgba(0,0,0,0)"
                               },
                             }}
-                            value = {newSection.availability}
                           />
                         </ContrastInputWrapper>
                       </Grid>
-                      <Grid item xs={2}>
-                        <ContrastInputWrapper 
-                          sx={{
-                            height: "100%",
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
-                          }}
-                        >
-                          <IconButton
-                            edge="end"
-                            onClick={addSection}
-                            sx={{marginRight: 0}}
-                            disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
-                          >
-                            <AddIcon/>
-                          </IconButton>
-                        </ContrastInputWrapper>
-                      </Grid>
                     </Grid>
-                  </Box>
-                </Box>
-                <br/>
-                <Box>
-                  <h3> Tags </h3>
-                  <TagsBar tags={tags} setTags={setTags} editable={true}/>
-                </Box>
+                  </Grid>
+                  <Grid item xs={1}></Grid>
+                  <Grid item xs={5}>
+                    <Box>
+                      <h3> Ticket Allocations </h3>
+                      <Grid container spacing={2}>
+                        <Grid item xs={7}>
+                          <Typography sx={{fontWeight: 'bold'}}>
+                            Section
+                          </Typography>
+                          <Divider/>
+                        </Grid>
+                        <Grid item xs={3}>
+                          <Typography sx={{fontWeight: 'bold'}}>
+                            Availability
+                          </Typography>
+                          <Divider/>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <Typography sx={{fontWeight: 'bold'}}>
+                            Delete
+                          </Typography>
+                          <Divider/>
+                        </Grid>
+                        {seatingList.map((value, index) => {
+                          return (
+                            <Grid item key={index} sx={{width: '100%'}}>
+                              <ContrastInputWrapper>
+                                <Grid container spacing={1}>
+                                  <Grid item xs={7}>
+                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                      <Typography
+                                        sx={{
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {value.section}
+                                      </Typography>
+                                    </Box>
+                                  </Grid>
+                                  <Grid item xs={3}>
+                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                      <Typography
+                                        sx={{
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {value.availability}
+                                      </Typography>
+                                    </Box>
+                                  </Grid>
+                                  <Grid item xs={2}>
+                                    <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                      <IconButton
+                                        edge="end"
+                                        aria-label="delete"
+                                        onClick={() => removeSeating(index)}
+                                        sx={{marginRight: 0}}
+                                      >
+                                        <DeleteIcon />
+                                      </IconButton>
+                                    </Box>
+                                  </Grid>
+                                </Grid>
+                              </ContrastInputWrapper>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                      <Box sx={{marginRight: 4, width: '100%'}}>
+                        <Grid container spacing={1}>
+                          <Grid item xs={7}>
+                            <ContrastInputWrapper>
+                              <ContrastInput
+                                placeholder={'Section Name'}
+                                fullWidth 
+                                onChange={(e) => {
+                                  setFieldInState('section', e.target.value, newSection, setNewSection)
+                                  setFieldInState('error', false, newSection, setNewSection)
+                                  setErrorStatus(false)
+                                }}
+                                sx={{
+                                  '.MuiOutlinedInput-notchedOutline': {
+                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                  },
+                                }}
+                                value = {newSection.section}
+                              />
+                            </ContrastInputWrapper>
+                          </Grid>
+                          <Grid item xs={3}>
+                            <ContrastInputWrapper>
+                              <ContrastInput 
+                                type="number"
+                                placeholder="Spots"
+                                fullWidth 
+                                onChange={(e) => {
+                                  const val = e.target.value
+                                  if (val < 0) {
+                                    setFieldInState('availability', 0, newSection, setNewSection)
+                                  } else {
+                                    setFieldInState('availability', val, newSection, setNewSection)
+                                  } 
+                                  setFieldInState('error', false, newSection, setNewSection)
+                                  setErrorStatus(false)
+                                }}
+                                sx={{
+                                  '.MuiOutlinedInput-notchedOutline': {
+                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                  },
+                                }}
+                                value = {newSection.availability}
+                              />
+                            </ContrastInputWrapper>
+                          </Grid>
+                          <Grid item xs={2}>
+                            <ContrastInputWrapper 
+                              sx={{
+                                height: "100%",
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
+                              }}
+                            >
+                              <IconButton
+                                edge="end"
+                                onClick={addSection}
+                                sx={{marginRight: 0}}
+                                disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
+                              >
+                                <AddIcon/>
+                              </IconButton>
+                            </ContrastInputWrapper>
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    </Box>
+                    <br/>
+                    <Box>
+                      <h3> Tags </h3>
+                      <TagsBar tags={tags} setTags={setTags} editable={true}/>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </EventForm>
+              <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
+                <Grid item xs={3}>
+                  <FormInput>
+                    <CentredBox>
+                      <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
+                        Delete
+                      </DeleteButton>
+                    </CentredBox>
+                  </FormInput>
+                </Grid>
+                <Grid item xs={6}>
+                </Grid> 
+                <Grid item xs={3}>
+                  <FormInput>
+                    <CentredBox>
+                      <TkrButton variant="contained" onClick={saveEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
+                    </CentredBox>
+                    <Collapse in={errorStatus}>
+                      <Alert severity="error">{errorMsg}.</Alert>
+                    </Collapse>
+                  </FormInput>
+                </Grid>
               </Grid>
-            </Grid>
-          </EventForm>
-          <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
-            <Grid item xs={3}>
-              <FormInput>
-                <CentredBox>
-                  <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
-                    Delete
-                  </DeleteButton>
-                </CentredBox>
-              </FormInput>
-            </Grid>
-            <Grid item xs={6}>
-            </Grid> 
-            <Grid item xs={3}>
-              <FormInput>
-                <CentredBox>
-                  <TkrButton variant="contained" onClick={submitEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
-                </CentredBox>
-                <Collapse in={errorStatus}>
-                  <Alert severity="error">{errorMsg}.</Alert>
-                </Collapse>
-              </FormInput>
-            </Grid>
-          </Grid>
-          <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-            
-            
-          </Box>
-        </div>
+              <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+              </Box>
+            </div>
+          </> 
+        : <div></div>
+        }
       </Box>
     </BackdropNoBG>
   );

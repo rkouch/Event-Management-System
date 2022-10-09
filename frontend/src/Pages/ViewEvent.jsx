@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { checkIfUser, getEventData } from "../Helpers";
+import { checkIfUser, getEventData, getToken, getUserData } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -82,10 +82,21 @@ export default function ViewEvent({}) {
     admins: ["8fa85163-5fe7-4183-8026-9b5ff174ee4c"],
   }
 
+  const [userData, setUserData] = React.useState({
+    user_id: ''
+  })
+  
+
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
-    setEditable(checkIfUser())
-  },[])
+    // getUserData(`auth_token=${getToken()}`,setUserData)
+    if (event.host_id !== '') {
+      checkIfUser(event.host_id, setEditable)
+      for (const i in event.admins) {
+        checkIfUser(event.admins[i], setEditable)
+      }
+    }
+  },[event.host_id])
 
   const goEdit = (e) => {
     e.stopPropagation();
