@@ -1,8 +1,11 @@
 package tickr.application.serialised.requests;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.gson.annotations.SerializedName;
+
+import tickr.application.serialised.SerializedLocation;
 
 public class EditEventRequest {
     @SerializedName("auth_token")
@@ -39,8 +42,6 @@ public class EditEventRequest {
             this.section = section;
             this.availability = availability;
         }
-        
+    }
     public EditEventRequest () {}
-
-
 }
