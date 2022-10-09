@@ -58,7 +58,7 @@ const router = createBrowserRouter([
     element: <RequestChangePassword/>
   },
   {
-    path: "/view_event/:eventID",
+    path: "/view_event/:event_id",
     element: <ViewEvent/>
   },
   {

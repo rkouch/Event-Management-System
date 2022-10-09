@@ -305,7 +305,7 @@ public class TickrController {
         // creating event from request
         Event event;
         if (request.picture == null) {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), "");
         } else {
             event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
                     FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
