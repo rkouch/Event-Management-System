@@ -14,6 +14,7 @@ import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.TestResponses;
+import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -249,5 +250,9 @@ public class TickrController {
                     FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.pfpDataUrl)
                             .orElseThrow(() -> new ForbiddenException("Invalid data url!")));
         }
+    }
+
+    public UserIdResponse userSearch (ModelSession session, Map<String, String> params) {
+        return new UserIdResponse(UUID.randomUUID().toString());
     }
 }
