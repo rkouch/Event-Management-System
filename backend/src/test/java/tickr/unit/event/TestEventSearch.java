@@ -56,6 +56,8 @@ public class TestEventSearch {
                 Map.of("page_start", Integer.toString(0), "max_results", Integer.toString(-1))));
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(0), "max_results", Integer.toString(257))));
+        assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
+                Map.of("page_start", "abcde", "max_results", Integer.toString(20))));
 
         assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(1), "max_results", Integer.toString(1), "auth_token", "testing123")));
@@ -112,7 +114,7 @@ public class TestEventSearch {
         assertEquals(0, tooHighResponse.eventIds.size());
     }
 
-    public EventSearch.Response makeSearch (int pageStart, int maxResults, EventSearch.Options options) {
+    private EventSearch.Response makeSearch (int pageStart, int maxResults, EventSearch.Options options) {
         var paramsMap = new HashMap<String, String>();
 
         paramsMap.put("page_start", Integer.toString(pageStart));
