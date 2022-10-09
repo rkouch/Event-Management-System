@@ -17,6 +17,7 @@ import ChangePassword from './Pages/ChangePassword';
 import { apiFetch, getToken, getUserData, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
 import ViewEvent from './Pages/ViewEvent';
+import EditEvent from './Pages/EditEvent';
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
   {
     path: "/view_profile/:user_id",
     element: <Profile editable={false}/>
+  },
+  {
+    path: "/edit_event",
+    element: <EditEvent/>
   }
 ])
 

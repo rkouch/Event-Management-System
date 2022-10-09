@@ -14,6 +14,7 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
+import EventCardsBar from '../Components/EventCardsBar';
 
 
 const CardsBar = styled(Box)({
@@ -107,6 +108,7 @@ export default function Landing({}) {
               </Box>
             </SectionHeading>
             <TabPanel value="1" sx={{padding: 0}}>
+              <EventCardsBar/>
               <CardsBar>
                 <EventCard/>
                 <EventCard/>

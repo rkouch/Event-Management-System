@@ -36,7 +36,6 @@ import Paper from '@mui/material/Paper';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
-import { useNavigate } from "react-router-dom";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -51,9 +50,7 @@ export const EventForm = styled("div")({
   gap: "10px",
 });
 
-export default function CreateEvent({}) {
-  const navigate = useNavigate()
-
+export default function EditEvent({}) {
   // States
   const [start, setStartValue] = React.useState({
     start: dayjs("2014-08-18T21:11:54"),
@@ -129,7 +126,50 @@ export default function CreateEvent({}) {
     errorMsg: '',
   });
 
-  const [loading, setLoading] = React.useState(false)
+  const testDate1 = dayjs().add(7, 'day')
+  const testDate2 = testDate1.add(7, 'hour')
+
+  const testEvent = {
+    event_name: "Welcome Back Ray",
+    location: {
+      street_no: "1",
+      street_name: "Station St",
+      suburb: 'Strathfield',
+      postcode: "2135",
+      state: "NSW",
+      country: "Australia"
+    },
+    host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
+    start_date: testDate1.toISOString(),
+    end_date: testDate2.toISOString(),
+    description: "This is going to be a party",
+    tags: ["music", "festival", "food"],
+    admins: ["21738066-4b4d-4c7c-98df-d486f58b0c6c"],
+    seating_details: [{
+      section: "A",
+      availability: 10,
+    }]
+  }
+
+  // Set Values
+  React.useEffect(() => {
+    const response = testEvent
+    console.log(response)
+    setFieldInState('value', response.event_name, eventName, setEventName)
+    setFieldInState('value', response.description, description, setDescription)
+    const eventLocation = response.location
+    setFieldInState('value', eventLocation.street_no + eventLocation.street_name, address, setAddress)
+    setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
+    setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
+    setFieldInState('value', eventLocation.state, state, setState)
+    setFieldInState('value', eventLocation.country, country, setCountry)
+    setAdminList(response.admins)
+    setTags(response.tags)
+    setFieldInState('start', dayjs(response.start_date), start, setStartValue)
+    setFieldInState('end', dayjs(response.end_date), end, setEndValue)
+    setSeatingList(response.seating_details)
+  }, [])
+
 
   React.useEffect(()=> {
     if(!errorStatus) {
@@ -271,7 +311,6 @@ export default function CreateEvent({}) {
   }, [newAdmin.response])
 
   const submitEvent = async (e) => {
-    setLoading(true)
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
@@ -308,7 +347,6 @@ export default function CreateEvent({}) {
     if (error) {
       setErrorStatus(true)
       setErrorMsg('Please fill in required fields')
-      setLoading(false)
       return
     }
 
@@ -317,8 +355,7 @@ export default function CreateEvent({}) {
       setErrorStatus(true)
       setFieldInState('error', true, newSection, setNewSection)
       setErrorMsg('Please allocate seating')
-      setLoading(false)
-      return
+      
     }
     
 
@@ -376,10 +413,7 @@ export default function CreateEvent({}) {
 
     try {
       const response = await apiFetch('POST', '/api/event/create', body)
-      // View event
-      // Navigate to event
-      // navigate(`/view_event/${response.event_id}`)
-      setLoading(false)
+      console.log(response)
     } catch (e) {
 
     }
@@ -403,7 +437,7 @@ export default function CreateEvent({}) {
           paddingTop: 1,
         }}
       >
-        <H3 sx={{ fontSize: "30px" }}>Create Event</H3>
+        <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
         <div>
           <EventForm>
             <Grid
@@ -779,27 +813,8 @@ export default function CreateEvent({}) {
           </EventForm>
           <FormInput>
             <CentredBox>
-              <TkrButton
-                variant="contained"
-                onClick={submitEvent}
-                disabled={loading}
-              >
-                Create Event
-              </TkrButton>
+              <TkrButton variant="contained" onClick={submitEvent}>Create Event</TkrButton>
             </CentredBox>
-            {loading && (
-              <CircularProgress 
-                size={24}
-                sx={{
-                  color: "#AE759F",
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  marginTop: '-12px',
-                  marginLeft: '-12px',
-                }}
-              />
-            )}
             <Collapse in={errorStatus}>
               <Alert severity="error">{errorMsg}.</Alert>
             </Collapse>
