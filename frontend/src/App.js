@@ -33,10 +33,9 @@ const router = createBrowserRouter([
     element: <Login/>
   },
   {
-    path: "/createEvent",
-    element: <CreateEvent/>,
+    path: "/create_event",
+    element: <CreateEvent/>
   },
-  
   {
     path: "/my_profile",
     element: <Profile editable={true}/>
