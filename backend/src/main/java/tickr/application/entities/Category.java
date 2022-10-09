@@ -23,6 +23,12 @@ public class Category {
 
     private String category;
 
+    public Category () {}
+
+    public Category (String category) {
+        this.category = category; 
+    }
+
     private UUID getId () {
         return id;
     }
@@ -35,11 +41,11 @@ public class Category {
         return event;
     }
 
-    private void setEvent (Event event) {
+    public void setEvent (Event event) {
         this.event = event;
     }
 
-    private String getCategory () {
+    public String getCategory () {
         return category;
     }
 

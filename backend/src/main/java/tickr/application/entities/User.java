@@ -218,6 +218,10 @@ public class User {
         this.hostingEvents = hostingEvents;
     }
 
+    public void addHostingEvent (Event event) {
+        hostingEvents.add(event);
+    }
+
     private Set<Event> getAdminEvents () {
         return adminEvents;
     }

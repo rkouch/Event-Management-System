@@ -8,6 +8,10 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
+<<<<<<< HEAD
+=======
+import tickr.application.serialised.requests.CreateEventRequest;
+>>>>>>> main
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
@@ -58,16 +62,26 @@ public class Server {
 
         post("/api/user/register", TickrController::userRegister, UserRegisterRequest.class);
         post("/api/user/login", TickrController::userLogin, UserLoginRequest.class);
+<<<<<<< HEAD
         delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
         post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestChangePasswordRequest.class);
         put("/api/user/reset", TickrController::loggedChangePassword, UserChangePasswordRequest.class);
         put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
+=======
+        post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
+        delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
+>>>>>>> main
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
 
         get("/api/user/profile", TickrController::userGetProfile);
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
+<<<<<<< HEAD
+=======
+
+        get("/api/user/search", TickrController::userSearch);
+>>>>>>> main
     }
 
     /**
