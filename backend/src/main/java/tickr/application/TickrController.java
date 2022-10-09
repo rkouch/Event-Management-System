@@ -293,8 +293,14 @@ public class TickrController {
                                         request.location.state, request.location.country, request.location.longitude, request.location.latitude);
         session.save(location);
 
-        // creating event from request 
-        Event event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability());
+        // creating event from request
+        Event event;
+        if (request.picture == null) {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), null);
+        } else {
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
+                    FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+        }
         session.save(event);
         // creating seating plan for each section
         for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {

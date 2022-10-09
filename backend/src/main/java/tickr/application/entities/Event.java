@@ -72,7 +72,7 @@ public class Event {
     public Event() {}
 
     public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
-            String eventDescription, Location location, int seatAvailability) {
+            String eventDescription, Location location, int seatAvailability, String eventPicture) {
         this.location = location;
         this.eventName = eventName;
         this.eventStart = eventStart;
@@ -80,6 +80,7 @@ public class Event {
         this.eventDescription = eventDescription;
         this.seatAvailability = seatAvailability;
         this.host = host;
+        this.eventPicture = eventPicture;
     }
 
     public UUID getId () {

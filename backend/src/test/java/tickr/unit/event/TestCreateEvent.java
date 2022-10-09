@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,11 @@ public class TestCreateEvent {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+    }
+
+    @AfterAll
+    public static void clearStaticFiles () {
+        TestHelper.clearStaticFiles();
     }
 
     @Test
