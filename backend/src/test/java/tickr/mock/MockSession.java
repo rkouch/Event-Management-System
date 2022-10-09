@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class MockSession implements ModelSession {
     private MockModel model;
@@ -27,6 +28,11 @@ public class MockSession implements ModelSession {
     @Override
     public <T> List<T> getAll (Class<T> entityClass) {
         return getMockTable(entityClass).getAll(entityClass);
+    }
+
+    @Override
+    public <T> Stream<T> getAllStream (Class<T> entityClass) {
+        return getAll(entityClass).stream();
     }
 
     @Override

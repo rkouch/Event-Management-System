@@ -1,6 +1,7 @@
 package tickr.application.serialised.combined;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import tickr.application.serialised.SerializedLocation;
 import tickr.server.exceptions.BadRequestException;
@@ -83,7 +84,11 @@ public class EventSearch {
         }
     }
 
-    public Options fromParams (String queryString) {
-        return new Gson().fromJson(new String(Base64.getDecoder().decode(queryString)), Options.class);
+    public static Options fromParams (String queryString) {
+        try {
+            return new Gson().fromJson(new String(Base64.getDecoder().decode(queryString)), Options.class);
+        } catch (IllegalArgumentException | JsonSyntaxException e) {
+            throw new BadRequestException("Invalid query parameter!", e);
+        }
     }
 }

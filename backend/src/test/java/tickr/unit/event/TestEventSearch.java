@@ -48,13 +48,13 @@ public class TestEventSearch {
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session, Map.of("page_start", Integer.toString(0))));
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session, Map.of("max_results", Integer.toString(1))));
 
-        assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
+        assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(-1), "max_results", Integer.toString(1))));
-        assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
+        assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(0), "max_results", Integer.toString(0))));
-        assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
+        assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(0), "max_results", Integer.toString(-1))));
-        assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
+        assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(0), "max_results", Integer.toString(257))));
 
         assertThrows(UnauthorizedException.class, () -> controller.searchEvents(session,
@@ -71,13 +71,14 @@ public class TestEventSearch {
 
     @Test
     public void testNoOptions () {
-        var response = makeSearch(session, 0, 100, null);
+        var response = makeSearch(0, 100, null);
         assertEquals(0, response.eventIds.size());
         assertEquals(0, response.numResults);
 
         var eventId = controller.createEvent(session, new CreateEventReqBuilder().build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
 
-        response = makeSearch(session, 0, 100, null);
+        response = makeSearch(0, 100, null);
         assertEquals(1, response.eventIds.size());
         assertEquals(eventId, response.eventIds.get(0));
         assertEquals(1, response.numResults);
@@ -95,21 +96,23 @@ public class TestEventSearch {
                     .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + i)))
                     .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + i)))
                     .build(authToken)).event_id);
+            session = TestHelper.commitMakeSession(model, session);
         }
 
         for (int i = 0; i < numPages; i++) {
-            var response = makeSearch(session, i, numPage, null);
+            var response = makeSearch(i * numPage, numPage, null);
             assertEquals(numPage, response.eventIds.size());
+            assertEquals(numPages * numPage, response.numResults);
             for (int j = 0; j < numPage; j++) {
                 assertEquals(eventIds.get(i * numPage + j), response.eventIds.get(j));
             }
         }
 
-        var tooHighResponse = makeSearch(session, numPages, numPage, null);
+        var tooHighResponse = makeSearch(numPages * numPage, numPage, null);
         assertEquals(0, tooHighResponse.eventIds.size());
     }
 
-    public EventSearch.Response makeSearch (ModelSession session, int pageStart, int maxResults, EventSearch.Options options) {
+    public EventSearch.Response makeSearch (int pageStart, int maxResults, EventSearch.Options options) {
         var paramsMap = new HashMap<String, String>();
 
         paramsMap.put("page_start", Integer.toString(pageStart));
@@ -119,7 +122,9 @@ public class TestEventSearch {
             paramsMap.put("search_options", options.serialise());
         }
 
-        return controller.searchEvents(session, paramsMap);
+        var result = controller.searchEvents(session, paramsMap);
+        session = TestHelper.commitMakeSession(model, session);
+        return result;
     }
 
     private static class OptionsBuilder {
