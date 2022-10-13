@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
 import StarIcon from '@mui/icons-material/Star';
-import { apiFetch, getToken, getUserData} from '../Helpers';
+import { apiFetch, getToken, getUserData, loggedIn} from '../Helpers';
 
 
 export default function UserAvatar({userId, size=35, host=false}) {
@@ -32,14 +32,19 @@ export default function UserAvatar({userId, size=35, host=false}) {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     console.log('viewing profile')
+
     try {
-      const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
-      const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
-      if (userId === response_2.user_id) {
-        window.open('/my_profile')
-        // navigate(`/my_profile`)
+      // Check if a uyser is logged in
+      if (loggedIn()) {
+        const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+        const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+        if (userId === response_2.user_id) {
+          window.open('/my_profile')
+          // navigate(`/my_profile`)
+        } else {
+          window.open(`/view_profile/${userId}`)
+        }
       } else {
-        // navigate(`/view_profile/${userId}`)
         window.open(`/view_profile/${userId}`)
       }
     } catch (e) {
