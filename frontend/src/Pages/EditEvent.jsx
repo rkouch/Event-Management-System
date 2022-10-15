@@ -195,6 +195,7 @@ export default function EditEvent({}) {
     setTags(event.tags)
     setFieldInState('start', dayjs(event.start_date), start, setStartValue)
     setFieldInState('end', dayjs(event.end_date), end, setEndValue)
+    setEventPicture(event.picture)
     setSeatingList(event.seating_details)
     // setPublished(response.published)
   }, [event])

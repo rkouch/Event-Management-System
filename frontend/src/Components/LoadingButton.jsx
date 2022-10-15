@@ -40,8 +40,7 @@ export default function LoadingButton({label, method, sx={}, route, body, naviga
       }
       setLoading(false)
       if (navigateTo == null) {
-        console.log("reload")
-        // window.location.reload(false);
+        window.location.reload(false);
       } else {
         navigate(navigateTo)
       }

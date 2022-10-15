@@ -98,7 +98,8 @@ export const getUserData = async (body, setUserData=null) => {
       lastName: response.last_name,
       profileDescription: response.profile_description,
       email: response.email,
-      events: response.events
+      events: response.events,
+      profilePicture: response.profile_picture
     }
     if (setUserData != null) {
       setUserData(ret)
