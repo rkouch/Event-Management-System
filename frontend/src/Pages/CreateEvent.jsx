@@ -442,8 +442,8 @@ export default function CreateEvent({}) {
                           }}
                           variant="contained"
                           component="label"
-                          startIcon={<PhotoCamera/>
-                        }>
+                          startIcon={<PhotoCamera/>}
+                        >
                           Upload Event Photo
                           <input
                             hidden
