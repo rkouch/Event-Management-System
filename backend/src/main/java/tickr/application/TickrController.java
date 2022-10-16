@@ -561,9 +561,6 @@ public class TickrController {
 
         return new EventSearch.Response(eventList, numItems.get());
     }
-<<<<<<< HEAD
-}
-=======
 
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
         if (!request.isValid()) {
@@ -580,4 +577,3 @@ public class TickrController {
         session.remove(user);
     }
 }
->>>>>>> main
