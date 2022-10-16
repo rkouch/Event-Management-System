@@ -98,13 +98,23 @@ export const getUserData = async (body, setUserData=null) => {
       lastName: response.last_name,
       profileDescription: response.profile_description,
       email: response.email,
-      events: response.events
+      events: response.events,
+      profilePicture: response.profile_picture
     }
     if (setUserData != null) {
       setUserData(ret)
     } else {
       return ret
     }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const getEventData = async (eventId, setEventData=null) => {
+  try {
+    const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
+    setEventData(response)
   } catch (error) {
     console.log(error)
   }
@@ -182,16 +192,18 @@ export function stringToColor(string) {
   return color;
 }
 
-export const checkIfUser= async (userId) => {
+export const checkIfUser= async (userId, setState) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
     const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+    console.log(response_2)
+    console.log(userId)
     if (userId === response_2.user_id) {
-      return true
+      setState(true)
       // navigate(`/my_profile`)
     } else {
       // navigate(`/view_profile/${userId}`)
-      return false
+      setState(false)
     }
   } catch (e) {
     console.log(e)

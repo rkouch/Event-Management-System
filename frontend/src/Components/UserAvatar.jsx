@@ -4,10 +4,13 @@ import Tooltip from '@mui/material/Tooltip';
 import Skeleton from '@mui/material/Skeleton';
 import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
-import { apiFetch, getToken, getUserData} from '../Helpers';
+import Badge from '@mui/material/Badge';
+import StarIcon from '@mui/icons-material/Star';
+import { apiFetch, getToken, getUserData, loggedIn} from '../Helpers';
+import { UploadPhoto } from '../Styles/HelperStyles';
 
 
-export default function UserAvatar({userId, size=35}) {
+export default function UserAvatar({userId, size=35, host=false}) {
   const navigate = useNavigate()
 
   const [userData, setUserData] = React.useState({
@@ -30,14 +33,19 @@ export default function UserAvatar({userId, size=35}) {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     console.log('viewing profile')
+
     try {
-      const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
-      const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
-      if (userId === response_2.user_id) {
-        window.open('/my_profile')
-        // navigate(`/my_profile`)
+      // Check if a uyser is logged in
+      if (loggedIn()) {
+        const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+        const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+        if (userId === response_2.user_id) {
+          window.open('/my_profile')
+          // navigate(`/my_profile`)
+        } else {
+          window.open(`/view_profile/${userId}`)
+        }
       } else {
-        // navigate(`/view_profile/${userId}`)
         window.open(`/view_profile/${userId}`)
       }
     } catch (e) {
@@ -49,7 +57,26 @@ export default function UserAvatar({userId, size=35}) {
     <IconButton disableRipple={true} onClick={handleClick}>
       <Tooltip title={`${userData.firstName} ${userData.lastName}`}>
         {(userData.userName !== '')
-          ? <Avatar sx={{height: size, width: size}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+          ? <>
+              {host
+                ? <Badge 
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={<StarIcon/>}
+                  >
+                    {(userData.profilePicture !== "")
+                      ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
+                      : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                    } 
+                  </Badge>
+                : <>
+                    {(userData.profilePicture !== "")
+                      ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
+                      : <Avatar sx={{ width: size, height: size }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                    } 
+                  </>
+              }
+            </> 
             // For later use with profile pictures
             // {(userData.profilePicture === '')
             //   ? <Avatar sx={{height: height, width: width}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>

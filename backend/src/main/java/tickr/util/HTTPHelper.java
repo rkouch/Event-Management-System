@@ -1,4 +1,4 @@
-package tickr.integration;
+package tickr.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,6 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -67,6 +68,24 @@ public class HTTPHelper {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
                 .orTimeout(1000, TimeUnit.MILLISECONDS)
+                .join();
+    }
+
+    public <T> Response post (String route, T body, Map<String, String> headers, long timeout) {
+        System.out.println(serverUrl + route);
+        var requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(serverUrl + route))
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(body)));
+
+        for (var i : headers.entrySet()) {
+            requestBuilder.header(i.getKey(), i.getValue());
+        }
+        var request = requestBuilder.build();
+
+
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
+                .orTimeout(timeout, TimeUnit.MILLISECONDS)
                 .join();
     }
 

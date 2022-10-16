@@ -1,18 +1,19 @@
 package tickr.unit.user;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.entities.ResetToken;
 import tickr.application.entities.User;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.mock.MockEmailAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -32,6 +33,10 @@ public class TestChangePassword {
 
     private ModelSession session;
     private String authToken;
+    @BeforeAll
+    public static void setupApi () {
+        ApiLocator.addLocator(IEmailAPI.class, MockEmailAPI::new);
+    }
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
@@ -46,6 +51,11 @@ public class TestChangePassword {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+    }
+
+    @AfterAll
+    public static void cleanupApis () {
+        ApiLocator.resetLocators();
     }
 
     @Test

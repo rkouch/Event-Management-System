@@ -17,6 +17,7 @@ import ChangePassword from './Pages/ChangePassword';
 import { apiFetch, getToken, getUserData, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
 import ViewEvent from './Pages/ViewEvent';
+import EditEvent from './Pages/EditEvent';
 
 const router = createBrowserRouter([
   {
@@ -45,7 +46,7 @@ const router = createBrowserRouter([
     element: <ChangePassword/>
   },
   {
-    path: "/change_password/:resetToken",
+    path: "/change_password/:email/:resetToken",
     element: <ChangePassword/>
   },
   {
@@ -57,12 +58,16 @@ const router = createBrowserRouter([
     element: <RequestChangePassword/>
   },
   {
-    path: "/view_event/:eventID",
+    path: "/view_event/:event_id",
     element: <ViewEvent/>
   },
   {
     path: "/view_profile/:user_id",
     element: <Profile editable={false}/>
+  },
+  {
+    path: "/edit_event/:event_id",
+    element: <EditEvent/>
   }
 ])
 

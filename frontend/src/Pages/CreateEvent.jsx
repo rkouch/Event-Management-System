@@ -1,7 +1,7 @@
 import React from "react";
 
 import Header from "../Components/Header";
-import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles";
+import { BackdropNoBG, CentredBox, UploadPhoto } from "../Styles/HelperStyles";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -25,17 +25,14 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import LoadingButton from "../Components/LoadingButton"
 import {CircularProgress} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
+import Tooltip from '@mui/material/Tooltip';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import Button from '@mui/material/Button';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
+import { useNavigate } from "react-router-dom";
+import UploadButtons from "../Components/InputTest";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -51,8 +48,9 @@ export const EventForm = styled("div")({
 });
 
 export default function CreateEvent({}) {
-  // States
+  const navigate = useNavigate()
 
+  // States
   const [start, setStartValue] = React.useState({
     start: dayjs("2014-08-18T21:11:54"),
     error: false,
@@ -126,6 +124,12 @@ export default function CreateEvent({}) {
     error: false,
     errorMsg: '',
   });
+
+  const [loading, setLoading] = React.useState(false)
+
+  const [eventPicture, setEventPicture] = React.useState('')
+
+  const [toggleUpload, setToggleUpload] = React.useState(true)
 
   React.useEffect(()=> {
     if(!errorStatus) {
@@ -267,6 +271,7 @@ export default function CreateEvent({}) {
   }, [newAdmin.response])
 
   const submitEvent = async (e) => {
+    setLoading(true)
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
@@ -303,6 +308,7 @@ export default function CreateEvent({}) {
     if (error) {
       setErrorStatus(true)
       setErrorMsg('Please fill in required fields')
+      setLoading(false)
       return
     }
 
@@ -311,7 +317,8 @@ export default function CreateEvent({}) {
       setErrorStatus(true)
       setFieldInState('error', true, newSection, setNewSection)
       setErrorMsg('Please allocate seating')
-      
+      setLoading(false)
+      return
     }
     
 
@@ -345,6 +352,7 @@ export default function CreateEvent({}) {
     const locationBody = {
       street_no: +streetAddress[0],
       street_name: streetAddress[1] + streetAddress[2],
+      suburb: suburb.value,
       unitNo: '',
       postcode: postcode.value,
       state: state.value,
@@ -356,20 +364,23 @@ export default function CreateEvent({}) {
     const body = {
       auth_token: getToken(),
       event_name: eventName.value,
-      picture: '',
       location: locationBody,
       start_date: start.start.toISOString(),
       end_date: end.end.toISOString(),
       description: description.value,
       seating_details: seatingList,
       categories: [],
-      tags: [],
+      tags: tags,
       admins: adminList,
+      picture: eventPicture,
     };
 
     try {
       const response = await apiFetch('POST', '/api/event/create', body)
       console.log(response)
+      // Navigate to event
+      navigate(`/view_event/${response.event_id}`)
+      setLoading(false)
     } catch (e) {
 
     }
@@ -407,17 +418,56 @@ export default function CreateEvent({}) {
               }}
             >
               <Grid item xs={12}>
-                <CentredBox
-                  sx={{
-                    height: 200,
-                    backgroundColor: alpha('#6A7B8A', 0.3),
-                    borderRadius: 5,
-                  }}
-                >
-                  <h3>
-                    Event cover photo
-                  </h3>
-                </CentredBox>
+                <ContrastInputWrapper>
+                  <CentredBox
+                    sx={{
+                      height: 200,
+                      borderRadius: 5,
+                    }}
+                    onMouseOver={() => {
+                      setToggleUpload(false);
+                    }}
+                    onMouseOut={() => {
+                      setToggleUpload(true);
+                    }}
+                  > 
+                    {!toggleUpload
+                      ? <Button 
+                          sx={{
+                            backgroundColor: "#92C5DD",
+                            "&:hover": {
+                              backgroundColor: "#73B5D3"
+                            },
+                            color: 'white'
+                          }}
+                          variant="contained"
+                          component="label"
+                          startIcon={<PhotoCamera/>}
+                        >
+                          Upload Event Photo
+                          <input
+                            hidden
+                            accept="image/*"
+                            multiple
+                            type="file" 
+                            onChange={async (e) => {
+                              const image = await fileToDataUrl(e.target.files[0])
+                              setEventPicture(image)
+                              console.log("uploaded image")
+                            }}
+                          />
+                        </Button>
+                      : <>
+                          {(eventPicture === '')
+                            ? <h3>
+                                Event cover photo
+                              </h3>
+                            : <UploadPhoto src={eventPicture}/>
+                          }
+                        </>                      
+                    }
+                  </CentredBox>
+                </ContrastInputWrapper>
               </Grid>
               <Grid item xs={6}>
                 <h3> Event Details </h3>
@@ -768,8 +818,27 @@ export default function CreateEvent({}) {
             </Grid>
           </EventForm>
           <FormInput>
-            <CentredBox>
-              <TkrButton variant="contained" onClick={submitEvent}>Create Event</TkrButton>
+            <CentredBox sx={{position: 'relative'}}>
+              <TkrButton
+                variant="contained"
+                onClick={submitEvent}
+                disabled={loading}
+              >
+                Create Event
+              </TkrButton>
+              {loading && (
+                <CircularProgress 
+                  size={24}
+                  sx={{
+                    color: "#AE759F",
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-12px',
+                    marginLeft: '-12px',
+                  }}
+                />
+              )}
             </CentredBox>
             <Collapse in={errorStatus}>
               <Alert severity="error">{errorMsg}.</Alert>

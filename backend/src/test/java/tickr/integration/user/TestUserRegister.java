@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;

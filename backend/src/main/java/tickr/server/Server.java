@@ -17,6 +17,7 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
+import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
@@ -72,6 +73,7 @@ public class Server {
 
         get("/api/user/profile", TickrController::userGetProfile);
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
+        delete("/api/user/delete", TickrController::userDeleteAccount, UserDeleteRequest.class);
 
         get("/api/user/search", TickrController::userSearch);
 

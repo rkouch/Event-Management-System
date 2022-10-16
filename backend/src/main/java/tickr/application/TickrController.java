@@ -9,6 +9,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.entities.AuthToken;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
@@ -24,17 +26,18 @@ import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventViewRequest;
+import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -407,6 +410,13 @@ public class TickrController {
         
         var resetToken = new ResetToken(user, Duration.ofHours(24));
         session.save(resetToken);
+
+        // localhost:3000/change_password/{email}/{reset_token}
+        var resetUrl = String.format("localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
+
+        var messageString = String.format("Please reset your Tickr account password here: %s\n", resetUrl);
+
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(user.getEmail(), "Tickr account password reset", messageString);
  
         return new RequestChangePasswordResponse(true);
     }
@@ -551,4 +561,23 @@ public class TickrController {
 
         return new EventSearch.Response(eventList, numItems.get());
     }
+<<<<<<< HEAD
 }
+=======
+
+    public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var token = getTokenFromStr(session, request.authToken);
+        User user = token.getUser();
+        user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
+        var tokenSet = new HashSet<>(user.getTokens());
+        for (var i : tokenSet) {
+            user.invalidateToken(session, i);
+        }
+        session.remove(user);
+    }
+}
+>>>>>>> main

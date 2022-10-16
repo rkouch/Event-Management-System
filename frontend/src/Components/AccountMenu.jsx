@@ -16,6 +16,8 @@ import HomeIcon from '@mui/icons-material/Home';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { getToken, setToken, getUserData } from '../Helpers';
+import { UploadPhoto } from '../Styles/HelperStyles';
+import { Skeleton } from '@mui/material';
 
 
 export default function AccountMenu() {
@@ -33,13 +35,18 @@ export default function AccountMenu() {
     setAnchorEl(null);
   };
 
-  const doLogout = (e) => {
+  const doLogout = async (e) => {
     e.stopPropagation()
     e.nativeEvent.stopImmediatePropagation()
-    setToken(null)
-    setIsLoggedIn(false)
-    navigate('/')
-    window.location.reload(false);
+    try {
+      const response = await('DELETE', '/api/user/logout', {auth_token: getToken()})
+      setToken(null)
+      setIsLoggedIn(false)
+      navigate('/')
+      window.location.reload(false);
+    } catch (e) {
+      console.log(e)
+    }
   };
 
   const [userData, setUserData] = React.useState({
@@ -67,7 +74,16 @@ export default function AccountMenu() {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
           >
-            <Avatar sx={{ width: 37, height: 37 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+            {(userData.userName !== "")
+              ? <>
+                  {(userData.profilePicture !== "")
+                    ? <UploadPhoto sx={{width: 37, height: 37, borderRadius: 37}} src={userData.profilePicture}/>
+                    : <Avatar sx={{ width: 37, height: 37 }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                  }
+                </>
+              : <Skeleton variant="circular" width={37} height={37}/>
+            }
+             
           </IconButton>
         </Tooltip>
       </Box>

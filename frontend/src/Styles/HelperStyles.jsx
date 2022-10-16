@@ -67,3 +67,10 @@ export const HeaderBar = styled(AppBar)({
   position: "sticky",
   padding: '10px',
 })
+
+export const UploadPhoto = styled(`img`)({
+  height: '100%',
+  width: '100%',
+  objectFit: 'cover',
+  borderRadius: 5,
+})

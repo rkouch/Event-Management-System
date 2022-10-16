@@ -20,7 +20,7 @@ import {CircularProgress, Typography } from '@mui/material';
 
 import '../App.css';
 
-import { apiFetch, getToken, setFieldInState, setToken } from '../Helpers';
+import { apiFetch, checkValidEmail, getToken, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link, useNavigate } from "react-router-dom";
@@ -44,75 +44,113 @@ export default function RequestChangePassword({}) {
   const [inError, setInError] = React.useState(false)
   const [errorMsg, setErrorMsg] = React.useState('')
 
-  const handleRequest = (e) => {
+  const handleRequest = async (e) => {
     // Wait for response
     setLoading(true)
+
+    // Check if email provided is valid
+    if (!checkValidEmail(email.email)) {
+      setFieldInState('error', true, email, setEmail)
+      setFieldInState('errorMsg', 'Enter a valid email.', email, setEmail)
+      setLoading(false)
+      return
+    }
+    try {
+      const response = await apiFetch('POST', '/api/user/reset/request', {email: email.email})
+      setEmailConfirmed(true)
+    } catch (error) {
+      setFieldInState('error', true, email, setEmail)
+      setInError(true)
+      setErrorMsg(error.reason)
+      setLoading(false)
+    }
   }
 
+  React.useEffect(() => {
+    if (!inError) {
+      setInError(false)
+      setErrorMsg('')
+    }
+  }, [inError])
+
+  const handleChange = (e) => {
+    setFieldInState('email', e.target.value, email, setEmail)
+    setInError(false)
+    setErrorMsg('')
+  }
 
   return (
     <div>
       <StandardLogo/>
       <Box disabled className='Background'> 
         <Box disabled sx={{ boxShadow: 3, width:500, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
-          <H3
-            sx={{
-              fontSize: '30px',
-            }}
-          >
-            Confirm Your Email
-          </H3>
-          <Divider/>
-          <br/>
-          <FormInput>
-            <Grid container spacing={2} sx={{paddingLeft: 5, paddingRight: 5, width: '90%'}}>
-              <Grid xs={12}>
-                <FormControl fullWidth={true}>
-                  <OutlinedInput
-                    id="email"
-                    placeholder="Email"
-                    variant="outlined"
-                    sx={{borderRadius: 2}} 
-                    fullWidth={true} 
-                    error={email.error}
-                    onChange={(e) => setFieldInState('email', e.target.value, email, setEmail)}
-                  />
-                  <FormHelperText>{email.errorMsg}</FormHelperText>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </FormInput>
-          <br/>
-          <Divider/>
-          <br/>
-          <FormInput>
-            <CentredBox sx={{position: 'relative'}}>
-              <TkrButton
-                variant="contained"
-                disabled={loading}
-                sx={{fontSize: 15}}
-                onClick={handleRequest}
+          {emailConfirmed
+            ? <CentredBox>
+                <H3>
+                  Password reset link has been sent to {email.email}
+                </H3>
+              </CentredBox>
+            : <>
+              <H3
+                sx={{
+                  fontSize: '30px',
+                }}
               >
-                Request Password Change
-              </TkrButton>
-              {loading && (
-                <CircularProgress 
-                  size={24}
-                  sx={{
-                    color: "#AE759F",
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    marginTop: '-12px',
-                    marginLeft: '-12px',
-                  }}
-                />
-              )}
-            </CentredBox>
-            <Collapse in={inError}>
-              <Alert severity="error">{errorMsg}</Alert>
-            </Collapse>
-          </FormInput>
+                Confirm Your Email
+              </H3>
+              <Divider/>
+              <br/>
+              <FormInput>
+                <Grid container spacing={2} sx={{paddingLeft: 5, paddingRight: 5, width: '90%'}}>
+                  <Grid xs={12}>
+                    <FormControl fullWidth={true}>
+                      <OutlinedInput
+                        id="email"
+                        placeholder="Email"
+                        variant="outlined"
+                        sx={{borderRadius: 2}} 
+                        fullWidth={true} 
+                        error={email.error}
+                        onChange={handleChange}
+                      />
+                      <FormHelperText>{email.errorMsg}</FormHelperText>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </FormInput>
+              <br/>
+              <Divider/>
+              <br/>
+              <FormInput>
+                <CentredBox sx={{position: 'relative'}}>
+                  <TkrButton
+                    variant="contained"
+                    disabled={loading}
+                    sx={{fontSize: 15}}
+                    onClick={handleRequest}
+                  >
+                    Request Password Change
+                  </TkrButton>
+                  {loading && (
+                    <CircularProgress 
+                      size={24}
+                      sx={{
+                        color: "#AE759F",
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        marginTop: '-12px',
+                        marginLeft: '-12px',
+                      }}
+                    />
+                  )}
+                </CentredBox>
+                <Collapse in={inError}>
+                  <Alert severity="error">{errorMsg}</Alert>
+                </Collapse>
+              </FormInput>
+              </>
+          }
         </Box>
       </Box>
     </div>

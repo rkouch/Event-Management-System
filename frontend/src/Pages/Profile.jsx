@@ -1,18 +1,18 @@
 import React from 'react'
 
-import { BackdropNoBG, CentredBox, H3  } from '../Styles/HelperStyles'
+import { BackdropNoBG, CentredBox, H3, UploadPhoto  } from '../Styles/HelperStyles'
 import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
 import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, CircularProgress, Collapse, Divider, fabClasses, OutlinedInput, Typography } from '@mui/material';
+import { Avatar, Button, CircularProgress, Collapse, Divider, fabClasses, IconButton, OutlinedInput, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, TextButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState, getToken, getUserData, loggedIn, apiFetch } from '../Helpers';
+import { setFieldInState, getToken, getUserData, loggedIn, apiFetch, fileToDataUrl } from '../Helpers';
 import ShadowInput from '../Components/ShadowInput';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormLabel from '@mui/material/FormLabel';
@@ -21,13 +21,16 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import ConfirmPassword from '../Components/ConfirmPassword';
-
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import { borderRadius, styled, alpha } from '@mui/system';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import LoadingButton from '../Components/LoadingButton';
 
 export default function Profile({editable=false}){
   const params = useParams()
   const navigate = useNavigate()
+
+  const [hover, setHover] = React.useState(false)
 
   const [editMode, setEditMode] = React.useState(false)
 
@@ -37,6 +40,7 @@ export default function Profile({editable=false}){
     lastName: '',
     email: '',
     profilePicture: '',
+    profilePictureChanged: false,
     events: []
   })
 
@@ -132,7 +136,9 @@ export default function Profile({editable=false}){
       last_name: profile.lastName,
       email: profile.email,
       profile_description: profile.profileDescription,
+      profile_picture: profile.profilePictureChanged ? profile.profilePicture : null,
     }
+
     return body
   }
 
@@ -172,17 +178,72 @@ export default function Profile({editable=false}){
                       justifyContent: 'center',
                     }}
                   >
-                    <CentredBox
-                      sx={{
-                        width: '300px',
-                        height: '300px',
-                        borderRadius: '15px',
-                      }}
-                    >
-                      <Avatar sx={{width: 300, height: 300, fontSize: 100}}>
-                        {profile.firstName[0]}{profile.lastName[0]}
-                      </Avatar>
-                    </CentredBox>
+                    {editMode
+                      ? <CentredBox
+                          sx={{
+                            width: '300px',
+                            height: '300px',
+                            borderRadius: '150px',
+                            backgroundColor: alpha('#6A7B8A', 0.5),
+                          }}
+                          onMouseOver={() => {
+                            setHover(false);
+                          }}
+                          onMouseOut={() => {
+                            setHover(true);
+                          }}
+                        >
+                          {!hover
+                            ? <Button
+                                sx={{
+                                  backgroundColor: 'rgba(0,0,0,0)',
+                                  "&:hover": {
+                                    backgroundColor: 'rgba(0,0,0,0)',
+                                  },
+                                  fontSize: 20,
+                                  color: 'white'
+                                }}
+                                startIcon={<PhotoCamera/>}
+                                component="label"
+                              >
+                                Upload photo
+                                <input
+                                  hidden
+                                  accept="image/*"
+                                  type="file" 
+                                  onChange={async (e) => {
+                                    const image = await fileToDataUrl(e.target.files[0])
+                                    setFieldInState("profilePictureChanged", true, profile, setProfile)
+                                    setFieldInState("profilePicture", image, profile, setProfile)
+                                  }}
+                                />
+                              </Button>
+                            : <>
+                                {(profile.profilePicture !== "")
+                                  ? <UploadPhoto sx={{borderRadius: 300}} src={profile.profilePicture}/>
+                                  : <Avatar sx={{width: 300, height: 300, fontSize: 100}}>
+                                      {profile.firstName[0]}{profile.lastName[0]}
+                                    </Avatar>
+                                } 
+                              </>
+                          }
+                        </CentredBox>
+                      : <CentredBox
+                          sx={{
+                            width: '300px',
+                            height: '300px',
+                            borderRadius: '300px',
+                          }}
+                        >
+                          {(profile.profilePicture !== "")
+                            ? <UploadPhoto sx={{borderRadius: 300}} src={profile.profilePicture}/>
+                            : <Avatar sx={{width: 300, height: 300, fontSize: 100}}>
+                                {profile.firstName[0]}{profile.lastName[0]}
+                              </Avatar>
+                          } 
+                          
+                        </CentredBox> 
+                    }
                   </Box>
                 </Grid>
                 <Grid item xs={6}>
@@ -404,7 +465,7 @@ export default function Profile({editable=false}){
                             >
                               Delete Account
                             </DeleteButton>
-                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc}/>
+                            <ConfirmPassword open={delAcc} handleOpen={handleDelAcc} method={'DELETE'} route={'/api/user/delete'} navigateTo={'/'}/>
                           </Box>
                         </FormControl>
                       </Box>

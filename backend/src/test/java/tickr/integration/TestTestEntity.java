@@ -9,6 +9,7 @@ import tickr.application.entities.TestEntity;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
+import tickr.util.HTTPHelper;
 
 import java.util.Map;
 import java.util.UUID;

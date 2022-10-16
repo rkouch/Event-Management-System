@@ -1,6 +1,5 @@
 package tickr.integration.user;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.AfterEach;
@@ -10,9 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import spark.Spark;
 import tickr.TestHelper;
 import tickr.application.serialised.combined.NotificationManagement;
-import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;

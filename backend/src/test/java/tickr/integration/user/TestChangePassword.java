@@ -1,20 +1,18 @@
 package tickr.integration.user;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import spark.Spark;
-import tickr.application.entities.ResetToken;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
-import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
-import tickr.integration.HTTPHelper;
+import tickr.util.HTTPHelper;
+import tickr.mock.MockEmailAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -24,6 +22,11 @@ public class TestChangePassword {
     private HTTPHelper httpHelper;
 
     private String authToken;
+
+    @BeforeAll
+    public static void setupApis () {
+        ApiLocator.addLocator(IEmailAPI.class, MockEmailAPI::new);
+    }
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
@@ -43,6 +46,11 @@ public class TestChangePassword {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+    }
+
+    @AfterAll
+    public static void cleanupApis () {
+        ApiLocator.resetLocators();
     }
 
     @Test
