@@ -455,20 +455,26 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
+        User hostUser;
+        try {
+            hostUser = authenticateToken(session, request.getAuthToken());
+        } catch (IllegalArgumentException e){
+            throw new UnauthorizedException("Invalid auth token");
+        }
+        if (hostUser.getId() != event.getHost().getId()) {
+            throw new ForbiddenException("User is not the host of the event!");
+        }
 
         if (request.picture == null) {
             event.editEvent(session, request.getEventName(), null, request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails());
         } else {
-            event.editEvent(session, request.getEventName(), request.getPicture(), request.getLocation(),
+            event.editEvent(session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
+            .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails());
         }
-        
-        event.editEvent(session, request.getEventName(), request.getPicture(), request.getLocation(),
-         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
         return;
     }
 

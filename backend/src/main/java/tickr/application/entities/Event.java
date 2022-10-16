@@ -233,7 +233,7 @@ public class Event {
             }
             this.eventPicture = picture;
         }
-        if (location != null) {
+        if (locations != null) {
             session.remove(this.location);
             Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
             locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
@@ -266,6 +266,7 @@ public class Event {
             for (Category cat : oldCat) {
                 session.remove(cat);
             }
+            this.categories.clear();
             for (String cat : categories) {
                 Category newCat = new Category(cat);
                 newCat.setEvent(this);
@@ -278,6 +279,7 @@ public class Event {
             for (Tag tag : oldTags) {
                 session.remove(tag);
             }
+            this.tags.clear();
             for (String tag : tags) {
                 Tag newTag = new Tag(tag);
                 newTag.setEvent(this);
