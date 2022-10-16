@@ -8,6 +8,7 @@ import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
@@ -75,6 +76,9 @@ public class Server {
         delete("/api/user/delete", TickrController::userDeleteAccount, UserDeleteRequest.class);
 
         get("/api/user/search", TickrController::userSearch);
+
+
+        put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
     }

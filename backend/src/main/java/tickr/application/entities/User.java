@@ -234,6 +234,10 @@ public class User {
         this.adminEvents = adminEvents;
     }
 
+    public void addAdminEvents (Event event) {
+        this.adminEvents.add(event);
+    }
+
     private Set<Group> getOwnedGroups () {
         return ownedGroups;
     }

@@ -1,14 +1,21 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.persistence.ModelSession;
+import tickr.server.exceptions.ForbiddenException;
+import tickr.util.FileHelper;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -211,8 +218,100 @@ public class Event {
         this.eventPicture = eventPicture;
     }
 
-    public void editEvent (String eventName, String picture, Location location, String startDate, String endDate, String description, 
-                            List<SeatingDetails> seatingDetails, Set<Category> categories, Set<Tag> tags, Set<User> admins) {
-            
+    private void clearAdmins () {
+        this.admins.clear();
+    }
+
+    public void editEvent (ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails) {
+        if (eventName != null) {
+            this.eventName = eventName; 
+        }
+        if (picture != null) {
+            if (!getEventPicture().equals("")) {
+                FileHelper.deleteFileAtUrl(getEventPicture());
+            }
+            this.eventPicture = picture;
+        }
+        if (locations != null) {
+            session.remove(this.location);
+            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
+            locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
+            session.save(newLocation);
+            this.location = newLocation; 
+        }
+        if (startDate != null) {
+            LocalDateTime start_date;
+            try {
+                start_date = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
+                this.eventStart = start_date;
+            } catch (DateTimeParseException e) {
+                throw new ForbiddenException("Invalid date time string!");
+            }
+        }
+        if (endDate != null) {
+            LocalDateTime end_date;
+            try {
+                end_date = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+                this.eventEnd = end_date;
+            } catch (DateTimeParseException e) {
+                throw new ForbiddenException("Invalid date time string!");
+            }
+        }
+        if (description != null) {
+            this.eventDescription = description;
+        }
+        if (categories != null) {
+            List<Category> oldCat = session.getAllWith(Category.class, "event", this);
+            for (Category cat : oldCat) {
+                session.remove(cat);
+            }
+            this.categories.clear();
+            for (String cat : categories) {
+                Category newCat = new Category(cat);
+                newCat.setEvent(this);
+                session.save(newCat);
+                this.addCategory(newCat); 
+            }
+        }
+        if (tags != null) {
+            List<Tag> oldTags = session.getAllWith(Tag.class, "event", this);
+            for (Tag tag : oldTags) {
+                session.remove(tag);
+            }
+            this.tags.clear();
+            for (String tag : tags) {
+                Tag newTag = new Tag(tag);
+                newTag.setEvent(this);
+                session.save(newTag);
+                this.addTag(newTag); 
+            }
+        }
+        if (admins != null) {
+            this.clearAdmins();
+
+            for (String admin : admins) {
+                User userAdmin;
+                try {
+                    userAdmin = session.getById(User.class, UUID.fromString(admin))
+                    .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                } catch (IllegalArgumentException e) {
+                    throw new ForbiddenException("invalid admin Id");
+                }
+                this.addAdmin(userAdmin);
+                userAdmin.addAdminEvents(this);
+            }
+        }
+
+        if (seatingDetails != null) {
+            List<SeatingPlan> seatingPlanList = session.getAllWith(SeatingPlan.class, "event", this);
+            for (SeatingPlan seat : seatingPlanList) {
+                session.remove(seat);
+            }
+            for (EditEventRequest.SeatingDetails seats : seatingDetails) {
+                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability);
+                session.save(seatingPlan);
+            }
+        }
     }
 }
