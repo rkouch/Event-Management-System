@@ -36,10 +36,15 @@ public class EventViewResponse {
 
     public static class SeatingDetails {
         public String section;
-        public int availability; 
-        public SeatingDetails(String section, int availability) {
+        public int availability;
+
+        @SerializedName("ticket_price") 
+        public int ticketPrice; 
+        
+        public SeatingDetails(String section, int availability, int cost) {
             this.section = section;
             this.availability = availability;
+            this.ticketPrice = cost;
         }
     }
 
