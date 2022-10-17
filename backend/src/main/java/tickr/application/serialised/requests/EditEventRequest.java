@@ -38,12 +38,17 @@ public class EditEventRequest {
 
     public Set<String> tags;
 
+    public boolean published; 
+
     public static class SeatingDetails {
         public String section;
         public int availability; 
-        public SeatingDetails(String section, int availability) {
+        @SerializedName("ticket_price") 
+        public int ticketPrice; 
+        public SeatingDetails(String section, int availability, int cost) {
             this.section = section;
             this.availability = availability;
+            this.ticketPrice = cost;
         }
     }
     public EditEventRequest () {}
@@ -52,7 +57,7 @@ public class EditEventRequest {
 
     public EditEventRequest(String eventId, String authToken, String eventName, String picture,
             SerializedLocation location, String startDate, String endDate, String description,
-            List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags) {
+            List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags, boolean published) {
         this.eventId = eventId;
         this.authToken = authToken;
         this.eventName = eventName;
@@ -65,9 +70,8 @@ public class EditEventRequest {
         this.admins = admins;
         this.categories = categories;
         this.tags = tags;
+        this.published = published;
     }
-
-
 
     public String getEventId() {
         return eventId;

@@ -8,6 +8,7 @@ import Badge from '@mui/material/Badge';
 import StarIcon from '@mui/icons-material/Star';
 import { apiFetch, getToken, getUserData, loggedIn} from '../Helpers';
 import { UploadPhoto } from '../Styles/HelperStyles';
+import Person4Icon from '@mui/icons-material/Person4';
 
 
 export default function UserAvatar({userId, size=35, host=false}) {
@@ -59,29 +60,25 @@ export default function UserAvatar({userId, size=35, host=false}) {
         {(userData.userName !== '')
           ? <>
               {host
-                ? <Badge 
-                    overlap="circular"
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    badgeContent={<StarIcon/>}
-                  >
-                    {(userData.profilePicture !== "")
-                      ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
-                      : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
-                    } 
-                  </Badge>
-                : <>
+                ? <Tooltip title="Event Host">
+                    <Badge 
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                      badgeContent={<Person4Icon/>}
+                    >
+                      {(userData.profilePicture !== "")
+                        ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
+                        : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                      } 
+                    </Badge>
+                  </Tooltip>
+                : <Tooltip title={`@${userData.userName}`}>
                     {(userData.profilePicture !== "")
                       ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
                       : <Avatar sx={{ width: size, height: size }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
                     } 
-                  </>
+                  </Tooltip>
               }
-            </> 
-            // For later use with profile pictures
-            // {(userData.profilePicture === '')
-            //   ? <Avatar sx={{height: height, width: width}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
-            //   : <Avatar src={userData.profilePicture}/>
-            // }
+            </>
           : <Skeleton variant="circular" width={size} height={size} />
         }
       </Tooltip>

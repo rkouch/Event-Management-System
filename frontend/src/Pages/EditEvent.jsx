@@ -9,13 +9,13 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Box, Divider, FormLabel, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Divider, FormGroup, FormLabel, List, ListItem, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -30,11 +30,14 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import UserAvatar from "../Components/UserAvatar";
 
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
+
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -132,30 +135,15 @@ export default function EditEvent({}) {
 
   const [published, setPublished] = React.useState(false)
 
-  const testDate1 = dayjs().add(7, 'day')
-  const testDate2 = testDate1.add(7, 'hour')
+  const [isHost, setIsHost] = React.useState(false)
 
-  const testEvent = {
-    event_name: "Welcome Back Ray",
-    location: {
-      street_no: "1",
-      street_name: "Station St",
-      suburb: 'Strathfield',
-      postcode: "2135",
-      state: "NSW",
-      country: "Australia"
-    },
-    host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
-    start_date: testDate1.toISOString(),
-    end_date: testDate2.toISOString(),
-    description: "This is going to be a party",
-    tags: ["music", "festival", "food"],
-    admins: ["21738066-4b4d-4c7c-98df-d486f58b0c6c"],
-    seating_details: [{
-      section: "A",
-      availability: 10,
-    }]
-  }
+  const [newHostMenu, setNewHostMenu] = React.useState(false)
+
+  const [newHost, setNewHost] = React.useState({})
+
+  const [newPhoto, setNewPhoto] = React.useState(false)
+
+  const [openDeleteMenu, setOpenDeleteMenu] = React.useState(false)
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -173,7 +161,8 @@ export default function EditEvent({}) {
     tags: [],
     admins: [],
     picture: "",
-    host_id: ''
+    host_id: '',
+    published: true,
   })
   
   React.useState(() => {
@@ -198,6 +187,9 @@ export default function EditEvent({}) {
     setEventPicture(event.picture)
     setSeatingList(event.seating_details)
     // setPublished(response.published)
+
+    // Set if it is the host who is logged in
+    checkIfUser(event.host_id, setIsHost)
   }, [event])
 
 
@@ -241,21 +233,6 @@ export default function EditEvent({}) {
       setFieldInState("error", false, end, setEndValue);
       setFieldInState("errorMsg", "", end, setEndValue);
     }
-  };
-
-  const handleSectionChange = (e, index) => {
-    const list = [...seatingList];
-    list[index].sectionName = e.target.value;
-    setSeatingList(list);
-    console.log(seatingList);
-  };
-
-  const handleCapacityChange = (e, index) => {
-    const { name, value } = e.target;
-    const list = [...seatingList];
-    list[index][name] = value;
-    setSeatingList(list);
-    console.log(seatingList);
   };
 
   const handleNewAdmin = (e) => {
@@ -334,6 +311,36 @@ export default function EditEvent({}) {
     list.splice(index, 1);
     setSeatingList(list);
   };
+
+  const handleNewHost = async () => {
+    console.log(newHost)
+    // Send api request for admin
+    const body = {
+      auth_token: getToken(),
+      event_id: params.event_id,
+      new_host_email: newHost.email
+    }
+    try {
+      const response = await apiFetch('PUT', '/api/event/make_host', body)
+      navigate(`/view_event/${params.event_id}`)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  const handleDeleteEvent = async () => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        event_id: params.event_id
+      }
+      const response = await apiFetch('DELETE', '/api/event/cancel', body)
+      navigate('/')
+
+    } catch(error) {
+      console.log(error)
+    }
+  }
 
   React.useEffect(() => {
     if (newAdmin.response) {
@@ -418,8 +425,9 @@ export default function EditEvent({}) {
 
     const locationBody = {
       street_no: +streetAddress[0],
-      street_name: streetAddress[1] + streetAddress[2],
+      street_name: streetAddress[1] + ' ' + streetAddress[2],
       unitNo: '',
+      suburb: suburb.value,
       postcode: postcode.value,
       state: state.value,
       country: country.value,
@@ -429,8 +437,9 @@ export default function EditEvent({}) {
 
     const body = {
       auth_token: getToken(),
+      event_id: params.event_id,
       event_name: eventName.value,
-      picture: '',
+      picture: newPhoto ? eventPicture : null,
       location: locationBody,
       start_date: start.start.toISOString(),
       end_date: end.end.toISOString(),
@@ -439,15 +448,17 @@ export default function EditEvent({}) {
       categories: [],
       tags: [],
       admins: adminList,
+      published: false,
     };
 
-    navigate(`/view_event/${params.event_id}`)
+    
 
     try {
-      // const response = await apiFetch('POST', '/api/event/edit', body)
-      // console.log(response)
-    } catch (e) {
-
+      const response = await apiFetch('PUT', '/api/event/edit', body)
+      console.log(response)
+      navigate(`/view_event/${params.event_id}`)
+    } catch (error) {
+      console.log(error)
     }
   };
 
@@ -478,7 +489,22 @@ export default function EditEvent({}) {
               </Grid>
               <Grid item xs={3}>
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
-                  <FormControlLabel control={<Checkbox defaultChecked sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                  {isHost
+                    ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        {!event.published
+                          ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
+                          : <></>
+                        }
+                      </FormGroup>
+                    : <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
+                        {!event.published
+                          ? <FormHelperText>Only the host can publish an event</FormHelperText>
+                          : <></>
+                        }
+                      </FormGroup>
+                  }        
                 </Box>
               </Grid>
             </Grid>
@@ -530,6 +556,7 @@ export default function EditEvent({}) {
                                 onChange={async (e) => {
                                   const image = await fileToDataUrl(e.target.files[0])
                                   setEventPicture(image)
+                                  setNewPhoto(true)
                                   console.log("uploaded image")
                                 }}
                               />
@@ -676,54 +703,77 @@ export default function EditEvent({}) {
                           </FormControl>
                         </Grid>
                       </LocalizationProvider>
-                      <Grid item xs={8}>
-                        <FormControl fullWidth={true}>
-                          <ContrastInputWrapper>
-                            <ContrastInput 
-                              value = {newAdmin.email}
-                              placeholder="New Admin" 
-                              startAdornment={<CentredBox sx={{pr: 1}}><EmailIcon sx={{color: "rgba(0,0,0,0.45)"}}/></CentredBox>} 
-                              fullWidth 
-                              onChange={handleNewAdmin}
-                              sx={{
-                                '.MuiOutlinedInput-notchedOutline': {
-                                  borderColor: newAdmin.error ? "red" : "rgba(0,0,0,0)"
-                                },
-                              }}
-                            />
-                          </ContrastInputWrapper>
-                          <FormHelperText>{newAdmin.errorMsg}</FormHelperText>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={4}>
-                        <CentredBox sx={{position: 'relative'}}>
-                          <TkrButton
-                            variant="contained"
-                            disabled={(adminLoading || (newAdmin.email.length <= 0))}
-                            sx={{mt: 1, fontSize: 15}}
-                            onClick={addAdmin}
-                            startIcon={<AddIcon/>}
-                          >
-                            Add Admin
-                          </TkrButton>
-                          {adminLoading && (
-                            <CircularProgress 
-                              size={24}
-                              sx={{
-                                color: "#AE759F",
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                marginTop: '-12px',
-                                marginLeft: '-12px',
-                              }}
-                            />
-                          )}
-                        </CentredBox>
-                      </Grid>
-                      <Grid item xs={7}>
-                        <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin}/>
-                      </Grid>
+                      {isHost
+                        ? <>
+                            <Grid item xs={8}>
+                              <FormControl fullWidth={true}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput 
+                                    value = {newAdmin.email}
+                                    placeholder="New Admin" 
+                                    startAdornment={<CentredBox sx={{pr: 1}}><EmailIcon sx={{color: "rgba(0,0,0,0.45)"}}/></CentredBox>} 
+                                    fullWidth 
+                                    onChange={handleNewAdmin}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newAdmin.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                  />
+                                </ContrastInputWrapper>
+                                <FormHelperText>{newAdmin.errorMsg}</FormHelperText>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <CentredBox sx={{position: 'relative'}}>
+                                <TkrButton
+                                  variant="contained"
+                                  disabled={(adminLoading || (newAdmin.email.length <= 0))}
+                                  sx={{mt: 1, fontSize: 15}}
+                                  onClick={addAdmin}
+                                  startIcon={<AddIcon/>}
+                                >
+                                  Add Admin
+                                </TkrButton>
+                                {adminLoading && (
+                                  <CircularProgress 
+                                    size={24}
+                                    sx={{
+                                      color: "#AE759F",
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      marginTop: '-12px',
+                                      marginLeft: '-12px',
+                                    }}
+                                  />
+                                )}
+                              </CentredBox>
+                            </Grid>
+                            <Grid item xs={7}>
+                              <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin} editEvent={true} openHostMenu={setNewHostMenu} setNewHost={setNewHost}/>
+                            </Grid>
+                          </>
+                        : <>
+                            <Grid item xs={7}>
+                              <br/>
+                              <Typography>
+                                Host and Admins
+                              </Typography>
+                              <Divider/>
+                              <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
+                                {event.admins.map((value, key) => {
+                                  return (
+                                    <UserAvatar key={key} userId={value} size={35}/>
+                                  );
+                                })}
+                                <UserAvatar userId={event.host_id} size={35} host={true}/>
+                              </AvatarGroup>
+                              <br/>
+                            </Grid>
+                          </>
+
+                      }
                       <Grid item xs={5}/>
                       <Grid item xs={12}>
                         <ContrastInputWrapper>
@@ -895,20 +945,25 @@ export default function EditEvent({}) {
               </EventForm>
               <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
                 <Grid item xs={3}>
-                  <FormInput>
-                    <CentredBox>
-                      <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
-                        Delete
-                      </DeleteButton>
-                    </CentredBox>
-                  </FormInput>
+                  {isHost
+                    ? <FormInput>
+                        <CentredBox>
+                          <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
+                            Delete
+                          </DeleteButton>
+                        </CentredBox>
+                      </FormInput>
+                    : <></>
+                  }
                 </Grid>
                 <Grid item xs={6}>
                 </Grid> 
                 <Grid item xs={3}>
                   <FormInput>
                     <CentredBox>
-                      <TkrButton variant="contained" onClick={saveEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
+                      <TkrButton variant="contained" onClick={saveEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>
+                        Save Changes
+                      </TkrButton>
                     </CentredBox>
                     <Collapse in={errorStatus}>
                       <Alert severity="error">{errorMsg}.</Alert>
@@ -923,6 +978,66 @@ export default function EditEvent({}) {
         : <div></div>
         }
       </Box>
+      <Backdrop open={newHostMenu} onClick={() => setNewHostMenu(false)}>
+        <Box sx={{width: 400, backgroundColor: "#FFFFFF", borderRadius: 2, p: 5}}>
+          <H3
+            sx={{
+              fontSize: '30px',
+              color: 'black',
+              mb: 2,
+            }}
+          >
+            Make {newHost.firstName} {newHost.lastName} the host of this event?
+          </H3>
+          <Typography
+            sx={{
+              fontSize: '15px',
+              color: 'black',
+              textAlign: 'center',
+              mb: 2,
+            }}
+          >
+            *This cannot be reversed
+          </Typography>
+          <Divider/>
+          <br/>
+          <CentredBox>
+            <TkrButton onClick={handleNewHost}>
+              Confirm
+            </TkrButton>
+          </CentredBox>
+        </Box>
+      </Backdrop>
+      <Backdrop open={openDeleteMenu} onClick={() => setOpenDeleteMenu(false)}>
+        <Box sx={{width: 400, backgroundColor: "#FFFFFF", borderRadius: 2, p: 5}}>
+          <H3
+            sx={{
+              fontSize: '30px',
+              color: 'black',
+              mb: 2,
+            }}
+          >
+            Delete Event?
+          </H3>
+          <Typography
+            sx={{
+              fontSize: '15px',
+              color: 'black',
+              textAlign: 'center',
+              mb: 2,
+            }}
+          >
+            *This cannot be reversed
+          </Typography>
+          <Divider/>
+          <br/>
+          <CentredBox>
+            <TkrButton onClick={handleDeleteEvent}>
+              Confirm
+            </TkrButton>
+          </CentredBox>
+        </Box>
+      </Backdrop>
     </BackdropNoBG>
   );
 }

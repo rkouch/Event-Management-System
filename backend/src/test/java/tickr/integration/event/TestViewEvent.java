@@ -50,7 +50,7 @@ public class TestViewEvent {
     }
 
     @Test 
-    public void testCreateEvent() {
+    public void testViewEvent() {
         var registerResponse = httpHelper.post("/api/user/register", new UserRegisterRequest("test_username", "TestFirst",
         "TestLast", "test@example.com", "Testing123!", "2022-04-14"));
         assertEquals(200, registerResponse.getStatus());
@@ -60,8 +60,8 @@ public class TestViewEvent {
         .parseClaimsJws(authTokenString);
         var id = authToken.getBody().getSubject();
         assertNotNull(id);
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
@@ -93,8 +93,10 @@ public class TestViewEvent {
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
         assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availability);
+        assertEquals(seats.get(0).ticketPrice, response.seatingDetails.get(0).ticketPrice);
         assertEquals(seats.get(1).section, response.seatingDetails.get(1).section);
         assertEquals(seats.get(1).availability, response.seatingDetails.get(1).availability);
+        assertEquals(seats.get(1).ticketPrice, response.seatingDetails.get(1).ticketPrice);
 
         Set<String> testAdmins = new HashSet<>();
         testAdmins.add(id); 
