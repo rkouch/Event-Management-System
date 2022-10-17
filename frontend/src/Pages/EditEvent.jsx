@@ -143,7 +143,7 @@ export default function EditEvent({}) {
 
   const [newPhoto, setNewPhoto] = React.useState(false)
 
-  const [loading, setLoading] = React.useState(false)
+  const [openDeleteMenu, setOpenDeleteMenu] = React.useState(false)
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -326,8 +326,20 @@ export default function EditEvent({}) {
     } catch (e) {
       console.log(e)
     }
-    
+  }
 
+  const handleDeleteEvent = async () => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        event_id: params.event_id
+      }
+      const response = await apiFetch('DELETE', '/api/event/cancel', body)
+      navigate('/')
+
+    } catch(error) {
+      console.log(error)
+    }
   }
 
   React.useEffect(() => {
@@ -477,14 +489,22 @@ export default function EditEvent({}) {
               </Grid>
               <Grid item xs={3}>
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
-                  <FormGroup>
-                    <FormControlLabel control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
-                    {!event.published
-                      ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
-                      : <></>
-                    }
-                  </FormGroup>
-                  
+                  {isHost
+                    ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        {!event.published
+                          ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
+                          : <></>
+                        }
+                      </FormGroup>
+                    : <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
+                        {!event.published
+                          ? <FormHelperText>Only the host can publish an event</FormHelperText>
+                          : <></>
+                        }
+                      </FormGroup>
+                  }        
                 </Box>
               </Grid>
             </Grid>
@@ -736,14 +756,20 @@ export default function EditEvent({}) {
                           </>
                         : <>
                             <Grid item xs={7}>
-                            <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
-                              {event.admins.map((value, key) => {
-                                return (
-                                  <UserAvatar key={key} userId={value} size={35}/>
-                                );
-                              })}
-                              <UserAvatar userId={event.host_id} size={35} host={true}/>
-                            </AvatarGroup>
+                              <br/>
+                              <Typography>
+                                Host and Admins
+                              </Typography>
+                              <Divider/>
+                              <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
+                                {event.admins.map((value, key) => {
+                                  return (
+                                    <UserAvatar key={key} userId={value} size={35}/>
+                                  );
+                                })}
+                                <UserAvatar userId={event.host_id} size={35} host={true}/>
+                              </AvatarGroup>
+                              <br/>
                             </Grid>
                           </>
 
@@ -919,20 +945,25 @@ export default function EditEvent({}) {
               </EventForm>
               <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
                 <Grid item xs={3}>
-                  <FormInput>
-                    <CentredBox>
-                      <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>}>
-                        Delete
-                      </DeleteButton>
-                    </CentredBox>
-                  </FormInput>
+                  {isHost
+                    ? <FormInput>
+                        <CentredBox>
+                          <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
+                            Delete
+                          </DeleteButton>
+                        </CentredBox>
+                      </FormInput>
+                    : <></>
+                  }
                 </Grid>
                 <Grid item xs={6}>
                 </Grid> 
                 <Grid item xs={3}>
                   <FormInput>
                     <CentredBox>
-                      <TkrButton variant="contained" onClick={saveEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>Save Changes</TkrButton>
+                      <TkrButton variant="contained" onClick={saveEvent} startIcon={<SaveIcon/>} sx={{textTransform: "none", textAlign: "left", width: 200}}>
+                        Save Changes
+                      </TkrButton>
                     </CentredBox>
                     <Collapse in={errorStatus}>
                       <Alert severity="error">{errorMsg}.</Alert>
@@ -972,6 +1003,36 @@ export default function EditEvent({}) {
           <br/>
           <CentredBox>
             <TkrButton onClick={handleNewHost}>
+              Confirm
+            </TkrButton>
+          </CentredBox>
+        </Box>
+      </Backdrop>
+      <Backdrop open={openDeleteMenu} onClick={() => setOpenDeleteMenu(false)}>
+        <Box sx={{width: 400, backgroundColor: "#FFFFFF", borderRadius: 2, p: 5}}>
+          <H3
+            sx={{
+              fontSize: '30px',
+              color: 'black',
+              mb: 2,
+            }}
+          >
+            Delete Event?
+          </H3>
+          <Typography
+            sx={{
+              fontSize: '15px',
+              color: 'black',
+              textAlign: 'center',
+              mb: 2,
+            }}
+          >
+            *This cannot be reversed
+          </Typography>
+          <Divider/>
+          <br/>
+          <CentredBox>
+            <TkrButton onClick={handleDeleteEvent}>
               Confirm
             </TkrButton>
           </CentredBox>
