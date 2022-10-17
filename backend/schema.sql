@@ -77,7 +77,8 @@ create table seating_plan (
     location_id  varchar(36) not null,
     section     varchar(255) not null,
     available_seats int not null,
-    primary key (id)
+    primary key (id),
+    foreign key (event_id) references `events`(id)
 );
 
 create table tickets (
