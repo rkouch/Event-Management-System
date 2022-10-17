@@ -75,4 +75,15 @@ public class Ticket {
     private void setSeatNumber (int seatNumber) {
         this.seatNumber = seatNumber;
     }
+
+    public Ticket () {
+
+    }
+
+    public Ticket (User user, Event event, SeatingPlan section, int seatNumber) {
+        this.user = user;
+        this.event = event;
+        this.section = section;
+        this.seatNumber = seatNumber;
+    }
 }

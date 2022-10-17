@@ -1,11 +1,10 @@
 package tickr.mock;
 
+import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.apis.purchase.LineItem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
 
@@ -59,6 +58,18 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
         orders.put(order.getOrderId(), order);
     }
 
+    @Override
+    public IOrderBuilder makePurchaseBuilder (String orderId) {
+        return new OrderBuilder(orderId);
+    }
+
+    @Override
+    public String registerOrder (IOrderBuilder builder) {
+        var order = ((OrderBuilder)builder).build();
+        orders.put(order.getOrderId(), order);
+        return order.getOrderId();
+    }
+
     abstract protected void onSuccess (Order order);
     abstract protected void onFailure (Order order);
     abstract protected void onCancel (Order order);
@@ -98,18 +109,23 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
     }
 
     public static class Order {
-        private final List<OrderItem> items;
+        private final List<LineItem> items;
         private String orderId;
+        private String reserveId;
         private String successUrl;
         private String cancelUrl;
 
-        public Order (List<OrderItem> items) {
+        public Order (String orderId, String reserveId, List<LineItem> items, String successUrl, String cancelUrl) {
+            this.orderId = orderId;
+            this.reserveId = reserveId;
             this.items = items;
+            this.successUrl = successUrl;
+            this.cancelUrl = cancelUrl;
         }
 
         public float getPrice () {
             return (float)items.stream()
-                    .map(OrderItem::getPrice)
+                    .map(LineItem::getPrice)
                     .reduce(0L, Long::sum) / 100;
         }
 
@@ -124,18 +140,38 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
         public String getCancelUrl () {
             return cancelUrl;
         }
+
+        public String getReserveId () {
+            return reserveId;
+        }
     }
 
-    public static class OrderItem {
-        private String itemName;
-        private long price;
+    protected static class OrderBuilder implements IOrderBuilder {
+        private List<LineItem> items;
+        private String reserveId;
+        private String successUrl;
+        private String cancelUrl;
 
-        public String getItemName () {
-            return itemName;
+        public OrderBuilder (String reserveId) {
+            items = new ArrayList<>();
+            this.reserveId = reserveId;
         }
 
-        public long getPrice () {
-            return price;
+        @Override
+        public IOrderBuilder withLineItem (LineItem lineItem) {
+            items.add(lineItem);
+            return this;
+        }
+
+        @Override
+        public IOrderBuilder withUrls (String successUrl, String cancelUrl) {
+            this.successUrl = successUrl;
+            this.cancelUrl = cancelUrl;
+            return this;
+        }
+
+        public Order build () {
+            return new Order("test://example.com/test/" + UUID.randomUUID(), reserveId, items, successUrl, cancelUrl);
         }
     }
 }

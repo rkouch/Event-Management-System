@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.application.apis.purchase.LineItem;
+import tickr.persistence.ModelSession;
 
 import java.util.UUID;
 
@@ -62,5 +64,13 @@ public class TicketReservation {
 
     public float getPrice () {
         return price;
+    }
+
+    public LineItem makeLineItem () {
+        return new LineItem(this.section.section, this.price);
+    }
+
+    public Ticket convert (Event event) {
+        return new Ticket(user, event, section, seatNum);
     }
 }
