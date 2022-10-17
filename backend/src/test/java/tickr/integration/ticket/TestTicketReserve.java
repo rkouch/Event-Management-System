@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -72,6 +74,8 @@ public class TestTicketReserve {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+
+        ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
     @Test

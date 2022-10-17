@@ -7,6 +7,7 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.ResetToken;
 import tickr.application.entities.User;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
@@ -55,7 +56,7 @@ public class TestChangePassword {
 
     @AfterAll
     public static void cleanupApis () {
-        ApiLocator.resetLocators();
+        ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
     @Test

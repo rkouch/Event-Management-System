@@ -1,21 +1,31 @@
 package tickr.application.apis.purchase;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tickr.application.TickrController;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.BadRequestException;
+import tickr.util.HTTPHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class NullPurchaseAPI implements IPurchaseAPI {
     static final Logger logger = LogManager.getLogger();
 
-    private DataModel model;
+    private HTTPHelper httpHelper;
+    private Gson gson;
+    private String signature;
 
-    public NullPurchaseAPI (DataModel model) {
-        this.model = model;
+    public NullPurchaseAPI (String serverUrl) {
+        this.httpHelper = new HTTPHelper(serverUrl);
+        this.signature = UUID.randomUUID().toString();
+        this.gson = new Gson();
     }
 
     @Override
@@ -32,22 +42,41 @@ public class NullPurchaseAPI implements IPurchaseAPI {
         }
         logger.info("Fulfilling order and returning success url \"{}\"", orderBuilder.getSuccessUrl());
 
-        var session = model.makeSession();
-        new TickrController().ticketPurchaseSuccess(session, orderBuilder.getReserveId());
-        session.commit();
-        session.close();
+
+        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("success", orderBuilder.getReserveId()),
+                Map.of(getSignatureHeader(), signature), 1000);
+        if (response.getStatus() != 200) {
+            logger.warn("Null webhook returned status code {} with body: \n{}", response.getStatus(), response.getBodyRaw());
+            throw new RuntimeException("Null webhook returned non-OK status code!");
+        }
 
         return orderBuilder.getSuccessUrl();
     }
 
     @Override
     public void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader) {
-        logger.warn("Null PurchaseAPI received webhook event???");
+        if (!signature.equals(sigHeader)) {
+            throw new BadRequestException("Invalid signature header!");
+        }
+
+        WebhookRequest webhookEvent;
+
+        try {
+            webhookEvent = gson.fromJson(requestBody, WebhookRequest.class);
+        } catch (IllegalStateException | JsonSyntaxException e) {
+            throw new BadRequestException("Invalid webhook request!", e);
+        }
+
+        if (webhookEvent.type.equals("success")) {
+            controller.ticketPurchaseSuccess(session, webhookEvent.reserveId);
+        } else {
+            throw new BadRequestException("Invalid webhook event type: \"" + webhookEvent.type + "\"!");
+        }
     }
 
     @Override
     public String getSignatureHeader () {
-        return "";
+        return "Null-Header";
     }
 
     private static class OrderBuilder implements IOrderBuilder {
@@ -82,6 +111,18 @@ public class NullPurchaseAPI implements IPurchaseAPI {
 
         public String getSuccessUrl () {
             return successUrl;
+        }
+    }
+
+    private static class WebhookRequest {
+        public String type;
+        public String reserveId;
+
+        public WebhookRequest () {}
+
+        public WebhookRequest (String type, String reserveId) {
+            this.type = type;
+            this.reserveId = reserveId;
         }
     }
 }

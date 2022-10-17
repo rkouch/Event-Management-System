@@ -85,7 +85,7 @@ public class TestTicketPurchase {
     @AfterEach
     public void cleanup () {
         model.cleanup();
-        ApiLocator.resetLocators();
+        ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
     @Test

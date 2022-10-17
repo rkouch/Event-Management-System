@@ -92,6 +92,8 @@ public class TestTicketPurchase {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+
+        ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
     @Test
