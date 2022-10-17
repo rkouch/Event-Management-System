@@ -305,7 +305,7 @@ public class Event {
             }
             seatingPlans.clear();
             for (EditEventRequest.SeatingDetails seats : seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability);
+                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice);
                 session.save(seatingPlan);
                 seatingPlans.add(seatingPlan);
             }

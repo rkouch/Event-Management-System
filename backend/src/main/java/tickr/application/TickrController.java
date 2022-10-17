@@ -322,7 +322,7 @@ public class TickrController {
         session.save(event);
         // creating seating plan for each section
         for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
+            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
             session.save(seatingPlan);
         }
         
@@ -498,7 +498,7 @@ public class TickrController {
 
         List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
         for (SeatingPlan seats : seatingDetails) {
-            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats());
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats(), seats.ticketPrice);
             seatingResponse.add(newSeats);
         }
         Set<String> tags = new HashSet<String>();
