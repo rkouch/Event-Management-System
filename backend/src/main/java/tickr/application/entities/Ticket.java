@@ -68,7 +68,7 @@ public class Ticket {
         this.section = section;
     }
 
-    private int getSeatNumber () {
+    public int getSeatNumber () {
         return seatNumber;
     }
 

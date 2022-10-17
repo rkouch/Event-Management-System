@@ -1,9 +1,11 @@
 package tickr.application.serialised.combined;
 
 import com.google.gson.annotations.SerializedName;
+import tickr.server.exceptions.BadRequestException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class TicketReserve {
@@ -26,12 +28,21 @@ public class TicketReserve {
 
         public Request (String authToken, String eventId, String ticketDateTime, List<TicketDetails> ticketDetails) {
             this.authToken = authToken;
+            this.eventId = eventId;
             this.ticketDateTime = ticketDateTime;
             this.ticketDetails = ticketDetails;
         }
 
         public Request (String authToken, String eventId, LocalDateTime ticketDateTime, List<TicketDetails> ticketDetails) {
             this(authToken, eventId, ticketDateTime.format(DateTimeFormatter.ISO_DATE_TIME), ticketDetails);
+        }
+
+        public LocalDateTime getTicketTime () {
+            try {
+                return LocalDateTime.parse(ticketDateTime, DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid datetime!", e);
+            }
         }
     }
 

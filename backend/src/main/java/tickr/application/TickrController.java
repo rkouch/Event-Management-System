@@ -110,6 +110,14 @@ public class TickrController {
         return getTokenFromStr(session, authTokenStr).getUser();
     }
 
+    private UUID parseUUID (String uuidStr) {
+        try {
+            return UUID.fromString(uuidStr);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid uuid!", e);
+        }
+    }
+
     public TestEntity testGet (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("id")) {
             throw new BadRequestException("Missing parameters!");
@@ -590,6 +598,32 @@ public class TickrController {
     }
 
     public TicketReserve.Response ticketReserve (ModelSession session, TicketReserve.Request request) {
-        return new TicketReserve.Response();
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null || request.ticketDateTime == null || request.ticketDetails == null) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var ticketDatetime = request.getTicketTime();
+        var eventId = parseUUID(request.eventId);
+
+        for (var i : request.ticketDetails) {
+            if (i.section == null) {
+                throw new BadRequestException("Null section!");
+            } else if ((i.firstName == null) != (i.lastName == null)) {
+                throw new BadRequestException("Invalid ticket details names!");
+            } else if (i.email != null && !EMAIL_REGEX.matcher(i.email).matches()) {
+                throw new BadRequestException("Invalid ticket details email!");
+            }
+        }
+        //var event = session.getById(Event.class, eventId).orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        //var reservation = event.makeReservation(session, user, ticketDatetime, request.ticketDetails);
+
+        //return new TicketReserve.Response(reservation.getId().toString(), Float.toString(reservation.getPrice()));
+
+        return session.getById(Event.class, eventId)
+                .map(e -> e.makeReservation(session, user, ticketDatetime, request.ticketDetails))
+                .map(r -> new TicketReserve.Response(r.getId().toString(), Float.toString(r.getPrice())))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
     }
 }

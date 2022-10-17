@@ -45,8 +45,8 @@ public class TestTicketReserve {
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
-                new CreateEventRequest.SeatingDetails("test_section", 10),
-                new CreateEventRequest.SeatingDetails("test_section2", 20)
+                new CreateEventRequest.SeatingDetails("test_section", 10, 1),
+                new CreateEventRequest.SeatingDetails("test_section2", 20, 4)
         );
 
         session = model.makeSession();
@@ -123,7 +123,12 @@ public class TestTicketReserve {
 
     @Test
     public void testMultipleTickets () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetails( null, null, null, "test_section", 4));
+        var ticketDetails = List.of(
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 5),
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 6),
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 7)
+        );
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
 
@@ -141,6 +146,6 @@ public class TestTicketReserve {
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
 
         assertNotNull(response.reserveId);
-        assertEquals(9, Float.parseFloat(response.price));
+        assertEquals(5, Float.parseFloat(response.price));
     }
 }
