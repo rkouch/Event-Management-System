@@ -39,7 +39,7 @@ export const EventForm = styled("div")({
 export default function ViewEvent({}) {
   const params = useParams()
   const navigate = useNavigate()
-  const [editable, setEditable] = React.useState()
+  const [editable, setEditable] = React.useState(false)
   var calendar = require('dayjs/plugin/calendar')
   dayjs.extend(calendar)
   
@@ -85,15 +85,16 @@ export default function ViewEvent({}) {
   const [userData, setUserData] = React.useState({
     user_id: ''
   })
-  
 
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
     // getUserData(`auth_token=${getToken()}`,setUserData)
     if (event.host_id !== '') {
       checkIfUser(event.host_id, setEditable)
-      for (const i in event.admins) {
-        checkIfUser(event.admins[i], setEditable)
+      if (!editable) {
+        for (const i in event.admins) {
+          checkIfUser(event.admins[i], setEditable)
+        }
       }
     }
   },[event.host_id])
@@ -232,16 +233,16 @@ export default function ViewEvent({}) {
                             color: "#999999"
                           }}
                         >
-                          Hosts
+                          Host and event Admins
                         </Typography>
-                        <Divider sx={{width: "50px"}}/>
+                        <Divider sx={{width: "170px"}}/>
                         <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
-                          <UserAvatar userId={event.host_id} size={35} host={true}/>
                           {event.admins.map((value, key) => {
                             return (
                               <UserAvatar key={key} userId={value} size={35}/>
                             );
                           })}
+                          <UserAvatar userId={event.host_id} size={35} host={true}/>
                         </AvatarGroup>
                       </Box>
                       <br/>

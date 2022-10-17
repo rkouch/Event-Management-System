@@ -201,10 +201,7 @@ export const checkIfUser= async (userId, setState) => {
     if (userId === response_2.user_id) {
       setState(true)
       // navigate(`/my_profile`)
-    } else {
-      // navigate(`/view_profile/${userId}`)
-      setState(false)
-    }
+    } 
   } catch (e) {
     console.log(e)
   }

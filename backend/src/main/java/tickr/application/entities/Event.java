@@ -62,6 +62,9 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
     private Set<Comment> comments;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
+    private Set<SeatingPlan> seatingPlans;
+
     @Column(name = "event_name")
     private String eventName;
 
@@ -233,13 +236,6 @@ public class Event {
             }
             this.eventPicture = picture;
         }
-        if (locations != null) {
-            session.remove(this.location);
-            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
-            locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
-            session.save(newLocation);
-            this.location = newLocation; 
-        }
         if (startDate != null) {
             LocalDateTime start_date;
             try {
@@ -304,14 +300,25 @@ public class Event {
         }
 
         if (seatingDetails != null) {
-            List<SeatingPlan> seatingPlanList = session.getAllWith(SeatingPlan.class, "event", this);
-            for (SeatingPlan seat : seatingPlanList) {
+            for (SeatingPlan seat : seatingPlans) {
                 session.remove(seat);
             }
+            seatingPlans.clear();
             for (EditEventRequest.SeatingDetails seats : seatingDetails) {
                 SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability);
                 session.save(seatingPlan);
+                seatingPlans.add(seatingPlan);
             }
+        }
+
+        if (locations != null) {
+            session.remove(this.location);
+            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
+                    locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
+            session.save(newLocation);
+            this.location = newLocation;
+
+            seatingPlans.forEach(s -> s.updateLocation(newLocation));
         }
     }
 }
