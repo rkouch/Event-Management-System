@@ -1,5 +1,6 @@
 package tickr.unit.event;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -268,6 +269,20 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getCountry(), location.country);
         assertEquals(event.getLocation().getLatitude(), location.latitude);
         assertEquals(event.getLocation().getLongitude(), location.longitude);
+
+        var newSession = TestHelper.commitMakeSession(model, session); 
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", null, admins, categories, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, null, categories, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, admins, null, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, admins, categories, null)));
     }
 
     @Test

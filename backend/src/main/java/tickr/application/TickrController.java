@@ -321,35 +321,46 @@ public class TickrController {
         }
         session.save(event);
         // creating seating plan for each section
-        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
-            session.save(seatingPlan);
+        if (request.seatingDetails != null) {
+            for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
+                session.save(seatingPlan);
+            }
+        }
+
+        if (request.tags != null) {
+            for (String tagStr : request.tags) {
+                Tag newTag = new Tag(tagStr);
+                newTag.setEvent(event);
+                event.addTag(newTag);
+                session.save(newTag);
+            }
         }
         
-        for (String tagStr : request.tags) {
-            Tag newTag = new Tag(tagStr);
-            newTag.setEvent(event);
-            event.addTag(newTag);
-            session.save(newTag);
-        }
-        for (String catStr : request.categories) {
-            Category newCat = new Category(catStr);
-            newCat.setEvent(event);
-            event.addCategory(newCat); 
-            session.save(newCat);
-        }
-        for (String admin : request.admins) {
-            User userAdmin;
-            try {
-                userAdmin = session.getById(User.class, UUID.fromString(admin))
-                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
-            } catch (IllegalArgumentException e) {
-                throw new ForbiddenException("invalid admin Id");
+        if (request.categories != null) {
+            for (String catStr : request.categories) {
+                Category newCat = new Category(catStr);
+                newCat.setEvent(event);
+                event.addCategory(newCat); 
+                session.save(newCat);
             }
-            
-            userAdmin.addAdminEvents(event);
-            event.addAdmin(userAdmin);
-        }        
+        }
+        
+        if (request.admins != null) {
+            for (String admin : request.admins) {
+                User userAdmin;
+                try {
+                    userAdmin = session.getById(User.class, UUID.fromString(admin))
+                    .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                } catch (IllegalArgumentException e) {
+                    throw new ForbiddenException("invalid admin Id");
+                }
+                
+                userAdmin.addAdminEvents(event);
+                event.addAdmin(userAdmin);
+            }
+        } 
+                
         event.setLocation(location);
 
         return new CreateEventResponse(event.getId().toString());
@@ -465,25 +476,25 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
-        User hostUser;
+        User user;
         try {
-            hostUser = authenticateToken(session, request.getAuthToken());
+            user = authenticateToken(session, request.getAuthToken());
         } catch (IllegalArgumentException e){
             throw new UnauthorizedException("Invalid auth token");
         }
-        if (hostUser.getId() != event.getHost().getId()) {
-            throw new ForbiddenException("User is not the host of the event!");
-        }
+        if (user.getId() != event.getHost().getId() && !event.getAdmins().contains(user)) {
+            throw new ForbiddenException("User is not a host/admin of the event!");
+        } 
 
         if (request.picture == null) {
             event.editEvent(session, request.getEventName(), null, request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         } else {
             event.editEvent(session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
             .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
         return;
     }
@@ -517,7 +528,7 @@ public class TickrController {
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
         return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
-                                    admins, categories, tags);
+                                    admins, categories, tags, event.isPublished());
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {

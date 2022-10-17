@@ -78,10 +78,12 @@ public class Event {
     private String eventDescription;
 
     @Column(name = "seat_availability")
-    private int seatAvailability;
+    private int seatAvailability = 0;
 
     @Column(name = "event_pic")
     private String eventPicture;
+
+    private boolean published;
 
     public Event() {}
 
@@ -95,6 +97,7 @@ public class Event {
         this.seatAvailability = seatAvailability;
         this.host = host;
         this.eventPicture = eventPicture;
+        this.published = false;
     }
 
     public UUID getId () {
@@ -225,8 +228,16 @@ public class Event {
         this.admins.clear();
     }
 
+    public boolean isPublished() {
+        return published;
+    }
+
+    public void setPublished(boolean published) {
+        this.published = published;
+    }
+
     public void editEvent (ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
-                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails) {
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
         if (eventName != null) {
             this.eventName = eventName; 
         }
@@ -320,5 +331,7 @@ public class Event {
 
             seatingPlans.forEach(s -> s.updateLocation(newLocation));
         }
+
+        this.published = published;
     }
 }
