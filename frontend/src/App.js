@@ -18,6 +18,7 @@ import { apiFetch, getToken, getUserData, loggedIn } from './Helpers';
 import RequestChangePassword from './Pages/RequestChangePassword';
 import ViewEvent from './Pages/ViewEvent';
 import EditEvent from './Pages/EditEvent';
+import PurchaseTicket from './Pages/PurchaseTickets';
 
 const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
   {
     path: "/edit_event/:event_id",
     element: <EditEvent/>
+  },
+  {
+    path: "/purchase_ticket/:event_id",
+    element: <PurchaseTicket/>
   }
 ])
 

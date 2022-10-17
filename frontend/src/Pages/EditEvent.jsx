@@ -126,7 +126,7 @@ export default function EditEvent({}) {
   const [newSection, setNewSection] = React.useState({
     section: '',
     availability: 0,
-    cost: 0,
+    ticket_price: 0,
     error: false,
     errorMsg: '',
   });
@@ -305,7 +305,7 @@ export default function EditEvent({}) {
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
-    setFieldInState('cost', 0, newSection, setNewSection)
+    setFieldInState('ticket_price', 0, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -479,6 +479,7 @@ export default function EditEvent({}) {
           borderRadius: "15px",
           paddingBottom: 5,
           paddingTop: 1,
+          boxShadow: 5,
         }}
       >
         {(eventName.value !== '')
@@ -818,185 +819,253 @@ export default function EditEvent({}) {
                   </Grid>
                   <Grid item xs={1}></Grid>
                   <Grid item xs={5}>
-                    <Box>
-                      <h3> Ticket Allocations </h3>
-                      <Grid container spacing={2}>
-                        <Grid item xs={4}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Section
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Availability
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Cost
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        <Grid item xs={2}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Delete
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        {seatingList.map((value, index) => {
-                          return (
-                            <Grid item key={index} sx={{width: '100%'}}>
-                              <ContrastInputWrapper>
-                                <Grid container spacing={1}>
-                                  <Grid item xs={4}>
-                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 'bold',
-                                        }}
-                                      >
-                                        {value.section}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  <Grid item xs={3}>
-                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 'bold',
-                                        }}
-                                      >
-                                        {value.availability}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  <Grid item xs={3}>
-                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 'bold',
-                                        }}
-                                      >
-                                        {value.cost}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  <Grid item xs={2}>
-                                    <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                      <IconButton
-                                        edge="end"
-                                        aria-label="delete"
-                                        onClick={() => removeSeating(index)}
-                                        sx={{marginRight: 0}}
-                                      >
-                                        <DeleteIcon />
-                                      </IconButton>
-                                    </Box>
-                                  </Grid>
-                                </Grid>
-                              </ContrastInputWrapper>
+                    {!event.published
+                      ? <Box>
+                          <h3> Ticket Allocations </h3>
+                          <Grid container spacing={2}>
+                            <Grid item xs={4}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Section
+                              </Typography>
+                              <Divider/>
                             </Grid>
-                          );
-                        })}
-                      </Grid>
-                      <Box sx={{marginRight: 4, width: '100%'}}>
-                        <Grid container spacing={1}>
-                          <Grid item xs={4}>
-                            <ContrastInputWrapper>
-                              <ContrastInput
-                                placeholder={'Section Name'}
-                                fullWidth 
-                                onChange={(e) => {
-                                  setFieldInState('section', e.target.value, newSection, setNewSection)
-                                  setFieldInState('error', false, newSection, setNewSection)
-                                  setErrorStatus(false)
-                                }}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
-                                value = {newSection.section}
-                              />
-                            </ContrastInputWrapper>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Availability
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Cost
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Delete
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            {seatingList.map((value, index) => {
+                              return (
+                                <Grid item key={index} sx={{width: '100%'}}>
+                                  <ContrastInputWrapper>
+                                    <Grid container spacing={1}>
+                                      <Grid item xs={4}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.section}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.availability}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            ${value.ticket_price}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={2}>
+                                        <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                          <IconButton
+                                            edge="end"
+                                            aria-label="delete"
+                                            onClick={() => removeSeating(index)}
+                                            sx={{marginRight: 0}}
+                                          >
+                                            <DeleteIcon />
+                                          </IconButton>
+                                        </Box>
+                                      </Grid>
+                                    </Grid>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                              );
+                            })}
                           </Grid>
-                          <Grid item xs={3}>
-                            <ContrastInputWrapper>
-                              <ContrastInput 
-                                type="number"
-                                placeholder="Spots"
-                                fullWidth 
-                                onChange={(e) => {
-                                  const val = e.target.value
-                                  if (val < 0) {
-                                    setFieldInState('availability', 0, newSection, setNewSection)
-                                  } else {
-                                    setFieldInState('availability', val, newSection, setNewSection)
-                                  } 
-                                  setFieldInState('error', false, newSection, setNewSection)
-                                  setErrorStatus(false)
-                                }}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
-                                value = {newSection.availability}
-                              />
-                            </ContrastInputWrapper>
+                          <Box sx={{marginRight: 4, width: '100%'}}>
+                            <Grid container spacing={1}>
+                              <Grid item xs={4}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput
+                                    placeholder={'Section Name'}
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      setFieldInState('section', e.target.value, newSection, setNewSection)
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    value = {newSection.section}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={3}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput 
+                                    type="number"
+                                    placeholder="Spots"
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      const val = e.target.value
+                                      if (val < 0) {
+                                        setFieldInState('availability', 0, newSection, setNewSection)
+                                      } else {
+                                        setFieldInState('availability', val, newSection, setNewSection)
+                                      } 
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    value = {newSection.availability}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={3}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput 
+                                    type="number"
+                                    placeholder="Cost"
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      const val = e.target.value
+                                      if (val < 0) {
+                                        setFieldInState('ticket_price', 0, newSection, setNewSection)
+                                      } else {
+                                        setFieldInState('ticket_price', val, newSection, setNewSection)
+                                      } 
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                    value = {newSection.ticket_price}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={2}>
+                                <ContrastInputWrapper 
+                                  sx={{
+                                    height: "100%",
+                                    width: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
+                                  }}
+                                >
+                                  <IconButton
+                                    edge="end"
+                                    onClick={addSection}
+                                    sx={{marginRight: 0}}
+                                    disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
+                                  >
+                                    <AddIcon/>
+                                  </IconButton>
+                                </ContrastInputWrapper>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        </Box>
+                      : <Box>
+                          <h3> Ticket Allocations </h3>
+                          <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Section
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Availability
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Cost
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            {seatingList.map((value, index) => {
+                              return (
+                                <Grid item key={index} sx={{width: '100%'}}>
+                                  <ContrastInputWrapper>
+                                    <Grid container spacing={1}>
+                                      <Grid item xs={6}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.section}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.availability}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            ${value.ticket_price}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                    </Grid>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                              );
+                            })}
                           </Grid>
-                          <Grid item xs={3}>
-                            <ContrastInputWrapper>
-                              <ContrastInput 
-                                type="number"
-                                placeholder="Cost"
-                                fullWidth 
-                                onChange={(e) => {
-                                  const val = e.target.value
-                                  if (val < 0) {
-                                    setFieldInState('cost', 0, newSection, setNewSection)
-                                  } else {
-                                    setFieldInState('cost', val, newSection, setNewSection)
-                                  } 
-                                  setFieldInState('error', false, newSection, setNewSection)
-                                  setErrorStatus(false)
-                                }}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
-                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                value = {newSection.cost}
-                              />
-                            </ContrastInputWrapper>
-                          </Grid>
-                          <Grid item xs={2}>
-                            <ContrastInputWrapper 
-                              sx={{
-                                height: "100%",
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
-                              }}
-                            >
-                              <IconButton
-                                edge="end"
-                                onClick={addSection}
-                                sx={{marginRight: 0}}
-                                disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
-                              >
-                                <AddIcon/>
-                              </IconButton>
-                            </ContrastInputWrapper>
-                          </Grid>
-                        </Grid>
                       </Box>
-                    </Box>
+                    }
                     <br/>
                     <Box>
                       <h3> Tags </h3>

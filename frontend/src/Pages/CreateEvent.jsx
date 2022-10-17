@@ -121,7 +121,7 @@ export default function CreateEvent({}) {
   const [newSection, setNewSection] = React.useState({
     section: '',
     availability: 0,
-    cost: 0,
+    ticket_price: 0,
     error: false,
     errorMsg: '',
   });
@@ -258,7 +258,7 @@ export default function CreateEvent({}) {
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
-    setFieldInState('cost', 0, newSection, setNewSection)
+    setFieldInState('ticket_price', 0, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -390,7 +390,7 @@ export default function CreateEvent({}) {
   };
 
   return (
-    <BackdropNoBG>
+    <BackdropNoBG sx={{boxShadow: 5}}>
       <Header />
       <Box
         sx={{
@@ -404,6 +404,7 @@ export default function CreateEvent({}) {
           borderRadius: "15px",
           paddingBottom: 5,
           paddingTop: 1,
+          boxShadow: 5,
         }}
       >
         <H3 sx={{ fontSize: "30px" }}>Create Event</H3>
@@ -736,7 +737,7 @@ export default function CreateEvent({}) {
                                       fontWeight: 'bold',
                                     }}
                                   >
-                                    {value.cost}
+                                    {value.ticket_price}
                                   </Typography>
                                 </Box>
                               </Grid>
@@ -814,9 +815,9 @@ export default function CreateEvent({}) {
                             onChange={(e) => {
                               const val = e.target.value
                               if (val < 0) {
-                                setFieldInState('cost', 0, newSection, setNewSection)
+                                setFieldInState('ticket_price', 0, newSection, setNewSection)
                               } else {
-                                setFieldInState('cost', val, newSection, setNewSection)
+                                setFieldInState('ticket_price', val, newSection, setNewSection)
                               } 
                               setFieldInState('error', false, newSection, setNewSection)
                               setErrorStatus(false)
@@ -826,7 +827,7 @@ export default function CreateEvent({}) {
                                 borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
                               },
                             }}
-                            value = {newSection.cost}
+                            value = {newSection.ticket_price}
                           />
                         </ContrastInputWrapper>
                       </Grid>

@@ -22,6 +22,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
+import { TkrButton } from "../Styles/InputStyles";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -43,8 +44,6 @@ export default function ViewEvent({}) {
   var calendar = require('dayjs/plugin/calendar')
   dayjs.extend(calendar)
   
-  const testDate1 = dayjs().add(7, 'day')
-  const testDate2 = testDate1.add(7, 'hour')
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -65,26 +64,6 @@ export default function ViewEvent({}) {
     host_id: ''
   })
 
-  const testEvent = {
-    event_name: "Welcome Back Ray",
-    location: {
-      street_no: "1",
-      street_name: "Station St",
-      postcode: "2135",
-      state: "NSW",
-      country: "Australia"
-    },
-    host_id: "1d14a0d0-5d09-4ed2-be9d-02c4d3cfd719",
-    start_date: testDate1.toISOString(),
-    end_date: testDate2.toISOString(),
-    description: "This is going to be a party",
-    tags: ["music", "festival", "food"],
-    admins: ["8fa85163-5fe7-4183-8026-9b5ff174ee4c"],
-  }
-
-  const [userData, setUserData] = React.useState({
-    user_id: ''
-  })
 
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
@@ -289,13 +268,19 @@ export default function ViewEvent({}) {
                               <TableRow key={key}>
                                 <TableCell>{section.section}</TableCell>
                                 <TableCell align="center">{section.availability}</TableCell>
-                                <TableCell align="center">${section.cost}</TableCell>
+                                <TableCell align="center">${section.ticket_price}</TableCell>
                               </TableRow>
                             )
                           })}
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    <br/>
+                    <CentredBox>
+                      <TkrButton onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                        Purchase tickets
+                      </TkrButton>
+                    </CentredBox>
                   </Box>
                   <br/>
                 </Grid>
