@@ -46,4 +46,9 @@ public class MockUnitPurchaseAPI extends AbstractMockPurchaseAPI {
     public void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader) {
         logger.warn("Unit test PurchaseAPI received webhook event???");
     }
+
+    @Override
+    public String getSignatureHeader () {
+        return null;
+    }
 }

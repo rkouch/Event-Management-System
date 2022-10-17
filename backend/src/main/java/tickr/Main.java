@@ -2,6 +2,9 @@ package tickr;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.apis.purchase.NullPurchaseAPI;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 
@@ -26,6 +29,8 @@ public class Main {
             port = Integer.parseInt(args[0]);
             frontendURL = args[1];
         }
+
+        ApiLocator.addLocator(IPurchaseAPI.class, () -> new NullPurchaseAPI(databaseModel));
 
         logger.info("Starting tickr server on http://localhost:{}!", port);
 

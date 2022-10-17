@@ -8,4 +8,5 @@ public interface IPurchaseAPI {
     String registerOrder (IOrderBuilder builder);
 
     void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader);
+    String getSignatureHeader ();
 }

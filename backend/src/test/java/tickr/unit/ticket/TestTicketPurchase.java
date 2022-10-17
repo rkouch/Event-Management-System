@@ -46,8 +46,6 @@ public class TestTicketPurchase {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    private List<CreateEventRequest.SeatingDetails> seatingDetails;
-
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
@@ -59,7 +57,7 @@ public class TestTicketPurchase {
         startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
-        seatingDetails = List.of(
+        List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
                 new CreateEventRequest.SeatingDetails("test_section", 10, 1),
                 new CreateEventRequest.SeatingDetails("test_section2", 20, 4)
         );

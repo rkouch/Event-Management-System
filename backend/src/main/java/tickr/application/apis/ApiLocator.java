@@ -3,6 +3,8 @@ package tickr.application.apis;
 import tickr.application.apis.email.GmailAPI;
 import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.email.SendGridAPI;
+import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.apis.purchase.NullPurchaseAPI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,7 @@ public class ApiLocator {
         var instance = getInstance();
         //instance.addLocatorInt(IEmailAPI.class, GmailAPI::new);
         instance.addLocatorInt(IEmailAPI.class, SendGridAPI::new);
+        //instance.addLocatorInt(IPurchaseAPI.class, NullPurchaseAPI::new);
     }
 
     public static <T> void addLocator (Class<T> tClass, Supplier<T> locator) {
