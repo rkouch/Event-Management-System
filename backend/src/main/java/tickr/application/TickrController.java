@@ -4,10 +4,6 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.exception.ConstraintViolationException;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
@@ -23,11 +19,11 @@ import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
@@ -625,5 +621,9 @@ public class TickrController {
                 .map(e -> e.makeReservation(session, user, ticketDatetime, request.ticketDetails))
                 .map(r -> new TicketReserve.Response(r.getId().toString(), Float.toString(r.getPrice())))
                 .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+    }
+
+    public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
+        return new TicketPurchase.Response();
     }
 }
