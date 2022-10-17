@@ -264,6 +264,8 @@ public class TestEventEdit {
         assertEquals(admins, response.admins);
         assertEquals(updateCategories, response.categories);
         assertEquals(updateTags, response.tags);
+
+
     }
 
     @Test

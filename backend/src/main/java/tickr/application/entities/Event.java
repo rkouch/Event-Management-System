@@ -75,7 +75,7 @@ public class Event {
     private String eventDescription;
 
     @Column(name = "seat_availability")
-    private int seatAvailability;
+    private int seatAvailability = 0;
 
     @Column(name = "event_pic")
     private String eventPicture;

@@ -321,35 +321,46 @@ public class TickrController {
         }
         session.save(event);
         // creating seating plan for each section
-        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
-            session.save(seatingPlan);
+        if (request.seatingDetails != null) {
+            for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability);
+                session.save(seatingPlan);
+            }
+        }
+
+        if (request.tags != null) {
+            for (String tagStr : request.tags) {
+                Tag newTag = new Tag(tagStr);
+                newTag.setEvent(event);
+                event.addTag(newTag);
+                session.save(newTag);
+            }
         }
         
-        for (String tagStr : request.tags) {
-            Tag newTag = new Tag(tagStr);
-            newTag.setEvent(event);
-            event.addTag(newTag);
-            session.save(newTag);
-        }
-        for (String catStr : request.categories) {
-            Category newCat = new Category(catStr);
-            newCat.setEvent(event);
-            event.addCategory(newCat); 
-            session.save(newCat);
-        }
-        for (String admin : request.admins) {
-            User userAdmin;
-            try {
-                userAdmin = session.getById(User.class, UUID.fromString(admin))
-                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
-            } catch (IllegalArgumentException e) {
-                throw new ForbiddenException("invalid admin Id");
+        if (request.categories != null) {
+            for (String catStr : request.categories) {
+                Category newCat = new Category(catStr);
+                newCat.setEvent(event);
+                event.addCategory(newCat); 
+                session.save(newCat);
             }
-            
-            userAdmin.addAdminEvents(event);
-            event.addAdmin(userAdmin);
-        }        
+        }
+        
+        if (request.admins != null) {
+            for (String admin : request.admins) {
+                User userAdmin;
+                try {
+                    userAdmin = session.getById(User.class, UUID.fromString(admin))
+                    .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                } catch (IllegalArgumentException e) {
+                    throw new ForbiddenException("invalid admin Id");
+                }
+                
+                userAdmin.addAdminEvents(event);
+                event.addAdmin(userAdmin);
+            }
+        } 
+                
         event.setLocation(location);
 
         return new CreateEventResponse(event.getId().toString());
