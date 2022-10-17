@@ -23,6 +23,7 @@ import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
@@ -575,5 +576,9 @@ public class TickrController {
             user.invalidateToken(session, i);
         }
         session.remove(user);
+    }
+
+    public TicketReserve.Response ticketReserve (ModelSession session, TicketReserve.Request request) {
+        return new TicketReserve.Response();
     }
 }
