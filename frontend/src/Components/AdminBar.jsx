@@ -13,7 +13,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import UserAvatar from "./UserAvatar";
 import AdminItem from "./AdminItem";
 
-export default function AdminsBar ({adminsList, editable=false, removeAdmin=null}) {
+export default function AdminsBar ({adminsList, editable=false, removeAdmin=null, editEvent=false, openHostMenu=null, setNewHost=null}) {
   return (
     <>
     {(adminsList.length !== 0)
@@ -26,7 +26,7 @@ export default function AdminsBar ({adminsList, editable=false, removeAdmin=null
                   return (
                     <div key={key}>
                       <ContrastInputWrapper >
-                        <AdminItem index={key} adminID={value} removeAdmin={removeAdmin}/>
+                        <AdminItem index={key} adminID={value} removeAdmin={removeAdmin} editEvent={editEvent} openHostMenu={openHostMenu} setNewHost={setNewHost}/>
                       </ContrastInputWrapper>
                       <br/>
                     </div>

@@ -33,16 +33,20 @@ public class SeatingPlan {
     @Column(name = "available_seats")
     public int availableSeats;
 
+    @Column(name = "ticket_price")
+    public int ticketPrice; 
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
     private Set<Ticket> tickets;
 
     public SeatingPlan () {}    
 
-    public SeatingPlan(Event event, Location location, String section, int availableSeats) {
+    public SeatingPlan(Event event, Location location, String section, int availableSeats, int ticketPrice) {
         this.event = event;
         this.location = location;
         this.section = section;
         this.availableSeats = availableSeats;
+        this.ticketPrice = ticketPrice;
     }
 
     private UUID getId () {
@@ -91,5 +95,9 @@ public class SeatingPlan {
 
     private void setTickets (Set<Ticket> tickets) {
         this.tickets = tickets;
+    }
+
+    public void updateLocation (Location location) {
+        setLocation(location);
     }
 }

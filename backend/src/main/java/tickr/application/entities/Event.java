@@ -62,6 +62,9 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
     private Set<Comment> comments;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "event")
+    private Set<SeatingPlan> seatingPlans;
+
     @Column(name = "event_name")
     private String eventName;
 
@@ -75,10 +78,12 @@ public class Event {
     private String eventDescription;
 
     @Column(name = "seat_availability")
-    private int seatAvailability;
+    private int seatAvailability = 0;
 
     @Column(name = "event_pic")
     private String eventPicture;
+
+    private boolean published;
 
     public Event() {}
 
@@ -92,6 +97,7 @@ public class Event {
         this.seatAvailability = seatAvailability;
         this.host = host;
         this.eventPicture = eventPicture;
+        this.published = false;
     }
 
     public UUID getId () {
@@ -222,8 +228,16 @@ public class Event {
         this.admins.clear();
     }
 
+    public boolean isPublished() {
+        return published;
+    }
+
+    public void setPublished(boolean published) {
+        this.published = published;
+    }
+
     public void editEvent (ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
-                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails) {
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
         if (eventName != null) {
             this.eventName = eventName; 
         }
@@ -232,13 +246,6 @@ public class Event {
                 FileHelper.deleteFileAtUrl(getEventPicture());
             }
             this.eventPicture = picture;
-        }
-        if (locations != null) {
-            session.remove(this.location);
-            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
-            locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
-            session.save(newLocation);
-            this.location = newLocation; 
         }
         if (startDate != null) {
             LocalDateTime start_date;
@@ -304,14 +311,27 @@ public class Event {
         }
 
         if (seatingDetails != null) {
-            List<SeatingPlan> seatingPlanList = session.getAllWith(SeatingPlan.class, "event", this);
-            for (SeatingPlan seat : seatingPlanList) {
+            for (SeatingPlan seat : seatingPlans) {
                 session.remove(seat);
             }
+            seatingPlans.clear();
             for (EditEventRequest.SeatingDetails seats : seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability);
+                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice);
                 session.save(seatingPlan);
+                seatingPlans.add(seatingPlan);
             }
         }
+
+        if (locations != null) {
+            session.remove(this.location);
+            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
+                    locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
+            session.save(newLocation);
+            this.location = newLocation;
+
+            seatingPlans.forEach(s -> s.updateLocation(newLocation));
+        }
+
+        this.published = published;
     }
 }

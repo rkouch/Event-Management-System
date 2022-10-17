@@ -34,12 +34,19 @@ public class EventViewResponse {
 
     public Set<String> tags;
 
+    public boolean published;
+
     public static class SeatingDetails {
         public String section;
-        public int availability; 
-        public SeatingDetails(String section, int availability) {
+        public int availability;
+
+        @SerializedName("ticket_price") 
+        public int ticketPrice; 
+        
+        public SeatingDetails(String section, int availability, int cost) {
             this.section = section;
             this.availability = availability;
+            this.ticketPrice = cost;
         }
     }
 
@@ -47,7 +54,7 @@ public class EventViewResponse {
 
     public EventViewResponse(String host_id, String eventName, String picture, SerializedLocation location, String startDate,
             String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins,
-            Set<String> categories, Set<String> tags) {
+            Set<String> categories, Set<String> tags, boolean published) {
         this.eventName = eventName;
         this.picture = picture;
         this.location = location;
@@ -59,6 +66,7 @@ public class EventViewResponse {
         this.categories = categories;
         this.tags = tags;
         this.host_id = host_id;
+        this.published = published;
     }
 
     

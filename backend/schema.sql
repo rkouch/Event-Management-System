@@ -47,6 +47,7 @@ create table `events` (
     event_description text,
     seat_availability int,
     event_pic varchar(255) not null,
+    published boolean not null,
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),
@@ -77,7 +78,9 @@ create table seating_plan (
     location_id  varchar(36) not null,
     section     varchar(255) not null,
     available_seats int not null,
-    primary key (id)
+    ticket_price int not null,
+    primary key (id),
+    foreign key (event_id) references `events`(id)
 );
 
 create table tickets (
