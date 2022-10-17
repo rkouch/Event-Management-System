@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Box, Divider, FormLabel, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Divider, FormLabel, List, ListItem, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -127,7 +127,7 @@ export default function CreateEvent({}) {
 
   const [loading, setLoading] = React.useState(false)
 
-  const [eventPicture, setEventPicture] = React.useState('')
+  const [eventPicture, setEventPicture] = React.useState(null)
 
   const [toggleUpload, setToggleUpload] = React.useState(true)
 
@@ -351,7 +351,7 @@ export default function CreateEvent({}) {
 
     const locationBody = {
       street_no: +streetAddress[0],
-      street_name: streetAddress[1] + streetAddress[2],
+      street_name: streetAddress[1] + ' ' + streetAddress[2],
       suburb: suburb.value,
       unitNo: '',
       postcode: postcode.value,
@@ -846,6 +846,6 @@ export default function CreateEvent({}) {
           </FormInput>
         </div>
       </Box>
-    </BackdropNoBG>
+    </BackdropNoBG>  
   );
 }
