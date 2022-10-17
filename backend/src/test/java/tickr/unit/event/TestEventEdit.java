@@ -98,21 +98,23 @@ public class TestEventEdit {
                                             "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(UUID.randomUUID().toString(), authTokenString, null, 
-        null, null, null,null, null, null, null, null, null)));
+            null, null, null,null, null, null, null, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, "aaa",null, null, null, null, null, null)));
+            null, null, "aaa",null, null, null, null, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, null,"aaa", null, null, null, null, null)));
+            null, null, null,"aaa", null, null, null, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, null, null , null, null, invalidAdmins, null, null)));
+            null, null, null, null , null, null, invalidAdmins, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, null, null , null, null, invalidAdmins2, null, null)));
+            null, null, null, null , null, null, invalidAdmins2, null, null)));
         assertThrows(UnauthorizedException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, "asd", null, 
-        null, null, null, null , null, null, null, null, null)));
+            null, null, null, null , null, null, null, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
-        null, null, null, null , null, null, null, null, null)));
+            null, null, null, null , null, null, null, null, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-         "asd", null, null, null , null, null, null, null, null)));
+            "asd", null, null, null , null, null, null, null, null)));
+        assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
+            null, null, null, null , null, null, null, null, null)));
     }
 
     @Test 
@@ -240,7 +242,7 @@ public class TestEventEdit {
         "updated description", updatedSeats, admins, updateCategories, updateTags));
 
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
-
+        var newSession = TestHelper.commitMakeSession(model, session); 
         assertEquals(id, response.host_id);
         assertEquals("update name", response.eventName);
         assertEquals("", response.picture);
@@ -266,6 +268,13 @@ public class TestEventEdit {
         assertEquals(admins, response.admins);
         assertEquals(updateCategories, response.categories);
         assertEquals(updateTags, response.tags);
+
+        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+        "updated description", null, admins, updateCategories, updateTags)));
+        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+        "updated description", null, admins, updateCategories, updateTags)));
+        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+        "updated description", updatedSeats, admins, updateCategories, updateTags)));
     }
 
     @Test
@@ -317,4 +326,93 @@ public class TestEventEdit {
         assertTrue(TestHelper.fileDiff("/test_images/smile.jpg", newFilePath));
 
     }
+
+    // @Test 
+    // public void testAdminEdit() {
+    //     var session = model.makeSession();
+    //     var authTokenString = controller.userRegister(session,
+    //     new UserRegisterRequest("test", "first", "last", "test1@example.com",
+    //             "Password123!", "2022-04-14")).authToken;
+    //     var authToken = CryptoHelper.makeJWTParserBuilder()
+    //     .build()
+    //     .parseClaimsJws(authTokenString);
+    //     var id = authToken.getBody().getSubject();
+    //     assertNotNull(id);
+
+    //     var testAuthTokenString = controller.userRegister(session,
+    //     new UserRegisterRequest("test", "first", "last", "test2@example.com",
+    //             "Password123!", "2022-04-14")).authToken;
+    //     var authTokenTest = CryptoHelper.makeJWTParserBuilder()
+    //     .build()
+    //     .parseClaimsJws(testAuthTokenString);
+    //     var idTest = authTokenTest.getBody().getSubject();
+    //     assertNotNull(idTest);
+
+    //     CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
+    //     CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+    //     List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
+    //     seats.add(seats1);
+    //     seats.add(seats2);
+    //     EditEventRequest.SeatingDetails seats3 = new EditEventRequest.SeatingDetails("sectionC", 101, 51);
+    //     EditEventRequest.SeatingDetails seats4 = new EditEventRequest.SeatingDetails("sectionD", 51, 51);
+    //     List<EditEventRequest.SeatingDetails> updatedSeats = new ArrayList<EditEventRequest.SeatingDetails>();
+    //     updatedSeats.add(seats3);
+    //     updatedSeats.add(seats4);
+
+    //     SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
+    //     SerializedLocation updatedLocation = new SerializedLocation("update street", 12, null, "Melbourne", "20200", "NS2W", "A2us", "", "");
+
+
+    //     Set<String> admins = new HashSet<>();
+    //     admins.add(id);
+
+    //     Set<String> categories = new HashSet<>();
+    //     categories.add("Movie");
+    //     categories.add("Sport");
+    //     Set<String> updateCategories = new HashSet<>();
+    //     updateCategories.add("Basketball");
+    //     updateCategories.add("Cricket");
+
+    //     Set<String> tags = new HashSet<>();
+    //     tags.add("testtags");
+    //     Set<String> updateTags = new HashSet<>();
+    //     updateTags.add("updatetags");
+
+    //     var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
+    //                                         , "2011-12-03T10:15:30", 
+    //                                         "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+    //     session = TestHelper.commitMakeSession(model, session);  
+    //     admins.add(idTest);
+    //     controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+    //     "updated description", updatedSeats, admins, updateCategories, updateTags));
+
+    //     var response = controller.eventView(session, Map.of("event_id", event_id)); 
+    //     var newSession = TestHelper.commitMakeSession(model, session); 
+    //     assertEquals(id, response.host_id);
+    //     assertEquals("update name", response.eventName);
+    //     assertEquals("", response.picture);
+    //     assertEquals(updatedLocation.streetName, response.location.streetName);
+    //     assertEquals(updatedLocation.streetNo, response.location.streetNo);
+    //     assertEquals(updatedLocation.unitNo, response.location.unitNo);
+    //     assertEquals(updatedLocation.postcode, response.location.postcode);
+    //     assertEquals(updatedLocation.state, response.location.state);
+    //     assertEquals(updatedLocation.country, response.location.country);
+    //     assertEquals(updatedLocation.longitude, response.location.longitude);
+    //     assertEquals(updatedLocation.latitude, response.location.latitude);
+    //     assertEquals("2011-12-04T10:15:30", response.startDate);
+    //     assertEquals("2011-12-05T10:15:30", response.endDate);
+    //     assertEquals("updated description", response.description);
+
+    //     assertEquals(updatedSeats.get(0).section, response.seatingDetails.get(0).section);
+    //     assertEquals(updatedSeats.get(0).availability, response.seatingDetails.get(0).availability);
+    //     assertEquals(updatedSeats.get(0).ticketPrice, response.seatingDetails.get(0).ticketPrice);
+    //     assertEquals(updatedSeats.get(1).section, response.seatingDetails.get(1).section);
+    //     assertEquals(updatedSeats.get(1).availability, response.seatingDetails.get(1).availability);
+    //     assertEquals(updatedSeats.get(1).ticketPrice, response.seatingDetails.get(1).ticketPrice);
+
+    //     assertEquals(admins, response.admins);
+    //     assertEquals(updateCategories, response.categories);
+    //     assertEquals(updateTags, response.tags);
+
+    // }
 }

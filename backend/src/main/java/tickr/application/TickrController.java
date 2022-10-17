@@ -465,15 +465,15 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
-        User hostUser;
+        User user;
         try {
-            hostUser = authenticateToken(session, request.getAuthToken());
+            user = authenticateToken(session, request.getAuthToken());
         } catch (IllegalArgumentException e){
             throw new UnauthorizedException("Invalid auth token");
         }
-        if (hostUser.getId() != event.getHost().getId()) {
-            throw new ForbiddenException("User is not the host of the event!");
-        }
+        if (user.getId() != event.getHost().getId() && !event.getAdmins().contains(user)) {
+            throw new ForbiddenException("User is not a host/admin of the event!");
+        } 
 
         if (request.picture == null) {
             event.editEvent(session, request.getEventName(), null, request.getLocation(),
