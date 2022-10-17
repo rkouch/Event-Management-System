@@ -280,6 +280,7 @@ export default function ViewEvent({}) {
                           <TableRow>
                             <TableCell sx={{fontWeight: 'bold', fontSize: 20}}>Section</TableCell>
                             <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Availability</TableCell>
+                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Cost</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -288,44 +289,13 @@ export default function ViewEvent({}) {
                               <TableRow key={key}>
                                 <TableCell>{section.section}</TableCell>
                                 <TableCell align="center">{section.availability}</TableCell>
+                                <TableCell align="center">${section.cost}</TableCell>
                               </TableRow>
                             )
                           })}
                         </TableBody>
                       </Table>
                     </TableContainer>
-                    {/* <Box>
-                      {seatingList.map((value, index) => {
-                        return (
-                          <div key={index}>
-                            <Grid container spacing={1}>
-                              <Grid item xs={7}>
-                                <ContrastInputWrapper>
-                                  <ContrastInput placeholder="Section Name" fullWidth onChange={(e) => handleSectionChange(e, index)}/>
-                                </ContrastInputWrapper>
-                              </Grid>
-                              <Grid item xs={3}>
-                                <ContrastInputWrapper>
-                                  <ContrastInput placeholder="Spots" fullWidth onChange={handleCapacityChange}/>
-                                </ContrastInputWrapper>
-                              </Grid>
-                              <Grid item xs={2}>
-                                <ContrastInputWrapper sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                  <IconButton
-                                    edge="end"
-                                    aria-label="delete"
-                                    onClick={() => removeSeating(index)}
-                                    sx={{marginRight: 0}}
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </ContrastInputWrapper>
-                              </Grid>
-                            </Grid>
-                          </div>
-                        );
-                      })}
-                    </Box> */}
                   </Box>
                   <br/>
                 </Grid>

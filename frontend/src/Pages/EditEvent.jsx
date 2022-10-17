@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormGroup, FormLabel, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -33,7 +33,7 @@ import Checkbox from '@mui/material/Checkbox';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import UserAvatar from "../Components/UserAvatar";
 
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
@@ -126,6 +126,7 @@ export default function EditEvent({}) {
   const [newSection, setNewSection] = React.useState({
     section: '',
     availability: 0,
+    cost: 0,
     error: false,
     errorMsg: '',
   });
@@ -304,6 +305,7 @@ export default function EditEvent({}) {
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
+    setFieldInState('cost', 0, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -392,7 +394,7 @@ export default function EditEvent({}) {
       setErrorStatus(true)
       setFieldInState('error', true, newSection, setNewSection)
       setErrorMsg('Please allocate seating')
-      
+      return
     }
     
 
@@ -481,8 +483,25 @@ export default function EditEvent({}) {
       >
         {(eventName.value !== '')
           ? <>
-            <Grid container spacing={2}>
-              <Grid item xs={3}>
+            <Grid 
+              container
+              spacing={2}
+              sx={{
+                marginLeft: 1,
+                marginRight: 5,
+              }}
+            >
+              <Grid item xs={3} sx={{p: 2}}>
+                {isHost
+                  ? <FormInput>
+                      <CentredBox>
+                        <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
+                          Delete Event
+                        </DeleteButton>
+                      </CentredBox>
+                    </FormInput>
+                  : <></>
+                }
               </Grid>
               <Grid item xs={6}>
                 <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
@@ -491,7 +510,7 @@ export default function EditEvent({}) {
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
                   {isHost
                     ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
                         {!event.published
                           ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
                           : <></>
@@ -802,7 +821,7 @@ export default function EditEvent({}) {
                     <Box>
                       <h3> Ticket Allocations </h3>
                       <Grid container spacing={2}>
-                        <Grid item xs={7}>
+                        <Grid item xs={4}>
                           <Typography sx={{fontWeight: 'bold'}}>
                             Section
                           </Typography>
@@ -811,6 +830,12 @@ export default function EditEvent({}) {
                         <Grid item xs={3}>
                           <Typography sx={{fontWeight: 'bold'}}>
                             Availability
+                          </Typography>
+                          <Divider/>
+                        </Grid>
+                        <Grid item xs={3}>
+                          <Typography sx={{fontWeight: 'bold'}}>
+                            Cost
                           </Typography>
                           <Divider/>
                         </Grid>
@@ -825,7 +850,7 @@ export default function EditEvent({}) {
                             <Grid item key={index} sx={{width: '100%'}}>
                               <ContrastInputWrapper>
                                 <Grid container spacing={1}>
-                                  <Grid item xs={7}>
+                                  <Grid item xs={4}>
                                     <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
                                       <Typography
                                         sx={{
@@ -844,6 +869,17 @@ export default function EditEvent({}) {
                                         }}
                                       >
                                         {value.availability}
+                                      </Typography>
+                                    </Box>
+                                  </Grid>
+                                  <Grid item xs={3}>
+                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                      <Typography
+                                        sx={{
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {value.cost}
                                       </Typography>
                                     </Box>
                                   </Grid>
@@ -867,7 +903,7 @@ export default function EditEvent({}) {
                       </Grid>
                       <Box sx={{marginRight: 4, width: '100%'}}>
                         <Grid container spacing={1}>
-                          <Grid item xs={7}>
+                          <Grid item xs={4}>
                             <ContrastInputWrapper>
                               <ContrastInput
                                 placeholder={'Section Name'}
@@ -911,6 +947,32 @@ export default function EditEvent({}) {
                               />
                             </ContrastInputWrapper>
                           </Grid>
+                          <Grid item xs={3}>
+                            <ContrastInputWrapper>
+                              <ContrastInput 
+                                type="number"
+                                placeholder="Cost"
+                                fullWidth 
+                                onChange={(e) => {
+                                  const val = e.target.value
+                                  if (val < 0) {
+                                    setFieldInState('cost', 0, newSection, setNewSection)
+                                  } else {
+                                    setFieldInState('cost', val, newSection, setNewSection)
+                                  } 
+                                  setFieldInState('error', false, newSection, setNewSection)
+                                  setErrorStatus(false)
+                                }}
+                                sx={{
+                                  '.MuiOutlinedInput-notchedOutline': {
+                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                  },
+                                }}
+                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                value = {newSection.cost}
+                              />
+                            </ContrastInputWrapper>
+                          </Grid>
                           <Grid item xs={2}>
                             <ContrastInputWrapper 
                               sx={{
@@ -945,16 +1007,19 @@ export default function EditEvent({}) {
               </EventForm>
               <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
                 <Grid item xs={3}>
-                  {isHost
-                    ? <FormInput>
-                        <CentredBox>
-                          <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
-                            Delete
-                          </DeleteButton>
-                        </CentredBox>
-                      </FormInput>
-                    : <></>
-                  }
+                  <FormInput>
+                    <CentredBox>
+                      <TkrButton2 variant="contained" onClick={() => navigate(`/view_event/${params.event_id}`)} startIcon={<DeleteIcon/>} sx={{textTransform: "none", textAlign: "left"}}>
+                        <Typography
+                          sx={{
+                            fontSize: "20px"
+                          }}
+                        >
+                          Discard Changes
+                        </Typography>
+                      </TkrButton2>
+                    </CentredBox>
+                  </FormInput>
                 </Grid>
                 <Grid item xs={6}>
                 </Grid> 
