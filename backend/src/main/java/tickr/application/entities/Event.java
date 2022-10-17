@@ -236,13 +236,6 @@ public class Event {
             }
             this.eventPicture = picture;
         }
-        if (locations != null) {
-            session.remove(this.location);
-            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
-            locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
-            session.save(newLocation);
-            this.location = newLocation; 
-        }
         if (startDate != null) {
             LocalDateTime start_date;
             try {
@@ -316,6 +309,16 @@ public class Event {
                 session.save(seatingPlan);
                 seatingPlans.add(seatingPlan);
             }
+        }
+
+        if (locations != null) {
+            session.remove(this.location);
+            Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
+                    locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
+            session.save(newLocation);
+            this.location = newLocation;
+
+            seatingPlans.forEach(s -> s.updateLocation(newLocation));
         }
     }
 }

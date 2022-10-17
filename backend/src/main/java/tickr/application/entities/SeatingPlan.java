@@ -92,4 +92,8 @@ public class SeatingPlan {
     private void setTickets (Set<Ticket> tickets) {
         this.tickets = tickets;
     }
+
+    public void updateLocation (Location location) {
+        setLocation(location);
+    }
 }
