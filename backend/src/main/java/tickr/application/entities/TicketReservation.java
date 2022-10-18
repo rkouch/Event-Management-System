@@ -67,7 +67,7 @@ public class TicketReservation {
     }
 
     public LineItem makeLineItem () {
-        return new LineItem(this.section.section, this.price);
+        return new LineItem(this.section.getSection(), this.price);
     }
 
     public Ticket convert (Event event) {

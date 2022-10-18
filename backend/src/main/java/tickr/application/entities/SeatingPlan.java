@@ -31,7 +31,7 @@ public class SeatingPlan {
     @JoinColumn(name = "location_id")
     private Location location;
 
-    public String section;
+    private String section;
 
     @Column(name = "available_seats")
     public int availableSeats;

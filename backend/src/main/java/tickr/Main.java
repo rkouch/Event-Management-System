@@ -8,6 +8,7 @@ import tickr.application.apis.email.NullEmailAPI;
 import tickr.application.apis.email.SendGridAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.apis.purchase.NullPurchaseAPI;
+import tickr.application.apis.purchase.StripeAPI;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 
@@ -75,7 +76,8 @@ public class Main {
         int portFinal = port;
         if (useLivePurchase) {
             logger.info("Using live Stripe payments API!");
-            ApiLocator.addLocator(IPurchaseAPI.class, () -> new NullPurchaseAPI("http://localhost:" + portFinal));
+            String finalStripeSecret = stripeSecret;
+            ApiLocator.addLocator(IPurchaseAPI.class, () -> new StripeAPI(finalStripeSecret));
         } else {
             logger.info("Using testing payments API!");
             ApiLocator.addLocator(IPurchaseAPI.class, () -> new NullPurchaseAPI("http://localhost:" + portFinal));
