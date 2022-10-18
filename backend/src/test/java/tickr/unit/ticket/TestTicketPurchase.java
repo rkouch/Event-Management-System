@@ -98,11 +98,11 @@ public class TestTicketPurchase {
         assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(null, requestId, "testing", "testing")));
         assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(TestHelper.makeFakeJWT(), requestId, "testing", "testing")));
 
-        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, UUID.randomUUID().toString(), "testing", "testing")));
+        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, UUID.randomUUID().toString(), "http://testing.com", "http://testing.com")));
 
         var newUser = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(newUser, requestId, "testing", "testing")));
+        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(newUser, requestId, "http://testing.com", "http://testing.com")));
     }
 
     @Test
@@ -154,5 +154,16 @@ public class TestTicketPurchase {
         assertEquals(0, session.getAll(Ticket.class).size());
         assertEquals(0, session.getAll(TicketReservation.class).size());
         assertEquals(0, session.getAll(EventReservation.class).size());
+    }
+
+    @Test
+    public void testBadUrls () {
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
+                "example.com/success", "https://example.com/cancel")));
+        session.rollback();
+        session.close();
+        session = model.makeSession();
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
+                "https://example.com/success", "not-real://example.com/cancel")));
     }
 }

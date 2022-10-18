@@ -38,6 +38,7 @@ import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+import tickr.util.Utils;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -421,9 +422,9 @@ public class TickrController {
         session.save(resetToken);
 
         // localhost:3000/change_password/{email}/{reset_token}
-        var resetUrl = String.format("localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
+        var resetUrl = String.format("http://localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
 
-        var messageString = String.format("Please reset your Tickr account password here: %s\n", resetUrl);
+        var messageString = String.format("Please reset your Tickr account password <a href=\"%s\">here</a>.\n", resetUrl);
 
         ApiLocator.locateApi(IEmailAPI.class).sendEmail(user.getEmail(), "Tickr account password reset", messageString);
  
@@ -604,11 +605,6 @@ public class TickrController {
                 throw new BadRequestException("Invalid ticket details email!");
             }
         }
-        //var event = session.getById(Event.class, eventId).orElseThrow(() -> new ForbiddenException("Invalid event id!"));
-
-        //var reservation = event.makeReservation(session, user, ticketDatetime, request.ticketDetails);
-
-        //return new TicketReserve.Response(reservation.getId().toString(), Float.toString(reservation.getPrice()));
 
         return session.getById(Event.class, eventId)
                 .map(e -> e.makeReservation(session, user, ticketDatetime, request.ticketDetails))
@@ -618,7 +614,8 @@ public class TickrController {
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
         var user = authenticateToken(session, request.authToken);
-        if (request.reserveId == null || request.successUrl == null || request.cancelUrl == null) {
+        if (request.reserveId == null || request.successUrl == null || request.cancelUrl == null
+                || !Utils.isValidUrl(request.successUrl) || !Utils.isValidUrl(request.cancelUrl)) {
             throw new BadRequestException("Invalid request!");
         }
 

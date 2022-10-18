@@ -125,9 +125,21 @@ public class SeatingPlan {
         if (availableSeats == 0) {
             throw new ForbiddenException("No seats remaining!");
         }
-        var ticketNum = getAllocatedNumbers().stream()
-                .max(Integer::compareTo)
-                .orElse(0) + 1;
+        var ticketNums = getAllocatedNumbers().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        int ticketNum;
+        if (ticketNums.size() == 0 || ticketNums.get(0) != 1) {
+            ticketNum = 1;
+        } else {
+            int index = 0;
+            while (index < ticketNums.size() - 1 && ticketNums.get(index) + 1 == ticketNums.get(index + 1)) {
+                index++;
+            }
+
+            ticketNum = ticketNums.get(index) + 1;
+        }
 
         var reservation = new TicketReservation(user, this, ticketNum, eventReservation, ticketPrice, firstName, lastName, email);
         session.save(reservation);

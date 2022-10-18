@@ -255,10 +255,10 @@ public class TestCreateEvent {
         }
         Event event1 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings = session.getAllWith(SeatingPlan.class, "event", event1);
-        assertEquals(seatings.get(0).section, "sectionA");
+        assertEquals(seatings.get(0).getSection(), "sectionA");
         assertEquals(seatings.get(0).availableSeats, 100);
         assertEquals(seatings.get(0).ticketPrice, 50);
-        assertEquals(seatings.get(1).section, "sectionB");
+        assertEquals(seatings.get(1).getSection(), "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
         assertEquals(seatings.get(1).ticketPrice, 70);
         assertEquals(event.getLocation().getStreetName(), location.streetName);
@@ -335,10 +335,10 @@ public class TestCreateEvent {
         }
         Event event1 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings = session.getAllWith(SeatingPlan.class, "event", event1);
-        assertEquals(seatings.get(0).section, "sectionA");
+        assertEquals(seatings.get(0).getSection(), "sectionA");
         assertEquals(seatings.get(0).availableSeats, 100);
         assertEquals(seatings.get(0).ticketPrice, 50);
-        assertEquals(seatings.get(1).section, "sectionB");
+        assertEquals(seatings.get(1).getSection(), "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
         assertEquals(seatings.get(1).ticketPrice, 50);
         assertEquals(event.getLocation().getStreetName(), location.streetName);
@@ -366,10 +366,10 @@ public class TestCreateEvent {
         
         Event event3 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings2 = session.getAllWith(SeatingPlan.class, "event", event3);
-        assertEquals(seatings2.get(0).section, "sectionA");
+        assertEquals(seatings2.get(0).getSection(), "sectionA");
         assertEquals(seatings2.get(0).availableSeats, 100);
         assertEquals(seatings2.get(0).ticketPrice, 50);
-        assertEquals(seatings2.get(1).section, "sectionB");
+        assertEquals(seatings2.get(1).getSection(), "sectionB");
         assertEquals(seatings2.get(1).availableSeats, 50);
         assertEquals(seatings2.get(1).ticketPrice, 50);
         assertEquals(event2.getLocation().getStreetName(), location.streetName);

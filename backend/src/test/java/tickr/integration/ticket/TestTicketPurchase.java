@@ -106,14 +106,14 @@ public class TestTicketPurchase {
                 requestId, "testing", "testing"));
         assertEquals(401, response.getStatus());
 
-        response = httpHelper.post("/api/ticket/purchase", new TicketPurchase.Request(authToken, UUID.randomUUID().toString(), "testing", "testing"));
+        response = httpHelper.post("/api/ticket/purchase", new TicketPurchase.Request(authToken, UUID.randomUUID().toString(), "http://testing.com", "http://testing.com"));
         assertEquals(403, response.getStatus());
 
         response = httpHelper.post("/api/user/register", TestHelper.makeRegisterRequest());
         assertEquals(200, response.getStatus());
         var newUser = response.getBody(AuthTokenResponse.class).authToken;
 
-        response = httpHelper.post("/api/ticket/purchase", new TicketPurchase.Request(newUser, requestId, "testing", "testing"));
+        response = httpHelper.post("/api/ticket/purchase", new TicketPurchase.Request(newUser, requestId, "http://testing.com", "http://testing.com"));
         assertEquals(403, response.getStatus());
     }
 

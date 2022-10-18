@@ -188,6 +188,7 @@ public class TestEventEdit {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         var authToken = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(authTokenString);
@@ -197,6 +198,7 @@ public class TestEventEdit {
         var testAuthTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         var authTokenTest = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(testAuthTokenString);
@@ -273,9 +275,11 @@ public class TestEventEdit {
 
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
         "updated description", null, admins, updateCategories, updateTags, false)));
-        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+        var newSession1 = TestHelper.commitMakeSession(model, newSession);
+        assertDoesNotThrow(() -> controller.editEvent(newSession1, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2011-12-04T10:15:30","2011-12-05T10:15:30",
         "updated description", null, admins, updateCategories, updateTags, false)));
-        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
+        var newSession2 = TestHelper.commitMakeSession(model, newSession1);
+        assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
         "updated description", updatedSeats, admins, updateCategories, updateTags, false)));
     }
 
@@ -285,6 +289,7 @@ public class TestEventEdit {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         var authToken = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(authTokenString);
@@ -317,9 +322,11 @@ public class TestEventEdit {
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2011-12-03T10:15:30", 
                                             "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, 
         FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null,null, null, null, null, null, null, false));
+        session = TestHelper.commitMakeSession(model, session);
         var response = controller.eventView(session, Map.of("event_id", event_id));
         assertNotEquals("", response.picture);
         
@@ -335,6 +342,7 @@ public class TestEventEdit {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         var authToken = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(authTokenString);
@@ -344,6 +352,7 @@ public class TestEventEdit {
         var adminAuthTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         var authTokenAdmin = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(adminAuthTokenString);
@@ -375,8 +384,9 @@ public class TestEventEdit {
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, adminAuthTokenString, "update name", null, null, "2011-12-04T10:15:30","2011-12-05T10:15:30",
         "updated description", null, null, null, null, false)));
+        session = TestHelper.commitMakeSession(model, newSession);
 
-        var response = controller.eventView(newSession, Map.of("event_id", event_id)); 
+        var response = controller.eventView(session, Map.of("event_id", event_id));
         assertEquals(id, response.host_id);
         assertEquals("update name", response.eventName);
         assertEquals("", response.picture);
