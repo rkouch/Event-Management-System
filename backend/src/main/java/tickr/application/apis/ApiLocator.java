@@ -3,6 +3,8 @@ package tickr.application.apis;
 import tickr.application.apis.email.GmailAPI;
 import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.email.SendGridAPI;
+import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.apis.purchase.NullPurchaseAPI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,17 +18,18 @@ public class ApiLocator {
     private static synchronized ApiLocator getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new ApiLocator();
-            addDefaultLocators();
+            //addDefaultLocators();
         }
 
         return INSTANCE;
     }
 
-    private static void addDefaultLocators () {
+    /*private static void addDefaultLocators () {
         var instance = getInstance();
         //instance.addLocatorInt(IEmailAPI.class, GmailAPI::new);
         instance.addLocatorInt(IEmailAPI.class, SendGridAPI::new);
-    }
+        //instance.addLocatorInt(IPurchaseAPI.class, NullPurchaseAPI::new);
+    }*/
 
     public static <T> void addLocator (Class<T> tClass, Supplier<T> locator) {
         getInstance().addLocatorInt(tClass, locator::get);
@@ -36,9 +39,13 @@ public class ApiLocator {
         return getInstance().locateApiInt(tClass);
     }
 
-    public static void resetLocators () {
-        addDefaultLocators();
+    public static <T> void clearLocator (Class<T> tClass) {
+        getInstance().clearLocatorInt(tClass);
     }
+
+    /*public static void resetLocators () {
+        addDefaultLocators();
+    }*/
 
     private ApiLocator () {
         locators = new HashMap<>();
@@ -58,6 +65,12 @@ public class ApiLocator {
             } else {
                 throw new RuntimeException("Failed to locate implementation for service " + tClass.getCanonicalName() + "!");
             }
+        }
+    }
+
+    private <T> void clearLocatorInt (Class<T> tClass) {
+        synchronized (locators) {
+            locators.remove(tClass);
         }
     }
 

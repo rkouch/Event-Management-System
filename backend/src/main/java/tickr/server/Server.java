@@ -7,7 +7,11 @@ import org.apache.logging.log4j.Logger;
 import spark.Request;
 import spark.Spark;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.combined.TicketPurchase;
+import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
@@ -81,6 +85,17 @@ public class Server {
         put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
+
+        post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
+        post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
+
+
+        Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
+            var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
+            var sigHeader = ctx.request.headers(paymentAPI.getSignatureHeader());
+            paymentAPI.handleWebhookEvent(ctx.controller, ctx.session, ctx.request.body(), sigHeader);
+            return new Object();
+        }));
     }
 
     /**

@@ -50,7 +50,7 @@ public class TestChangePassword {
 
     @AfterAll
     public static void cleanupApis () {
-        ApiLocator.resetLocators();
+        ApiLocator.clearLocator(IEmailAPI.class);
     }
 
     @Test

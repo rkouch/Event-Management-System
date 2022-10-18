@@ -22,7 +22,9 @@ public class HTTPHelper {
     private String serverUrl;
     public HTTPHelper (String serverUrl) {
         client = HttpClient.newHttpClient();
-        gson = new Gson();
+        gson = new GsonBuilder()
+                .disableHtmlEscaping()
+                .create();
         this.serverUrl = serverUrl;
     }
 

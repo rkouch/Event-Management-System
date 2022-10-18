@@ -7,6 +7,7 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.ResetToken;
 import tickr.application.entities.User;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
@@ -25,22 +26,24 @@ import tickr.util.FileHelper;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 
 public class TestChangePassword {
     private DataModel model;
     private TickrController controller;
 
+    private MockEmailAPI emailAPI;
+
     private ModelSession session;
     private String authToken;
-    @BeforeAll
-    public static void setupApi () {
-        ApiLocator.addLocator(IEmailAPI.class, MockEmailAPI::new);
-    }
+
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        emailAPI = new MockEmailAPI();
+        ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
 
         session = model.makeSession();
         authToken = controller.userRegister(session, new UserRegisterRequest("TestUsername", "Test", "User", "test@example.com",
@@ -51,11 +54,7 @@ public class TestChangePassword {
     @AfterEach
     public void cleanup () {
         model.cleanup();
-    }
-
-    @AfterAll
-    public static void cleanupApis () {
-        ApiLocator.resetLocators();
+        ApiLocator.clearLocator(IEmailAPI.class);
     }
 
     @Test
@@ -76,9 +75,22 @@ public class TestChangePassword {
         controller.unloggedChangePassword(session, new UserRequestChangePasswordRequest("test@example.com"));
         session = TestHelper.commitMakeSession(model, session);
 
+        assertEquals(1, emailAPI.getSentMessages().size());
+        var message = emailAPI.getSentMessages().get(0);
+
+        assertEquals("test@example.com", message.getToEmail());
+        assertNotNull(message.getSubject());
+
+        var pattern = Pattern.compile("<a href=\"http://localhost:3000/change_password/(.*)/(.*)\">.*</a>");
+        var matcher = pattern.matcher(message.getBody());
+        assertTrue(matcher.find());
+        assertEquals("test@example.com", matcher.group(1));
+
+
         var user = session.getByUnique(User.class, "email", "test@example.com").orElse(null);
         var list = session.getAllWith(ResetToken.class, "user", user);
         assertEquals(1, list.size());
+        assertEquals(list.get(0).getId().toString(), matcher.group(2));
         
         session = TestHelper.commitMakeSession(model, session);
         var resetToken = session;
