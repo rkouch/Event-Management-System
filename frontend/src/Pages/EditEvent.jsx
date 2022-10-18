@@ -127,6 +127,7 @@ export default function EditEvent({}) {
     section: '',
     availability: 0,
     ticket_price: 0,
+    seats: false,
     error: false,
     errorMsg: '',
   });
@@ -306,6 +307,7 @@ export default function EditEvent({}) {
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
     setFieldInState('ticket_price', 0, newSection, setNewSection)
+    setFieldInState('seats', false, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -823,7 +825,7 @@ export default function EditEvent({}) {
                       ? <Box>
                           <h3> Ticket Allocations </h3>
                           <Grid container spacing={2}>
-                            <Grid item xs={4}>
+                            <Grid item xs={3}>
                               <Typography sx={{fontWeight: 'bold'}}>
                                 Section
                               </Typography>
@@ -843,7 +845,7 @@ export default function EditEvent({}) {
                             </Grid>
                             <Grid item xs={2}>
                               <Typography sx={{fontWeight: 'bold'}}>
-                                Delete
+                                Seating
                               </Typography>
                               <Divider/>
                             </Grid>
@@ -852,8 +854,8 @@ export default function EditEvent({}) {
                                 <Grid item key={index} sx={{width: '100%'}}>
                                   <ContrastInputWrapper>
                                     <Grid container spacing={1}>
-                                      <Grid item xs={4}>
-                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
                                           <Typography
                                             sx={{
                                               fontWeight: 'bold',
@@ -864,10 +866,11 @@ export default function EditEvent({}) {
                                         </Box>
                                       </Grid>
                                       <Grid item xs={3}>
-                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
                                           <Typography
                                             sx={{
                                               fontWeight: 'bold',
+                                              width: '100%'
                                             }}
                                           >
                                             {value.availability}
@@ -875,10 +878,11 @@ export default function EditEvent({}) {
                                         </Box>
                                       </Grid>
                                       <Grid item xs={3}>
-                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
                                           <Typography
                                             sx={{
                                               fontWeight: 'bold',
+                                              width: '100%'
                                             }}
                                           >
                                             ${value.ticket_price}
@@ -886,6 +890,11 @@ export default function EditEvent({}) {
                                         </Box>
                                       </Grid>
                                       <Grid item xs={2}>
+                                        <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                          <Checkbox disabled checked={value.seats}/>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={1}>
                                         <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                                           <IconButton
                                             edge="end"
@@ -905,10 +914,10 @@ export default function EditEvent({}) {
                           </Grid>
                           <Box sx={{marginRight: 4, width: '100%'}}>
                             <Grid container spacing={1}>
-                              <Grid item xs={4}>
+                              <Grid item xs={3}>
                                 <ContrastInputWrapper>
                                   <ContrastInput
-                                    placeholder={'Section Name'}
+                                    placeholder={'Section'}
                                     fullWidth 
                                     onChange={(e) => {
                                       setFieldInState('section', e.target.value, newSection, setNewSection)
@@ -976,6 +985,20 @@ export default function EditEvent({}) {
                                 </ContrastInputWrapper>
                               </Grid>
                               <Grid item xs={2}>
+                                <ContrastInputWrapper sx={{ height: '100%'}}>
+                                  <CentredBox sx={{ height: '100%'}}>
+                                    <Checkbox
+                                      checked={newSection.seats}
+                                      onChange={(e) => {
+                                        setFieldInState('seats', e.target.checked, newSection, setNewSection)
+                                        setFieldInState('error', false, newSection, setNewSection)
+                                        setErrorStatus(false)
+                                      }}
+                                    />
+                                  </CentredBox>
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={1}>
                                 <ContrastInputWrapper 
                                   sx={{
                                     height: "100%",
@@ -983,7 +1006,10 @@ export default function EditEvent({}) {
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
+                                    backgroundColor: ((newSection.section.length > 0) && (newSection.availability > 0)) ? alpha('#6A7B8A', 0.3) : "rgba(0, 0, 0, 0.08)",
+                                    '&:hover': {
+                                      backgroundColor: ((newSection.section.length > 0) && (newSection.availability > 0)) ? alpha('#6A7B8A', 0.5): "rgba(0, 0, 0, 0.08)",
+                                    },
                                   }}
                                 >
                                   <IconButton
@@ -1002,7 +1028,7 @@ export default function EditEvent({}) {
                       : <Box>
                           <h3> Ticket Allocations </h3>
                           <Grid container spacing={2}>
-                            <Grid item xs={6}>
+                            <Grid item xs={4}>
                               <Typography sx={{fontWeight: 'bold'}}>
                                 Section
                               </Typography>
@@ -1020,12 +1046,18 @@ export default function EditEvent({}) {
                               </Typography>
                               <Divider/>
                             </Grid>
+                            <Grid item xs={2}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Seats
+                              </Typography>
+                              <Divider/>
+                            </Grid>
                             {seatingList.map((value, index) => {
                               return (
                                 <Grid item key={index} sx={{width: '100%'}}>
                                   <ContrastInputWrapper>
                                     <Grid container spacing={1}>
-                                      <Grid item xs={6}>
+                                      <Grid item xs={4}>
                                         <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
                                           <Typography
                                             sx={{
@@ -1056,6 +1088,11 @@ export default function EditEvent({}) {
                                           >
                                             ${value.ticket_price}
                                           </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={2}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Checkbox checked={value.seats} disabled/>
                                         </Box>
                                       </Grid>
                                     </Grid>

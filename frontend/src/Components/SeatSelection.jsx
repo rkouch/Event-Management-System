@@ -24,7 +24,7 @@ const ExpandMore = styled((props) => {
 // Vary this variable to make there be less per row or more
 const numPerRow = 10
 
-export default function SeatSelection ({section, index, sectionDetails, setSectionDetails}) {
+export default function SeatSelector ({section, index, sectionDetails, setSectionDetails}) {
   const [expanded, setExpanded] = React.useState(false)
 
   // Contain all seats
@@ -34,21 +34,6 @@ export default function SeatSelection ({section, index, sectionDetails, setSecti
 
   const [disableSeats, setDisableSeats] = React.useState(false)
 
-  React.useEffect(() => {
-    var seats_t = []
-    for (var i = 1; i <= section.capacity; i++) {
-      seats_t.push(section.section[0]+i)
-    }
-    setSeats(seats_t)
-    const numRows = seats_t.length/10 + 1
-    const rowsList_a = []
-    for (var m = 0; m < numRows; m++) {
-      const rowsList_t = seats_t.splice(0, 10)
-      rowsList_a.push(rowsList_t)
-    }
-    setRowsList(rowsList_a)
-  },[])
-
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
@@ -56,8 +41,21 @@ export default function SeatSelection ({section, index, sectionDetails, setSecti
   const handleQuantityChange = (key, qty) => {
     if (qty > 0) {
       setExpanded(true)
+      var seats_t = []
+      for (var i = 1; i <= section.capacity; i++) {
+        seats_t.push(section.section[0]+i)
+      }
+      setSeats(seats_t)
+      const numRows = seats_t.length/10 + 1
+      const rowsList_a = []
+      for (var m = 0; m < numRows; m++) {
+        const rowsList_t = seats_t.splice(0, 10)
+        rowsList_a.push(rowsList_t)
+      }
+      setRowsList(rowsList_a)
     } else if (qty === 0) {
       setExpanded(false)
+      setRowsList([])
     }
     const new_sections = sectionDetails.map((value, key_m) => {
       if (key_m === key) {
@@ -84,7 +82,7 @@ export default function SeatSelection ({section, index, sectionDetails, setSecti
       currentlySelected.sort()
     } else {
       const index = currentlySelected.indexOf(seatVal)
-      currentlySelected.pop(index)
+      currentlySelected.splice(index, 1)
     }
     section.seatsSelected = currentlySelected
     const newState = sectionDetails.map(obj => {
@@ -181,14 +179,20 @@ export default function SeatSelection ({section, index, sectionDetails, setSecti
         }
       </Grid>
       <Collapse in={expanded && section.selectable}>
-        <CentredBox>
-          {rowsList.map((value, key) => {
-            return (
-              <SeatRow key={key} row={value}>
+        <CentredBox sx={{flexDirection: 'column'}}>
+          <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+            FRONT
+          </Typography>
+          <CentredBox sx={{flexDirection: 'column'}}>
+            {rowsList.map((value, key) => {
+              return (
+                <SeatRow key={key} row={value}>
 
-              </SeatRow>
-            )
-          })}
+                </SeatRow>
+              )
+            })}
+          </CentredBox>
+          
         </CentredBox>
       </Collapse>
       <br/>

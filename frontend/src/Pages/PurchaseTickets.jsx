@@ -8,7 +8,8 @@ import { getEventData } from "../Helpers";
 import { Divider, FormControl, Grid, InputLabel, LinearProgress, MenuItem, Select, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import SeatSelection from "../Components/SeatSelection";
+import SeatSelector from "../Components/SeatSelection";
+import QuantitySelector from "../Components/QuantitySelector";
 
 export default function PurchaseTicket ({}) {
   const params = useParams()
@@ -57,7 +58,7 @@ export default function PurchaseTicket ({}) {
         capacity: section.availability,
         seats: seats,
         quantity: 0,
-        selectable: false,
+        selectable: true,
         seatsSelected: []
       }
       setSectionDetails(current => [section_det, ...current])
@@ -138,7 +139,13 @@ export default function PurchaseTicket ({}) {
                   <br/>
                   {(sectionDetails).map((section, key) => {
                     return (
-                      <SeatSelection section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                      <>
+                        {section.selectable
+                          ? <SeatSelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                          : <QuantitySelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                        }
+                      </>
+                      
                     )
                   })}
                 </Grid>

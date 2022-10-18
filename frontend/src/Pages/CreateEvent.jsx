@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormLabel, InputAdornment, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Checkbox, Divider, FormLabel, InputAdornment, List, ListItem, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -122,6 +122,7 @@ export default function CreateEvent({}) {
     section: '',
     availability: 0,
     ticket_price: 0,
+    seats: false,
     error: false,
     errorMsg: '',
   });
@@ -259,6 +260,7 @@ export default function CreateEvent({}) {
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
     setFieldInState('ticket_price', 0, newSection, setNewSection)
+    setFieldInState('seats', false, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -679,7 +681,7 @@ export default function CreateEvent({}) {
                 <Box>
                   <h3> Ticket Allocations </h3>
                   <Grid container spacing={2}>
-                    <Grid item xs={4}>
+                    <Grid item xs={3}>
                       <Typography sx={{fontWeight: 'bold'}}>
                         Section
                       </Typography>
@@ -699,7 +701,7 @@ export default function CreateEvent({}) {
                     </Grid>
                     <Grid item xs={2}>
                       <Typography sx={{fontWeight: 'bold'}}>
-                        Delete
+                        Seating
                       </Typography>
                       <Divider/>
                     </Grid>
@@ -708,7 +710,7 @@ export default function CreateEvent({}) {
                         <Grid item key={index} sx={{width: '100%'}}>
                           <ContrastInputWrapper>
                             <Grid container spacing={1}>
-                              <Grid item xs={4}>
+                              <Grid item xs={3}>
                                 <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
                                   <Typography
                                     sx={{
@@ -743,6 +745,11 @@ export default function CreateEvent({}) {
                               </Grid>
                               <Grid item xs={2}>
                                 <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                  <Checkbox disabled checked={value.seats}/>
+                                </Box>
+                              </Grid>
+                              <Grid item xs={1}>
+                                <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                                   <IconButton
                                     edge="end"
                                     aria-label="delete"
@@ -761,10 +768,10 @@ export default function CreateEvent({}) {
                   </Grid>
                   <Box sx={{marginRight: 4, width: '100%'}}>
                     <Grid container spacing={1}>
-                      <Grid item xs={4}>
+                      <Grid item xs={3}>
                         <ContrastInputWrapper>
                           <ContrastInput
-                            placeholder={'Section Name'}
+                            placeholder={'Section'}
                             fullWidth 
                             onChange={(e) => {
                               setFieldInState('section', e.target.value, newSection, setNewSection)
@@ -832,6 +839,20 @@ export default function CreateEvent({}) {
                         </ContrastInputWrapper>
                       </Grid>
                       <Grid item xs={2}>
+                        <ContrastInputWrapper sx={{ height: '100%'}}>
+                          <CentredBox sx={{ height: '100%'}}>
+                            <Checkbox
+                              checked={newSection.seats}
+                              onChange={(e) => {
+                                setFieldInState('seats', e.target.checked, newSection, setNewSection)
+                                setFieldInState('error', false, newSection, setNewSection)
+                                setErrorStatus(false)
+                              }}
+                            />
+                          </CentredBox>
+                        </ContrastInputWrapper>
+                      </Grid>
+                      <Grid item xs={1}>
                         <ContrastInputWrapper 
                           sx={{
                             height: "100%",
