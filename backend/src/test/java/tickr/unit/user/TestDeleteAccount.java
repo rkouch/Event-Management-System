@@ -71,6 +71,7 @@ public class TestDeleteAccount {
     @Test
     public void testCannotLoginDeleted () {
         controller.userDeleteAccount(session, new UserDeleteRequest(authToken, "Password123!"));
+        session = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.userLogin(session, new UserLoginRequest("test@example.com", "Password123!")));
     }
 

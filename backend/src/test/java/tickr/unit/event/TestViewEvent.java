@@ -145,5 +145,6 @@ public class TestViewEvent {
         testTags.add("testtags");
         assertEquals(testTags, response.tags);
 
+        
     }
 }

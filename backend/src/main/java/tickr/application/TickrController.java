@@ -4,29 +4,19 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.PersistenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.exception.ConstraintViolationException;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
-import tickr.application.entities.AuthToken;
-import tickr.application.entities.Category;
-import tickr.application.entities.Event;
-import tickr.application.entities.Location;
-import tickr.application.entities.ResetToken;
-import tickr.application.entities.SeatingPlan;
-import tickr.application.entities.Tag;
-import tickr.application.entities.TestEntity;
-import tickr.application.entities.User;
+import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.combined.TicketPurchase;
+import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.EventViewRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
@@ -48,6 +38,7 @@ import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+import tickr.util.Utils;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -107,6 +98,14 @@ public class TickrController {
 
     private User authenticateToken (ModelSession session, String authTokenStr) {
         return getTokenFromStr(session, authTokenStr).getUser();
+    }
+
+    private UUID parseUUID (String uuidStr) {
+        try {
+            return UUID.fromString(uuidStr);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid uuid!", e);
+        }
     }
 
     public TestEntity testGet (ModelSession session, Map<String, String> params) {
@@ -321,35 +320,46 @@ public class TickrController {
         }
         session.save(event);
         // creating seating plan for each section
-        for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-            SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
-            session.save(seatingPlan);
+        if (request.seatingDetails != null) {
+            for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
+                session.save(seatingPlan);
+            }
+        }
+
+        if (request.tags != null) {
+            for (String tagStr : request.tags) {
+                Tag newTag = new Tag(tagStr);
+                newTag.setEvent(event);
+                event.addTag(newTag);
+                session.save(newTag);
+            }
         }
         
-        for (String tagStr : request.tags) {
-            Tag newTag = new Tag(tagStr);
-            newTag.setEvent(event);
-            event.addTag(newTag);
-            session.save(newTag);
-        }
-        for (String catStr : request.categories) {
-            Category newCat = new Category(catStr);
-            newCat.setEvent(event);
-            event.addCategory(newCat); 
-            session.save(newCat);
-        }
-        for (String admin : request.admins) {
-            User userAdmin;
-            try {
-                userAdmin = session.getById(User.class, UUID.fromString(admin))
-                .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
-            } catch (IllegalArgumentException e) {
-                throw new ForbiddenException("invalid admin Id");
+        if (request.categories != null) {
+            for (String catStr : request.categories) {
+                Category newCat = new Category(catStr);
+                newCat.setEvent(event);
+                event.addCategory(newCat); 
+                session.save(newCat);
             }
-            
-            userAdmin.addAdminEvents(event);
-            event.addAdmin(userAdmin);
-        }        
+        }
+        
+        if (request.admins != null) {
+            for (String admin : request.admins) {
+                User userAdmin;
+                try {
+                    userAdmin = session.getById(User.class, UUID.fromString(admin))
+                    .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                } catch (IllegalArgumentException e) {
+                    throw new ForbiddenException("invalid admin Id");
+                }
+                
+                userAdmin.addAdminEvents(event);
+                event.addAdmin(userAdmin);
+            }
+        } 
+                
         event.setLocation(location);
 
         return new CreateEventResponse(event.getId().toString());
@@ -412,9 +422,9 @@ public class TickrController {
         session.save(resetToken);
 
         // localhost:3000/change_password/{email}/{reset_token}
-        var resetUrl = String.format("localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
+        var resetUrl = String.format("http://localhost:3000/change_password/%s/%s", user.getEmail(), resetToken.getId().toString());
 
-        var messageString = String.format("Please reset your Tickr account password here: %s\n", resetUrl);
+        var messageString = String.format("Please reset your Tickr account password <a href=\"%s\">here</a>.\n", resetUrl);
 
         ApiLocator.locateApi(IEmailAPI.class).sendEmail(user.getEmail(), "Tickr account password reset", messageString);
  
@@ -465,25 +475,25 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
-        User hostUser;
+        User user;
         try {
-            hostUser = authenticateToken(session, request.getAuthToken());
+            user = authenticateToken(session, request.getAuthToken());
         } catch (IllegalArgumentException e){
             throw new UnauthorizedException("Invalid auth token");
         }
-        if (hostUser.getId() != event.getHost().getId()) {
-            throw new ForbiddenException("User is not the host of the event!");
-        }
+        if (user.getId() != event.getHost().getId() && !event.getAdmins().contains(user)) {
+            throw new ForbiddenException("User is not a host/admin of the event!");
+        } 
 
         if (request.picture == null) {
             event.editEvent(session, request.getEventName(), null, request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         } else {
             event.editEvent(session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
             .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails());
+         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
         return;
     }
@@ -517,7 +527,7 @@ public class TickrController {
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
         return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
-                                    admins, categories, tags);
+                                    admins, categories, tags, event.isPublished());
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
@@ -575,5 +585,75 @@ public class TickrController {
             user.invalidateToken(session, i);
         }
         session.remove(user);
+    }
+
+    public TicketReserve.Response ticketReserve (ModelSession session, TicketReserve.Request request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null || request.ticketDateTime == null || request.ticketDetails == null) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var ticketDatetime = request.getTicketTime();
+        var eventId = parseUUID(request.eventId);
+
+        for (var i : request.ticketDetails) {
+            if (i.section == null) {
+                throw new BadRequestException("Null section!");
+            } else if ((i.firstName == null) != (i.lastName == null)) {
+                throw new BadRequestException("Invalid ticket details names!");
+            } else if (i.email != null && !EMAIL_REGEX.matcher(i.email).matches()) {
+                throw new BadRequestException("Invalid ticket details email!");
+            }
+        }
+
+        return session.getById(Event.class, eventId)
+                .map(e -> e.makeReservation(session, user, ticketDatetime, request.ticketDetails))
+                .map(r -> new TicketReserve.Response(r.getId().toString(), Float.toString(r.getPrice())))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+    }
+
+    public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.reserveId == null || request.successUrl == null || request.cancelUrl == null
+                || !Utils.isValidUrl(request.successUrl) || !Utils.isValidUrl(request.cancelUrl)) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var reservation = session.getById(EventReservation.class, parseUUID(request.reserveId))
+                .orElseThrow(() -> new ForbiddenException("Invalid reserve id!"));
+
+        var purchaseAPI = ApiLocator.locateApi(IPurchaseAPI.class);
+
+        var redirectUrl = purchaseAPI.registerOrder(reservation.buildOrder(user, purchaseAPI)
+                .withUrls(request.successUrl, request.cancelUrl));
+
+        return new TicketPurchase.Response(redirectUrl);
+    }
+
+    public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
+        logger.debug("Ticket purchase {} success!", reserveId);
+        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
+
+        reservation.convertReservation(session);
+        session.remove(reservation);
+    }
+
+    public void ticketPurchaseCancel (ModelSession session, String reserveId) {
+        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
+        logger.info("Ticket purchase {} was cancelled!", reservation.getId());
+
+        reservation.cancelReservation(session);
+        session.remove(reservation);
+    }
+
+    public void ticketPurchaseFailure (ModelSession session, String reserveId) {
+        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
+        logger.info("Ticket purchase {} failed!", reservation.getId());
+
+        reservation.cancelReservation(session);
+        session.remove(reservation);
     }
 }

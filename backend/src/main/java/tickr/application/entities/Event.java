@@ -2,10 +2,12 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.FileHelper;
 
@@ -16,10 +18,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "events")
@@ -78,10 +77,12 @@ public class Event {
     private String eventDescription;
 
     @Column(name = "seat_availability")
-    private int seatAvailability;
+    private int seatAvailability = 0;
 
     @Column(name = "event_pic")
     private String eventPicture;
+
+    private boolean published;
 
     public Event() {}
 
@@ -95,6 +96,7 @@ public class Event {
         this.seatAvailability = seatAvailability;
         this.host = host;
         this.eventPicture = eventPicture;
+        this.published = false;
     }
 
     public UUID getId () {
@@ -225,8 +227,16 @@ public class Event {
         this.admins.clear();
     }
 
+    public boolean isPublished() {
+        return published;
+    }
+
+    public void setPublished(boolean published) {
+        this.published = published;
+    }
+
     public void editEvent (ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
-                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails) {
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
         if (eventName != null) {
             this.eventName = eventName; 
         }
@@ -320,5 +330,37 @@ public class Event {
 
             seatingPlans.forEach(s -> s.updateLocation(newLocation));
         }
+
+        this.published = published;
+    }
+
+    private Optional<SeatingPlan> getSeatingPlan (String section) {
+        return seatingPlans.stream()
+                .filter(s -> s.getSection().equals(section))
+                .findAny();
+    }
+
+    public EventReservation makeReservation (ModelSession session, User user, LocalDateTime requestedTime, List<TicketReserve.TicketDetails> reserveDetails) {
+        if (reserveDetails.isEmpty()) {
+            throw new BadRequestException("Empty reserve list!");
+        } else if (eventStart.isAfter(requestedTime) || eventEnd.isBefore(requestedTime)) {
+            throw new ForbiddenException("Invalid requested time!");
+        }
+
+        var reservation = new EventReservation(user, this);
+        session.save(reservation);
+
+        for (var i : reserveDetails) {
+            var seatingPlan = getSeatingPlan(i.section).orElseThrow(() -> new ForbiddenException("Invalid section name!"));
+
+            if (i.seatNum != null) {
+                reservation.addTicketReservation(seatingPlan.reserveSeat(session, user, i.seatNum, reservation, i.firstName, i.lastName, i.email));
+            } else {
+                reservation.addTicketReservation(seatingPlan.reserveSeat(session, user, reservation, i.firstName, i.lastName, i.email));
+            }
+            seatAvailability--;
+        }
+
+        return reservation;
     }
 }

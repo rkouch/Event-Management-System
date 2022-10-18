@@ -1,5 +1,6 @@
 package tickr.unit.event;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -254,10 +255,10 @@ public class TestCreateEvent {
         }
         Event event1 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings = session.getAllWith(SeatingPlan.class, "event", event1);
-        assertEquals(seatings.get(0).section, "sectionA");
+        assertEquals(seatings.get(0).getSection(), "sectionA");
         assertEquals(seatings.get(0).availableSeats, 100);
         assertEquals(seatings.get(0).ticketPrice, 50);
-        assertEquals(seatings.get(1).section, "sectionB");
+        assertEquals(seatings.get(1).getSection(), "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
         assertEquals(seatings.get(1).ticketPrice, 70);
         assertEquals(event.getLocation().getStreetName(), location.streetName);
@@ -268,6 +269,20 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getCountry(), location.country);
         assertEquals(event.getLocation().getLatitude(), location.latitude);
         assertEquals(event.getLocation().getLongitude(), location.longitude);
+
+        var newSession = TestHelper.commitMakeSession(model, session); 
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", null, admins, categories, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, null, categories, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, admins, null, tags)));
+        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        , "2011-12-03T10:15:30", 
+        "2011-12-04T10:15:30", "description", seats, admins, categories, null)));
     }
 
     @Test
@@ -320,10 +335,10 @@ public class TestCreateEvent {
         }
         Event event1 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings = session.getAllWith(SeatingPlan.class, "event", event1);
-        assertEquals(seatings.get(0).section, "sectionA");
+        assertEquals(seatings.get(0).getSection(), "sectionA");
         assertEquals(seatings.get(0).availableSeats, 100);
         assertEquals(seatings.get(0).ticketPrice, 50);
-        assertEquals(seatings.get(1).section, "sectionB");
+        assertEquals(seatings.get(1).getSection(), "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
         assertEquals(seatings.get(1).ticketPrice, 50);
         assertEquals(event.getLocation().getStreetName(), location.streetName);
@@ -351,10 +366,10 @@ public class TestCreateEvent {
         
         Event event3 = session.getById(Event.class, UUID.fromString(event_id)).orElse(null);
         List<SeatingPlan> seatings2 = session.getAllWith(SeatingPlan.class, "event", event3);
-        assertEquals(seatings2.get(0).section, "sectionA");
+        assertEquals(seatings2.get(0).getSection(), "sectionA");
         assertEquals(seatings2.get(0).availableSeats, 100);
         assertEquals(seatings2.get(0).ticketPrice, 50);
-        assertEquals(seatings2.get(1).section, "sectionB");
+        assertEquals(seatings2.get(1).getSection(), "sectionB");
         assertEquals(seatings2.get(1).availableSeats, 50);
         assertEquals(seatings2.get(1).ticketPrice, 50);
         assertEquals(event2.getLocation().getStreetName(), location.streetName);

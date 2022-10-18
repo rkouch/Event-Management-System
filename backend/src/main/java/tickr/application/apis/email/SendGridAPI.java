@@ -1,6 +1,7 @@
 package tickr.application.apis.email;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tickr.util.HTTPHelper;
@@ -19,7 +20,10 @@ public class SendGridAPI implements IEmailAPI {
         var request = new SendEmailRequest("tickr3900@gmail.com", toEmail, subject, body);
 
         var httpHelper = new HTTPHelper("https://api.sendgrid.com");
-        logger.info("Request string: {}", new Gson().toJson(request));
+        logger.info("Request string: {}", new GsonBuilder()
+                .disableHtmlEscaping()
+                .create()
+                .toJson(request));
         var response = httpHelper.post("/v3/mail/send", request,
                 Map.of("Authorization", "Bearer " + API_KEY, "Content-Type", "application/json"), 10000);
 
@@ -47,7 +51,7 @@ public class SendGridAPI implements IEmailAPI {
             from = new User(fromEmail);
             this.subject = subject;
 
-            content = List.of(new Content("text/plain", body));
+            content = List.of(new Content("text/html", body));
         }
 
         private static class User {

@@ -70,13 +70,15 @@ public class CreateEventRequest {
 
     public boolean isValid() {
         return authToken != null && !authToken.isEmpty() && eventName != null && !eventName.isEmpty()
-                && location != null &&  startDate != null && endDate != null && admins != null && categories != null && tags != null;
+                && location != null &&  startDate != null && endDate != null;
     }
 
     public boolean isSeatingDetailsValid() {
-        for (SeatingDetails seats : seatingDetails) {
-            if (seats.section == null || seats.section.isEmpty()) {
-                return false;
+        if (seatingDetails != null) {
+            for (SeatingDetails seats : seatingDetails) {
+                if (seats.section == null || seats.section.isEmpty()) {
+                    return false;
+                }
             }
         }
         return true;
@@ -87,6 +89,9 @@ public class CreateEventRequest {
     }
 
     public int getSeatAvailability() {
+        if (seatingDetails == null) {
+            return 0;
+        }
         int count = 0;
         for (SeatingDetails details : seatingDetails) {
             count += details.availability;
