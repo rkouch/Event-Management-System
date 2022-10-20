@@ -114,17 +114,17 @@ public class TestCreateEvent {
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
             null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList2, admins, categories, tags)));
 
-        CreateEventRequest.SeatingDetails invalidSeats3 = new CreateEventRequest.SeatingDetails("SectionA", 0, 50, true);
-        List<CreateEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<CreateEventRequest.SeatingDetails>();
-        invalidSeatsList3.add(invalidSeats3);
-        assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList3, admins, categories, tags)));
+        // CreateEventRequest.SeatingDetails invalidSeats3 = new CreateEventRequest.SeatingDetails("SectionA", 0, 50, true);
+        // List<CreateEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<CreateEventRequest.SeatingDetails>();
+        // invalidSeatsList3.add(invalidSeats3);
+        // assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
+        //     null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList3, admins, categories, tags)));
 
-        CreateEventRequest.SeatingDetails invalidSeats4 = new CreateEventRequest.SeatingDetails("SectionA", 100, 50, false);
-        List<CreateEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<CreateEventRequest.SeatingDetails>();
-        invalidSeatsList4.add(invalidSeats4);
-        assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList4, admins, categories, tags)));
+        // CreateEventRequest.SeatingDetails invalidSeats4 = new CreateEventRequest.SeatingDetails("SectionA", 100, 50, false);
+        // List<CreateEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<CreateEventRequest.SeatingDetails>();
+        // invalidSeatsList4.add(invalidSeats4);
+        // assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
+        //     null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList4, admins, categories, tags)));
     }
 
     @Test 

@@ -85,9 +85,6 @@ public class CreateEventRequest {
                 if (seats.section == null || seats.section.isEmpty()) {
                     return false;
                 }
-                if ((seats.availability != 0 && seats.hasSeats == false) || (seats.availability == 0 && seats.hasSeats == true)) {
-                    return false;
-                }
             }
         }
         return true;

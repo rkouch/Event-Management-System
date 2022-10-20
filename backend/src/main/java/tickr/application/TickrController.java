@@ -545,14 +545,15 @@ public class TickrController {
     public void makeHost (ModelSession session, EditHostRequest request) {
         User newHost = session.getByUnique(User.class, "email", request.newHostEmail)
                             .orElseThrow(() -> new ForbiddenException("Invalid user"));
-
+        User oldHost = authenticateToken(session, request.authToken);
         Event event = session.getById(Event.class, UUID.fromString(request.eventId))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
         
         if (!event.getAdmins().contains(newHost)) {
             throw new BadRequestException("User is not an admin!");
         }
-
+        event.getAdmins().remove(newHost);
+        event.addAdmin(oldHost);
         event.setHost(newHost);
     }
 

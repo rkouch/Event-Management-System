@@ -1,6 +1,7 @@
 package tickr.unit.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -99,7 +100,8 @@ public class TestMakeHost {
         var response = controller.eventView(session, Map.of("event_id", eventId));
         String newHostId = controller.userSearch(session, Map.of("email", newHostEmail)).userId;
         assertEquals(newHostId, response.host_id);
-        
+        assertFalse(response.admins.contains(newHostId));
+        assertTrue(response.admins.contains(controller.authenticateToken(session, authToken).getId().toString()));
         // var newHost = session.getByUnique(User.class, "email", newHostEmail).orElse(null);
         // Event event = session.getById(Event.class, UUID.fromString(eventId)).orElse(null);
         // assertEquals(newHost, event.getHost());
