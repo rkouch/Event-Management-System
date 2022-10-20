@@ -44,12 +44,18 @@ public class CreateEventRequest {
     public static class SeatingDetails {
         public String section;
         public int availability; 
+
         @SerializedName("ticket_price") 
-        public int ticketPrice; 
-        public SeatingDetails(String section, int availability, int cost) {
+        public float ticketPrice; 
+
+        @SerializedName("has_seats")
+        public boolean hasSeats;
+
+        public SeatingDetails(String section, int availability, float cost, boolean hasSeats) {
             this.section = section;
             this.availability = availability;
             this.ticketPrice = cost;
+            this.hasSeats = hasSeats;
         }
     }
 
@@ -70,13 +76,16 @@ public class CreateEventRequest {
 
     public boolean isValid() {
         return authToken != null && !authToken.isEmpty() && eventName != null && !eventName.isEmpty()
-                && location != null &&  startDate != null && endDate != null;
+                &&  startDate != null && endDate != null;
     }
 
     public boolean isSeatingDetailsValid() {
         if (seatingDetails != null) {
             for (SeatingDetails seats : seatingDetails) {
                 if (seats.section == null || seats.section.isEmpty()) {
+                    return false;
+                }
+                if ((seats.availability != 0 && seats.hasSeats == false) || (seats.availability == 0 && seats.hasSeats == true)) {
                     return false;
                 }
             }
@@ -88,7 +97,7 @@ public class CreateEventRequest {
         return location.postcode != null && location.state != null && location.country != null && location.longitude != null && location.latitude != null;
     }
 
-    public int getSeatAvailability() {
+    public int getSeatCapacity() {
         if (seatingDetails == null) {
             return 0;
         }

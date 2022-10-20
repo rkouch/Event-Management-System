@@ -79,6 +79,9 @@ public class Event {
     @Column(name = "seat_availability")
     private int seatAvailability = 0;
 
+    @Column(name = "seat_capacity")
+    private int seatCapacity = 0;
+
     @Column(name = "event_pic")
     private String eventPicture;
 
@@ -94,6 +97,7 @@ public class Event {
         this.eventEnd = eventEnd;
         this.eventDescription = eventDescription;
         this.seatAvailability = seatAvailability;
+        this.seatCapacity = seatAvailability;
         this.host = host;
         this.eventPicture = eventPicture;
         this.published = false;
@@ -111,7 +115,7 @@ public class Event {
         return host;
     }
 
-    private void setHost (User host) {
+    public void setHost (User host) {
         this.host = host;
     }
 
@@ -235,7 +239,15 @@ public class Event {
         this.published = published;
     }
 
-    public void editEvent (ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
+    public int getSeatCapacity() {
+        return seatCapacity;
+    }
+
+    public void setSeatCapacity(int seatCapacity) {
+        this.seatCapacity = seatCapacity;
+    }
+
+    public void editEvent (EditEventRequest request, ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
                              Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
         if (eventName != null) {
             this.eventName = eventName; 
@@ -315,10 +327,12 @@ public class Event {
             }
             seatingPlans.clear();
             for (EditEventRequest.SeatingDetails seats : seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice);
+                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
                 session.save(seatingPlan);
                 seatingPlans.add(seatingPlan);
             }
+            this.seatAvailability = request.getSeatCapacity();
+            this.seatCapacity = request.getSeatCapacity();
         }
 
         if (locations != null) {
@@ -333,6 +347,15 @@ public class Event {
 
         this.published = published;
     }
+
+    // public boolean hasTicketsBeenSold () {
+    //     for (SeatingPlan seats : seatingPlans) {
+    //         if (!seats.getReservations().isEmpty()) {
+    //             return false; 
+    //         }
+    //     }
+    //     return true;
+    // }
 
     private Optional<SeatingPlan> getSeatingPlan (String section) {
         return seatingPlans.stream()

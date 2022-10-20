@@ -51,8 +51,8 @@ public class TestTicketReserve {
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
-                new CreateEventRequest.SeatingDetails("test_section", 10, 1),
-                new CreateEventRequest.SeatingDetails("test_section2", 20, 4)
+                new CreateEventRequest.SeatingDetails("test_section", 10, 1, true),
+                new CreateEventRequest.SeatingDetails("test_section2", 20, 4, true)
         );
 
         session = model.makeSession();
