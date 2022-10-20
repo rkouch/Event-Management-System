@@ -8,6 +8,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PersonIcon from '@mui/icons-material/Person';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { Box } from '@mui/system';
+import CheckIcon from '@mui/icons-material/Check';
 import { setFieldInState } from '../Helpers';
 
 const ExpandMore = styled((props) => {
@@ -95,6 +96,7 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
     console.log(currentlySelected)
     if (currentlySelected.length === section.quantity) {
       setDisableSeats(true)
+      setExpanded(false)
     } else {
       setDisableSeats(false)
     }
@@ -102,21 +104,35 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
   
   function SeatRow ({row}) {
     return (
-      <div>
-        {row.map((value, key) => {
-          return (
-            <Tooltip key={key} title={value}>
-              <Checkbox
-                disabled={disableSeats && !section.seatsSelected.includes(value)}
-                icon={<PersonOutlineIcon/>}
-                checkedIcon={<PersonIcon/>}
-                onClick={(e) => handleSelectSeat(e.target.checked, value)}
-                checked={section.seatsSelected.includes(value)}
-              />
-            </Tooltip>
-          )
-        })}
-      </div>
+      <Box sx={{width: '100%'}}>
+        {(row.length !== 0)
+          ? <Grid container spacing={1} sx={{width: '100%'}}>
+              <Grid item xs={2}>
+                <Typography sx={{color: 'rgba(0, 0, 0, 0.6)', height: '100%', width: '100%', display: 'flex', alignItems: 'center', textAlign: 'right', pl: 4}}>
+                  {row[0]} - {row[row.length-1]}
+                </Typography>
+              </Grid>
+              <Grid item xs={10}>
+                <CentredBox>
+                  {row.map((value, key) => {
+                    return (
+                      <Tooltip key={key} title={value}>
+                        <Checkbox
+                          disabled={disableSeats && !section.seatsSelected.includes(value)}
+                          icon={<PersonOutlineIcon/>}
+                          checkedIcon={<PersonIcon/>}
+                          onClick={(e) => handleSelectSeat(e.target.checked, value)}
+                          checked={section.seatsSelected.includes(value)}
+                        />
+                      </Tooltip>
+                    )
+                  })}
+                </CentredBox>
+              </Grid>
+            </Grid>
+          : <></>
+        }
+      </Box>
     )
   }
 
@@ -134,7 +150,6 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
               value={section.quantity}
               onChange={(e) => {handleQuantityChange(index, e.target.value)}}
             >
-
               {section.seats.map((value, key) => {
                 return (
                   <MenuItem key={key} value={value}>
@@ -147,7 +162,22 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
         </Grid>
         {(section.selectable && section.quantity > 0)
           ? <>
-              <Grid item xs={8}>
+              <Grid item xs={4}>
+                {(section.quantity > 0)
+                  ? <>
+                      {(section.quantity === section.seatsSelected.length)
+                        ? <Typography sx={{color: 'rgba(0, 0, 0, 0.6)', display: 'flex', alignItems: 'center'}}>
+                            {section.seatsSelected.length} x tickets selected <CheckIcon/>
+                          </Typography>
+                        : <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                            {section.seatsSelected.length} x tickets selected
+                          </Typography>
+                      } 
+                    </>
+                  : <></>
+                }
+              </Grid>
+              <Grid item xs={4}>
 
               </Grid>
               <Grid item xs={4}>
@@ -178,22 +208,23 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
 
         }
       </Grid>
-      <Collapse in={expanded && section.selectable}>
-        <CentredBox sx={{flexDirection: 'column'}}>
-          <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
-            FRONT
-          </Typography>
-          <CentredBox sx={{flexDirection: 'column'}}>
-            {rowsList.map((value, key) => {
-              return (
-                <SeatRow key={key} row={value}>
-
-                </SeatRow>
-              )
-            })}
-          </CentredBox>
-          
-        </CentredBox>
+      <Collapse in={expanded && section.selectable} sx={{flexDirection: 'column', width: '100%', backgroundColor: '#EEEEEE', pt: 1, pb: 1, borderRadius: 1}}>
+        <Grid container spacing={1}>
+          <Grid item xs={2}>
+          </Grid>
+          <Grid item xs={10}>
+            <CentredBox>
+              <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                FRONT
+              </Typography>
+            </CentredBox>
+          </Grid>  
+        </Grid>
+        {rowsList.map((value, key) => {
+          return (
+            <SeatRow key={key} row={value}/>
+          )
+        })}
       </Collapse>
       <br/>
     </CentredBox>

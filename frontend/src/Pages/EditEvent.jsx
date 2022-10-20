@@ -125,9 +125,9 @@ export default function EditEvent({}) {
 
   const [newSection, setNewSection] = React.useState({
     section: '',
-    availability: 0,
+    available_seats: 0,
     ticket_price: 0,
-    seats: false,
+    has_seats: false,
     error: false,
     errorMsg: '',
   });
@@ -187,7 +187,17 @@ export default function EditEvent({}) {
     setFieldInState('start', dayjs(event.start_date), start, setStartValue)
     setFieldInState('end', dayjs(event.end_date), end, setEndValue)
     setEventPicture(event.picture)
-    setSeatingList(event.seating_details)
+    setPublished(published)
+
+    const currentSeatingDetails = []
+    for (const i in event.seating_details) {
+      const section = event.seating_details[i]
+      console.log(section)
+      section['availability'] = section.total_seats
+      currentSeatingDetails.push(section)
+    }
+    console.log(currentSeatingDetails)
+    setSeatingList(currentSeatingDetails)
     // setPublished(response.published)
 
     // Set if it is the host who is logged in
@@ -305,9 +315,9 @@ export default function EditEvent({}) {
     sectionList.push(newSection.stateCopy);
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
-    setFieldInState('availability', 0, newSection, setNewSection)
+    setFieldInState('available_seats', 0, newSection, setNewSection)
     setFieldInState('ticket_price', 0, newSection, setNewSection)
-    setFieldInState('seats', false, newSection, setNewSection)
+    setFieldInState('has_seats', false, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -452,7 +462,7 @@ export default function EditEvent({}) {
       categories: [],
       tags: [],
       admins: adminList,
-      published: false,
+      published:published,
     };
 
     
@@ -513,14 +523,14 @@ export default function EditEvent({}) {
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
                   {isHost
                     ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Checkbox disabled={(event.published)} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
                         {!event.published
                           ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
                           : <></>
                         }
                       </FormGroup>
                     : <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
                         {!event.published
                           ? <FormHelperText>Only the host can publish an event</FormHelperText>
                           : <></>
@@ -873,7 +883,7 @@ export default function EditEvent({}) {
                                               width: '100%'
                                             }}
                                           >
-                                            {value.availability}
+                                            {value.available_seats}
                                           </Typography>
                                         </Box>
                                       </Grid>
@@ -891,7 +901,7 @@ export default function EditEvent({}) {
                                       </Grid>
                                       <Grid item xs={2}>
                                         <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                          <Checkbox disabled checked={value.seats}/>
+                                          <Checkbox disabled checked={value.has_seats}/>
                                         </Box>
                                       </Grid>
                                       <Grid item xs={1}>
@@ -942,9 +952,9 @@ export default function EditEvent({}) {
                                     onChange={(e) => {
                                       const val = e.target.value
                                       if (val < 0) {
-                                        setFieldInState('availability', 0, newSection, setNewSection)
+                                        setFieldInState('available_seats', 0, newSection, setNewSection)
                                       } else {
-                                        setFieldInState('availability', val, newSection, setNewSection)
+                                        setFieldInState('available_seats', val, newSection, setNewSection)
                                       } 
                                       setFieldInState('error', false, newSection, setNewSection)
                                       setErrorStatus(false)
@@ -954,7 +964,7 @@ export default function EditEvent({}) {
                                         borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
                                       },
                                     }}
-                                    value = {newSection.availability}
+                                    value = {newSection.available_seats}
                                   />
                                 </ContrastInputWrapper>
                               </Grid>
@@ -988,9 +998,9 @@ export default function EditEvent({}) {
                                 <ContrastInputWrapper sx={{ height: '100%'}}>
                                   <CentredBox sx={{ height: '100%'}}>
                                     <Checkbox
-                                      checked={newSection.seats}
+                                      checked={newSection.has_seats}
                                       onChange={(e) => {
-                                        setFieldInState('seats', e.target.checked, newSection, setNewSection)
+                                        setFieldInState('has_seats', e.target.checked, newSection, setNewSection)
                                         setFieldInState('error', false, newSection, setNewSection)
                                         setErrorStatus(false)
                                       }}
@@ -1006,9 +1016,9 @@ export default function EditEvent({}) {
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: ((newSection.section.length > 0) && (newSection.availability > 0)) ? alpha('#6A7B8A', 0.3) : "rgba(0, 0, 0, 0.08)",
+                                    backgroundColor: ((newSection.section.length > 0) && (newSection.available_seats > 0)) ? alpha('#6A7B8A', 0.3) : "rgba(0, 0, 0, 0.08)",
                                     '&:hover': {
-                                      backgroundColor: ((newSection.section.length > 0) && (newSection.availability > 0)) ? alpha('#6A7B8A', 0.5): "rgba(0, 0, 0, 0.08)",
+                                      backgroundColor: ((newSection.section.length > 0) && (newSection.available_seats > 0)) ? alpha('#6A7B8A', 0.5): "rgba(0, 0, 0, 0.08)",
                                     },
                                   }}
                                 >
@@ -1016,7 +1026,7 @@ export default function EditEvent({}) {
                                     edge="end"
                                     onClick={addSection}
                                     sx={{marginRight: 0}}
-                                    disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
+                                    disabled = {((newSection.section.length === 0)|| (newSection.available_seats === 0))}
                                   >
                                     <AddIcon/>
                                   </IconButton>
@@ -1075,7 +1085,7 @@ export default function EditEvent({}) {
                                               fontWeight: 'bold',
                                             }}
                                           >
-                                            {value.availability}
+                                            {value.available_seats}
                                           </Typography>
                                         </Box>
                                       </Grid>
@@ -1092,7 +1102,7 @@ export default function EditEvent({}) {
                                       </Grid>
                                       <Grid item xs={2}>
                                         <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                          <Checkbox checked={value.seats} disabled/>
+                                          <Checkbox checked={value.has_seats} disabled/>
                                         </Box>
                                       </Grid>
                                     </Grid>

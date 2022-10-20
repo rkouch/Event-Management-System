@@ -228,16 +228,19 @@ export default function ViewEvent({}) {
                     </Grid>
                     <Grid item xs={12}>
                       <br/>
-                      <Box>
-                        <Typography
-                          sx={{
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          Tags
-                        </Typography>
-                        <TagsBar tags={event.tags} editable={false}/>
-                      </Box>
+                      {(event.tags.length > 0)
+                        ? <Box>
+                            <Typography
+                              sx={{
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              Tags
+                            </Typography>
+                            <TagsBar tags={event.tags} editable={false}/>
+                          </Box>
+                        : <></>
+                      }         
                     </Grid>
                   </Grid>
                 </Grid>
@@ -267,7 +270,7 @@ export default function ViewEvent({}) {
                             return (
                               <TableRow key={key}>
                                 <TableCell>{section.section}</TableCell>
-                                <TableCell align="center">{section.availability}</TableCell>
+                                <TableCell align="center">{section.available_seats}</TableCell>
                                 <TableCell align="center">${section.ticket_price}</TableCell>
                               </TableRow>
                             )

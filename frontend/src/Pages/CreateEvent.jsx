@@ -122,7 +122,7 @@ export default function CreateEvent({}) {
     section: '',
     availability: 0,
     ticket_price: 0,
-    seats: false,
+    has_seats: false,
     error: false,
     errorMsg: '',
   });
@@ -260,7 +260,7 @@ export default function CreateEvent({}) {
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('availability', 0, newSection, setNewSection)
     setFieldInState('ticket_price', 0, newSection, setNewSection)
-    setFieldInState('seats', false, newSection, setNewSection)
+    setFieldInState('has_seats', false, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -722,7 +722,7 @@ export default function CreateEvent({}) {
                                 </Box>
                               </Grid>
                               <Grid item xs={3}>
-                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                <Box sx={{display: 'flex', alignItems:'center', height: '100%', pl: 2}}>
                                   <Typography
                                     sx={{
                                       fontWeight: 'bold',
@@ -733,19 +733,19 @@ export default function CreateEvent({}) {
                                 </Box>
                               </Grid>
                               <Grid item xs={3}>
-                                <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                <Box sx={{display: 'flex', alignItems:'center', height: '100%', pl: 2}}>
                                   <Typography
                                     sx={{
                                       fontWeight: 'bold',
                                     }}
                                   >
-                                    {value.ticket_price}
+                                    ${value.ticket_price}
                                   </Typography>
                                 </Box>
                               </Grid>
                               <Grid item xs={2}>
                                 <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                  <Checkbox disabled checked={value.seats}/>
+                                  <Checkbox disabled checked={value.has_seats}/>
                                 </Box>
                               </Grid>
                               <Grid item xs={1}>
@@ -842,9 +842,9 @@ export default function CreateEvent({}) {
                         <ContrastInputWrapper sx={{ height: '100%'}}>
                           <CentredBox sx={{ height: '100%'}}>
                             <Checkbox
-                              checked={newSection.seats}
+                              checked={newSection.has_seats}
                               onChange={(e) => {
-                                setFieldInState('seats', e.target.checked, newSection, setNewSection)
+                                setFieldInState('has_seats', e.target.checked, newSection, setNewSection)
                                 setFieldInState('error', false, newSection, setNewSection)
                                 setErrorStatus(false)
                               }}
