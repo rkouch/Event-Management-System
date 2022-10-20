@@ -26,11 +26,6 @@ public class CreateEventReqBuilder {
     private Set<String> categories = new HashSet<>();
     private Set<String> tags = new HashSet<>();
 
-    public CreateEventReqBuilder withAuthTokenString (String authTokenString) {
-        this.authTokenString = authTokenString;
-        return this;
-    }
-
     public CreateEventReqBuilder withEventName (String eventName) {
         this.eventName = eventName;
         return this;

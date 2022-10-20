@@ -46,6 +46,7 @@ create table `events` (
     event_end         datetime not null,
     event_description text,
     seat_availability int,
+    seat_capacity int,
     event_pic varchar(255) not null,
     published boolean not null,
 /*    has_seats    boolean not null,*/
@@ -77,9 +78,10 @@ create table seating_plan (
     event_id     varchar(36) not null,
     location_id  varchar(36) not null,
     section     varchar(255) not null,
-    available_seats int not null,
+    seat_availability int not null,
     total_seats int not null,
-    ticket_price int not null,
+    ticket_price float not null,
+    has_seats boolean not null,
     primary key (id),
     foreign key (event_id) references `events`(id)
 );
