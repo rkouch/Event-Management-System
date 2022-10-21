@@ -87,7 +87,7 @@ public class Server {
         get("/api/event/search", TickrController::searchEvents);
 
         post("/api/ticket/reserve", (TickrController c, ModelSession m, TicketReserve.Request r) -> c.ticketReserve(m, r), TicketReserve.Request.class);
-        post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
+        post("/api/ticket/purchase", (TickrController c, ModelSession m, TicketPurchase.Request r) -> c.ticketPurchase(m, r), TicketPurchase.Request.class);
 
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {

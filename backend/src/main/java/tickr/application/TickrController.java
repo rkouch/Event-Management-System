@@ -649,6 +649,10 @@ public class TickrController {
         return new TicketPurchase.Response(redirectUrl);
     }
 
+    public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.RequestNew request) {
+        return new TicketPurchase.Response();
+    }
+
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.debug("Ticket purchase {} success!", reserveId);
         var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
