@@ -46,6 +46,56 @@ public class TicketReserve {
         }
     }
 
+    public static class RequestNew {
+        @SerializedName("auth_token")
+        public String authToken = null;
+
+        @SerializedName("event_id")
+        public String eventId = null;
+
+        @SerializedName("ticket_datetime")
+        public String ticketDateTime = null;
+
+        @SerializedName("ticket_details")
+        public List<TicketDetailsNew> ticketDetails = null;
+
+        public RequestNew () {
+
+        }
+
+        public RequestNew (String authToken, String eventId, String ticketDateTime, List<TicketDetailsNew> ticketDetails) {
+            this.authToken = authToken;
+            this.eventId = eventId;
+            this.ticketDateTime = ticketDateTime;
+            this.ticketDetails = ticketDetails;
+        }
+
+        public RequestNew (String authToken, String eventId, LocalDateTime ticketDateTime, List<TicketDetailsNew> ticketDetails) {
+            this(authToken, eventId, ticketDateTime.format(DateTimeFormatter.ISO_DATE_TIME), ticketDetails);
+        }
+
+        public LocalDateTime getTicketTime () {
+            try {
+                return LocalDateTime.parse(ticketDateTime, DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid datetime!", e);
+            }
+        }
+    }
+
+    public static class ResponseNew {
+        @SerializedName("reserve_tickets")
+        public List<ReserveDetails> reserveTickets;
+
+        public ResponseNew () {
+
+        }
+
+        public ResponseNew (List<ReserveDetails> reserveTickets) {
+            this.reserveTickets = reserveTickets;
+        }
+    }
+
     public static class Response {
         @SerializedName("reserve_id")
         public String reserveId;
@@ -93,6 +143,45 @@ public class TicketReserve {
             this.email = email;
             this.section = section;
             this.seatNum = seatNum;
+        }
+    }
+
+    public static class TicketDetailsNew {
+        public String section;
+        public int quantity;
+        @SerializedName("seat_numbers")
+        public List<Integer> seatNums;
+
+
+        public TicketDetailsNew () {
+
+        }
+
+        public TicketDetailsNew (String section, int quantity, List<Integer> seatNums) {
+            this.section = section;
+            this.quantity = quantity;
+            this.seatNums = seatNums;
+        }
+    }
+
+    public static class ReserveDetails {
+        @SerializedName("reserve_id")
+        public String reserveId;
+
+        @SerializedName("seat_number")
+        public int seatNum;
+        public String section;
+        public float price;
+
+        public ReserveDetails () {
+
+        }
+
+        public ReserveDetails (String reserveId, int seatNum, String section, float price) {
+            this.reserveId = reserveId;
+            this.seatNum = seatNum;
+            this.section = section;
+            this.price = price;
         }
     }
 }

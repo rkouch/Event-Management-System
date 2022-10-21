@@ -86,7 +86,7 @@ public class Server {
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
 
-        post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
+        post("/api/ticket/reserve", (TickrController c, ModelSession m, TicketReserve.Request r) -> c.ticketReserve(m, r), TicketReserve.Request.class);
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
 
 

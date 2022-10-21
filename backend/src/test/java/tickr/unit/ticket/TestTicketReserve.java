@@ -24,10 +24,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TestTicketReserve {
     private DataModel model;
@@ -119,50 +116,132 @@ public class TestTicketReserve {
     }
 
     @Test
+    public void testBadRequestNew () {
+        var ticketDetails = List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()));
+
+        assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session, new TicketReserve.Request()));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(TestHelper.makeFakeJWT(), eventId, startTime, ticketDetails)));
+
+        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, null, startTime, ticketDetails)));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, (String)null, ticketDetails)));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime, List.of())));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew(null, 1, List.of())))));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew("test_section", 2, List.of(1))))));
+
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, LocalDateTime.now(), ticketDetails)));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
+
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew("testing", 1, List.of())))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(0))))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(-1))))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
+                new TicketReserve.RequestNew(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(1000000))))));
+    }
+
+    @Test
     public void testOneTicket () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section"));
+        var ticketDetails = List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()));
 
-        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
+        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
 
-        assertNotNull(response.reserveId);
-        assertEquals(1, Float.parseFloat(response.price));
+        //assertNotNull(response.reserveId);
+        //assertEquals(1, Float.parseFloat(response.price));
+        assertEquals(1, response.reserveTickets.size());
+        var reservation = response.reserveTickets.get(0);
+        assertNotNull(reservation.reserveId);
+        assertTrue(0 < reservation.seatNum && reservation.seatNum <= 10);
+        assertEquals("test_section", reservation.section);
+        assertEquals(1, reservation.price);
     }
 
     @Test
     public void testMultipleTickets () {
         var ticketDetails = List.of(
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 5),
+                /*new TicketReserve.TicketDetailsNew( null, null, null, "test_section", 4),
+                new TicketReserve.TicketDetailsNew( null, null, null, "test_section", 5),
                 new TicketReserve.TicketDetails( null, null, null, "test_section", 6),
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 7)
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 7)*/
+                new TicketReserve.TicketDetailsNew("test_section", 4, List.of(4, 6, 7, 5))
         );
 
-        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
-
-        assertNotNull(response.reserveId);
-        assertEquals(4, Float.parseFloat(response.price));
+        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
+        assertEquals(4, response.reserveTickets.size());
+        //assertNotNull(response.reserveId);
+        //assertEquals(4, Float.parseFloat(response.price));
+        response.reserveTickets.sort(Comparator.comparing(r -> r.seatNum));
+        var seenIds = new HashSet<String>();
+        for (int i = 0; i < 4; i++) {
+            var reservation = response.reserveTickets.get(i);
+            assertEquals(4 + i, reservation.seatNum);
+            assertEquals("test_section", reservation.section);
+            assertFalse(seenIds.contains(reservation.reserveId));
+            assertEquals(1, reservation.price);
+            seenIds.add(reservation.reserveId);
+        }
     }
 
     @Test
     public void testMultipleSections () {
         var ticketDetails = List.of(
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
-                new TicketReserve.TicketDetails(null, null, null, "test_section2", 5)
+                new TicketReserve.TicketDetailsNew("test_section", 4, List.of()),
+                new TicketReserve.TicketDetailsNew("test_section2", 5, List.of())
         );
 
-        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
+        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
 
-        assertNotNull(response.reserveId);
-        assertEquals(5, Float.parseFloat(response.price));
+        //assertNotNull(response.reserveId);
+        //assertEquals(5, Float.parseFloat(response.price));
+        assertEquals(9, ticketDetails.size());
+        response.reserveTickets.sort(Comparator.comparing(r -> r.section));
+        var seenNums1 = new HashSet<Integer>();
+        var seenNums2 = new HashSet<Integer>();
+
+        for (int i = 0; i < 4; i++) {
+            assertEquals("test_section", response.reserveTickets.get(i).section);
+            assertFalse(seenNums1.contains(response.reserveTickets.get(i).seatNum));
+            assertEquals(1, response.reserveTickets.get(i).price);
+
+            seenNums1.add(response.reserveTickets.get(i).seatNum);
+        }
+
+        for (int i = 4; i < 9; i++) {
+            assertEquals("test_section2", response.reserveTickets.get(i).section);
+            assertFalse(seenNums1.contains(response.reserveTickets.get(i).seatNum));
+            assertEquals(4, response.reserveTickets.get(i).price);
+
+            seenNums1.add(response.reserveTickets.get(i).seatNum);
+        }
     }
 
     @Test
     public void testSectionLimits () {
-        var reserveIds = new ArrayList<String>();
-
+        var seatNums = new HashSet<Integer>();
         for (int i = 0; i < 10; i++) {
-            reserveIds.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                    List.of(new TicketReserve.TicketDetails(null, null, null, "test_section")))).reserveId);
+            /*reserveIds.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
+                    List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of())))).reserveTickets.get(0).reserveId);*/
+            var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
+                            List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()))));
+            assertEquals(1, response.reserveTickets.size());
+            seatNums.add(response.reserveTickets.get(0).seatNum);
             session = TestHelper.commitMakeSession(model, session);
         }
 
@@ -172,7 +251,7 @@ public class TestTicketReserve {
         session.close();
         session = model.makeSession();
 
-        var seatNums = new HashSet<Integer>();
+        /*var seatNums = new HashSet<Integer>();
 
         for (var i : reserveIds) {
             var eventReservation = session.getById(EventReservation.class, UUID.fromString(i)).orElse(null);
@@ -181,7 +260,7 @@ public class TestTicketReserve {
 
             var ticket = tickets.get(0);
             seatNums.add(ticket.getSeatNum());
-        }
+        }*/
 
         assertEquals(10, seatNums.size());
         assertEquals(1, seatNums.stream().min(Integer::compareTo).orElse(0));
@@ -191,17 +270,18 @@ public class TestTicketReserve {
     @Test
     public void testSpecifiedSeats () {
         var reserveIds = new ArrayList<String>();
+        var seatNums = new ArrayList<Integer>();
 
-        reserveIds.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetails(null, null, null, "test_section", 3)))).reserveId);
+        seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(3))))).reserveTickets.get(0).seatNum);
         session = TestHelper.commitMakeSession(model, session);
-        reserveIds.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetails(null, null, null, "test_section", 9)))).reserveId);
+        seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(9))))).reserveTickets.get(0).seatNum);
         session = TestHelper.commitMakeSession(model, session);
 
         for (int i = 0; i < 8; i++) {
-            reserveIds.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                    List.of(new TicketReserve.TicketDetails(null, null, null, "test_section")))).reserveId);
+            seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
+                    List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of())))).reserveTickets.get(0).seatNum);
             session = TestHelper.commitMakeSession(model, session);
         }
 
@@ -211,20 +291,20 @@ public class TestTicketReserve {
         session.close();
         session = model.makeSession();
 
-        var reserveId1 = reserveIds.get(0);
+        /*var reserveId1 = reserveIds.get(0);
         var reserveId2 = reserveIds.get(1);
 
         var ticketReservation1 = session.getAllWith(TicketReservation.class, "eventReservation",
                 session.getById(EventReservation.class, UUID.fromString(reserveId1)).orElse(null));
         var ticketReservation2 = session.getAllWith(TicketReservation.class, "eventReservation",
-                session.getById(EventReservation.class, UUID.fromString(reserveId2)).orElse(null));
+                session.getById(EventReservation.class, UUID.fromString(reserveId2)).orElse(null));*/
 
-        assertEquals(1, ticketReservation1.size());
-        assertEquals(3, ticketReservation1.get(0).getSeatNum());
-        assertEquals(1, ticketReservation2.size());
-        assertEquals(9, ticketReservation2.get(0).getSeatNum());
+        //assertEquals(1, seatNums.size());
+        assertEquals(3, seatNums.get(0));
+        //assertEquals(1, ticketReservation2.size());
+        assertEquals(9, seatNums.get(1));
 
-        var seatNums = new HashSet<Integer>();
+        /*var seatNums = new HashSet<Integer>();
 
         for (var i : reserveIds) {
             var eventReservation = session.getById(EventReservation.class, UUID.fromString(i)).orElse(null);
@@ -233,7 +313,7 @@ public class TestTicketReserve {
 
             var ticket = tickets.get(0);
             seatNums.add(ticket.getSeatNum());
-        }
+        }*/
 
         assertEquals(10, seatNums.size());
         assertEquals(1, seatNums.stream().min(Integer::compareTo).orElse(0));
