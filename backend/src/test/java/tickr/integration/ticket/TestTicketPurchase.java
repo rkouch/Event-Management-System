@@ -70,7 +70,7 @@ public class TestTicketPurchase {
         );
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
-                .withStartDate(startTime)
+                .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken));

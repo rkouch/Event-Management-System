@@ -61,7 +61,7 @@ public class TestTicketReserve {
         session = TestHelper.commitMakeSession(model, session);
 
         eventId = controller.createEvent(session, new CreateEventReqBuilder()
-                .withStartDate(startTime)
+                .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
