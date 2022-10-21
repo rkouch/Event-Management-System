@@ -210,7 +210,7 @@ public class TestTicketReserve {
 
         //assertNotNull(response.reserveId);
         //assertEquals(5, Float.parseFloat(response.price));
-        assertEquals(9, ticketDetails.size());
+        assertEquals(9, response.reserveTickets.size());
         response.reserveTickets.sort(Comparator.comparing(r -> r.section));
         var seenNums1 = new HashSet<Integer>();
         var seenNums2 = new HashSet<Integer>();
@@ -225,10 +225,10 @@ public class TestTicketReserve {
 
         for (int i = 4; i < 9; i++) {
             assertEquals("test_section2", response.reserveTickets.get(i).section);
-            assertFalse(seenNums1.contains(response.reserveTickets.get(i).seatNum));
+            assertFalse(seenNums2.contains(response.reserveTickets.get(i).seatNum));
             assertEquals(4, response.reserveTickets.get(i).price);
 
-            seenNums1.add(response.reserveTickets.get(i).seatNum);
+            seenNums2.add(response.reserveTickets.get(i).seatNum);
         }
     }
 

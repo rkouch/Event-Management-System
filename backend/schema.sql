@@ -97,17 +97,17 @@ create table event_reservation (
 create table ticket_reservation (
     id varchar(36) not null,
     user_id varchar(36) not null,
-    first_name varchar(255),
-    last_name varchar(255),
-    email varchar(255),
+    #first_name varchar(255),
+    #last_name varchar(255),
+    #email varchar(255),
     seating_id varchar(36) not null,
     seat_num int not null,
-    reservation_id varchar(36) not null,
+    #reservation_id varchar(36) not null,
     price float not null,
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (seating_id) references `seating_plan`(id),
-    foreign key (reservation_id) references event_reservation(id)
+    #foreign key (reservation_id) references event_reservation(id)
 );
 
 create table tickets (

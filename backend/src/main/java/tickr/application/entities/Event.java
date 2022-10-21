@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "events")
@@ -362,5 +364,24 @@ public class Event {
         }
 
         return reservation;
+    }
+
+    public List<TicketReservation> makeReservations (ModelSession session, User user, LocalDateTime requestedTime, String section,
+                                                     int quantity, List<Integer> seatNums) {
+        if (section == null) {
+            throw new BadRequestException("Null section!");
+        } else if (quantity <= 0 || (seatNums.size() != 0 && seatNums.size() != quantity)) {
+            throw new BadRequestException("Invalid quantity of seats!");
+        } else if (eventStart.isAfter(requestedTime) || eventEnd.isBefore(requestedTime)) {
+            throw new ForbiddenException("Invalid requested time!");
+        }
+
+        for (var i : seatingPlans) {
+            if (i.getSection().equals(section)) {
+                return seatNums.size() != 0 ? i.reserveSeats(session, user, seatNums) : i.reserveSeats(session, user, quantity);
+            }
+        }
+
+        throw new ForbiddenException("Invalid section!");
     }
 }

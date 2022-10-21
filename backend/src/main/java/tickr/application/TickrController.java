@@ -613,7 +613,22 @@ public class TickrController {
     }
 
     public TicketReserve.ResponseNew ticketReserve (ModelSession session, TicketReserve.RequestNew request) {
-        return new TicketReserve.ResponseNew();
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null || request.ticketDateTime == null || request.ticketDetails == null || request.ticketDetails.size() == 0) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        var ticketDatetime = request.getTicketTime();
+        var eventId = parseUUID(request.eventId);
+
+        return session.getById(Event.class, eventId)
+                .map(e -> request.ticketDetails.stream()
+                        .map(t -> e.makeReservations(session, user, request.getTicketTime(), t.section, t.quantity, t.seatNums))
+                        .flatMap(Collection::stream)
+                        .map(TicketReservation::getDetails)
+                        .collect(Collectors.toList()))
+                .map(TicketReserve.ResponseNew::new)
+                .orElseThrow(() -> new ForbiddenException("Invalid event!"));
     }
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {

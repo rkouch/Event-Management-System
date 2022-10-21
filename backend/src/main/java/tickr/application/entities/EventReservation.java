@@ -31,8 +31,8 @@ public class EventReservation {
 
     private float price;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "eventReservation")
-    private Set<TicketReservation> ticketReservations;
+    //@OneToMany(fetch = FetchType.LAZY, mappedBy = "eventReservation")
+    //private Set<TicketReservation> ticketReservations;
 
     public EventReservation () {
 
@@ -41,7 +41,7 @@ public class EventReservation {
     public EventReservation (User user, Event event) {
         this.user = user;
         this.event = event;
-        this.ticketReservations = new HashSet<>();
+        //this.ticketReservations = new HashSet<>();
         this.price = 0.0f;
     }
 
@@ -50,7 +50,7 @@ public class EventReservation {
     }
 
     public void addTicketReservation (TicketReservation reservation) {
-        ticketReservations.add(reservation);
+       // ticketReservations.add(reservation);
         price += reservation.getPrice();
     }
 
@@ -65,15 +65,15 @@ public class EventReservation {
 
         var builder = purchaseAPI.makePurchaseBuilder(id.toString());
 
-        for (var i : ticketReservations) {
+        /*for (var i : ticketReservations) {
             builder = builder.withLineItem(i.makeLineItem());
-        }
+        }*/
 
         return builder;
     }
 
     public void convertReservation (ModelSession session) {
-        for (var i : ticketReservations) {
+        /*for (var i : ticketReservations) {
             session.save(i.convert(event));
         }
 
@@ -81,14 +81,14 @@ public class EventReservation {
             session.remove(i);
         }
 
-        ticketReservations.clear();
+        ticketReservations.clear();*/
     }
 
     public void cancelReservation (ModelSession session) {
-        for (var i : ticketReservations) {
+        /*for (var i : ticketReservations) {
             session.remove(i);
         }
 
-        ticketReservations.clear();
+        ticketReservations.clear();*/
     }
 }

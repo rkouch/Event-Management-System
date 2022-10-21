@@ -3,10 +3,13 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -165,5 +168,81 @@ public class SeatingPlan {
         availableSeats--;
 
         return reservation;
+    }
+
+    private List<TicketReservation> makeReservations (ModelSession session, User user, List<Integer> seatNums) {
+        var newReservations = new ArrayList<TicketReservation>();
+        for (var i : seatNums) {
+            var reserve = new TicketReservation(user, this, i, ticketPrice);
+            session.save(reserve);
+            newReservations.add(reserve);
+            reservations.add(reserve);
+        }
+
+        availableSeats -= seatNums.size();
+
+        return newReservations;
+    }
+
+    public List<TicketReservation> reserveSeats (ModelSession session, User user, int quantity) {
+        if (availableSeats < quantity) {
+            throw new ForbiddenException("Not enough tickets remaining!");
+        }
+
+        var nums = getAllocatedNumbers().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        var reservedNums = new ArrayList<Integer>();
+
+        /*if (nums.size() == 0 || nums.get(0) != 1) {
+            reservedNums.add(1);
+            nums.add(0, 1);
+        }
+
+        for (int i = 1; i < nums.size(); i++) {
+            int start = nums.get(i - 1);
+            int end = nums.get(i);
+            for (int j = start + 1; j < end; j++) {
+                nums.add(i++, j);
+                reservedNums.add(j);
+            }
+        }
+
+        int next = nums.get(nums.size() - 1) + 1;*/
+        int last = 0;
+        int next = last;
+        for (var i : nums) {
+            if (reservedNums.size() == quantity) {
+                break;
+            }
+            next = i;
+
+            for (int j = last + 1; j < next; j++) {
+                reservedNums.add(j);
+                if (reservedNums.size() == quantity) {
+                    break;
+                }
+            }
+
+            last = i;
+        }
+
+
+        while (reservedNums.size() < quantity) {
+            reservedNums.add(++next);
+        }
+
+
+        return makeReservations(session, user, reservedNums);
+    }
+
+    public List<TicketReservation> reserveSeats (ModelSession session, User user, List<Integer> seatNums) {
+        var takenNums = getAllocatedNumbers();
+        if (seatNums.stream().anyMatch(i -> i <= 0 || i > totalSeats || takenNums.contains(i))) {
+            throw new ForbiddenException("One or more ticket number is already taken!");
+        }
+
+        return makeReservations(session, user, seatNums);
     }
 }
