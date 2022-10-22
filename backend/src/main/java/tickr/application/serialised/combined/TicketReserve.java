@@ -47,52 +47,54 @@ public class TicketReserve {
     }
 
     public static class Response {
-        @SerializedName("reserve_id")
-        public String reserveId;
-        public String price;
+        @SerializedName("reserve_tickets")
+        public List<ReserveDetails> reserveTickets;
 
         public Response () {
 
         }
 
-        public Response (String reserveId, String price) {
-            this.reserveId = reserveId;
-            this.price = price;
+        public Response (List<ReserveDetails> reserveTickets) {
+            this.reserveTickets = reserveTickets;
         }
     }
 
     public static class TicketDetails {
-        @SerializedName("first_name")
-        public String firstName;
-        @SerializedName("last_name")
-        public String lastName;
-        public String email;
         public String section;
+        public int quantity;
+        @SerializedName("seat_numbers")
+        public List<Integer> seatNums;
 
-        @SerializedName("seat_number")
-        public Integer seatNum = null;
 
         public TicketDetails () {
 
         }
 
-        public TicketDetails (String section) {
-            this(null, null, null, section);
+        public TicketDetails (String section, int quantity, List<Integer> seatNums) {
+            this.section = section;
+            this.quantity = quantity;
+            this.seatNums = seatNums;
+        }
+    }
+
+    public static class ReserveDetails {
+        @SerializedName("reserve_id")
+        public String reserveId;
+
+        @SerializedName("seat_number")
+        public int seatNum;
+        public String section;
+        public float price;
+
+        public ReserveDetails () {
+
         }
 
-        public TicketDetails (String firstName, String lastName, String email, String section) {
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.email = email;
-            this.section = section;
-        }
-
-        public TicketDetails (String firstName, String lastName, String email, String section, Integer seatNum) {
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.email = email;
-            this.section = section;
+        public ReserveDetails (String reserveId, int seatNum, String section, float price) {
+            this.reserveId = reserveId;
             this.seatNum = seatNum;
+            this.section = section;
+            this.price = price;
         }
     }
 }

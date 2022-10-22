@@ -3,10 +3,13 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,7 +71,7 @@ public class SeatingPlan {
         this.id = id;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 
@@ -121,49 +124,64 @@ public class SeatingPlan {
         return ticketSet;
     }
 
-    public TicketReservation reserveSeat (ModelSession session, User user, EventReservation eventReservation, String firstName, String lastName, String email) {
-        if (availableSeats == 0) {
-            throw new ForbiddenException("No seats remaining!");
+    private List<TicketReservation> makeReservations (ModelSession session, User user, List<Integer> seatNums) {
+        var newReservations = new ArrayList<TicketReservation>();
+        for (var i : seatNums) {
+            var reserve = new TicketReservation(user, this, i, ticketPrice);
+            session.save(reserve);
+            newReservations.add(reserve);
+            reservations.add(reserve);
         }
-        var ticketNums = getAllocatedNumbers().stream()
+
+        availableSeats -= seatNums.size();
+
+        return newReservations;
+    }
+
+    public List<TicketReservation> reserveSeats (ModelSession session, User user, int quantity) {
+        if (availableSeats < quantity) {
+            throw new ForbiddenException("Not enough tickets remaining!");
+        }
+
+        var nums = getAllocatedNumbers().stream()
                 .sorted()
                 .collect(Collectors.toList());
 
-        int ticketNum;
-        if (ticketNums.size() == 0 || ticketNums.get(0) != 1) {
-            ticketNum = 1;
-        } else {
-            int index = 0;
-            while (index < ticketNums.size() - 1 && ticketNums.get(index) + 1 == ticketNums.get(index + 1)) {
-                index++;
+        var reservedNums = new ArrayList<Integer>();
+
+        int last = 0;
+        int next = last;
+        for (var i : nums) {
+            if (reservedNums.size() == quantity) {
+                break;
+            }
+            next = i;
+
+            for (int j = last + 1; j < next; j++) {
+                reservedNums.add(j);
+                if (reservedNums.size() == quantity) {
+                    break;
+                }
             }
 
-            ticketNum = ticketNums.get(index) + 1;
+            last = i;
         }
 
-        var reservation = new TicketReservation(user, this, ticketNum, eventReservation, ticketPrice, firstName, lastName, email);
-        session.save(reservation);
 
-        reservations.add(reservation);
+        while (reservedNums.size() < quantity) {
+            reservedNums.add(++next);
+        }
 
-        availableSeats--;
 
-        return reservation;
+        return makeReservations(session, user, reservedNums);
     }
 
-    public TicketReservation reserveSeat (ModelSession session, User user, int seatNum, EventReservation eventReservation, String firstName,
-                                          String lastName, String email) {
-        if (availableSeats == 0 || seatNum <= 0 || seatNum >= totalSeats || getAllocatedNumbers().contains(seatNum)) {
-            throw new ForbiddenException("Seat number is invalid!");
+    public List<TicketReservation> reserveSeats (ModelSession session, User user, List<Integer> seatNums) {
+        var takenNums = getAllocatedNumbers();
+        if (seatNums.stream().anyMatch(i -> i <= 0 || i > totalSeats || takenNums.contains(i))) {
+            throw new ForbiddenException("One or more ticket number is already taken!");
         }
 
-        var reservation = new TicketReservation(user, this, seatNum, eventReservation, ticketPrice, firstName, lastName, email);
-        session.save(reservation);
-
-        reservations.add(reservation);
-
-        availableSeats--;
-
-        return reservation;
+        return makeReservations(session, user, seatNums);
     }
 }

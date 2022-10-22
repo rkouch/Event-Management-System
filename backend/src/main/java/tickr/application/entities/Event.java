@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "events")
@@ -334,33 +336,22 @@ public class Event {
         this.published = published;
     }
 
-    private Optional<SeatingPlan> getSeatingPlan (String section) {
-        return seatingPlans.stream()
-                .filter(s -> s.getSection().equals(section))
-                .findAny();
-    }
-
-    public EventReservation makeReservation (ModelSession session, User user, LocalDateTime requestedTime, List<TicketReserve.TicketDetails> reserveDetails) {
-        if (reserveDetails.isEmpty()) {
-            throw new BadRequestException("Empty reserve list!");
+    public List<TicketReservation> makeReservations (ModelSession session, User user, LocalDateTime requestedTime, String section,
+                                                     int quantity, List<Integer> seatNums) {
+        if (section == null) {
+            throw new BadRequestException("Null section!");
+        } else if (quantity <= 0 || (seatNums.size() != 0 && seatNums.size() != quantity)) {
+            throw new BadRequestException("Invalid quantity of seats!");
         } else if (eventStart.isAfter(requestedTime) || eventEnd.isBefore(requestedTime)) {
             throw new ForbiddenException("Invalid requested time!");
         }
 
-        var reservation = new EventReservation(user, this);
-        session.save(reservation);
-
-        for (var i : reserveDetails) {
-            var seatingPlan = getSeatingPlan(i.section).orElseThrow(() -> new ForbiddenException("Invalid section name!"));
-
-            if (i.seatNum != null) {
-                reservation.addTicketReservation(seatingPlan.reserveSeat(session, user, i.seatNum, reservation, i.firstName, i.lastName, i.email));
-            } else {
-                reservation.addTicketReservation(seatingPlan.reserveSeat(session, user, reservation, i.firstName, i.lastName, i.email));
+        for (var i : seatingPlans) {
+            if (i.getSection().equals(section)) {
+                return seatNums.size() != 0 ? i.reserveSeats(session, user, seatNums) : i.reserveSeats(session, user, quantity);
             }
-            seatAvailability--;
         }
 
-        return reservation;
+        throw new ForbiddenException("Invalid section!");
     }
 }
