@@ -650,33 +650,64 @@ public class TickrController {
     }
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.RequestNew request) {
-        return new TicketPurchase.Response();
+        var user = authenticateToken(session, request.authToken);
+        if (request.ticketDetails == null || request.ticketDetails.size() == 0 || request.successUrl == null || request.cancelUrl == null
+                || !Utils.isValidUrl(request.successUrl) || !Utils.isValidUrl(request.cancelUrl)) {
+            throw new BadRequestException("Invalid request!");
+        }
+
+        
+        var purchaseAPI = ApiLocator.locateApi(IPurchaseAPI.class);
+        var orderId = UUID.randomUUID();
+        var builder = purchaseAPI.makePurchaseBuilder(orderId.toString());
+
+        for (var i : request.ticketDetails) {
+            builder = session.getById(TicketReservation.class, UUID.fromString(i.requestId))
+                    .orElseThrow(() -> new ForbiddenException("Invalid ticket reservation!"))
+                    .registerPurchaseItem(session, builder, orderId, user, i.firstName, i.lastName, i.email);
+        }
+
+        return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)));
     }
 
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.debug("Ticket purchase {} success!", reserveId);
-        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
                 .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
 
         reservation.convertReservation(session);
-        session.remove(reservation);
+        session.remove(reservation);*/
+        for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
+            session.save(i.convert(session));
+            session.remove(i);
+        }
     }
 
     public void ticketPurchaseCancel (ModelSession session, String reserveId) {
-        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
                 .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
         logger.info("Ticket purchase {} was cancelled!", reservation.getId());
 
         reservation.cancelReservation(session);
-        session.remove(reservation);
+        session.remove(reservation);*/
+        logger.info("Order {} was cancelled!", reserveId);
+        for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
+            i.cancel(session);
+            session.remove(i);
+        }
     }
 
     public void ticketPurchaseFailure (ModelSession session, String reserveId) {
-        var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
+        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
                 .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
         logger.info("Ticket purchase {} failed!", reservation.getId());
 
         reservation.cancelReservation(session);
-        session.remove(reservation);
+        session.remove(reservation);*/
+        logger.info("Order {} failed!", reserveId);
+        for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
+            i.cancel(session);
+            session.remove(i);
+        }
     }
 }

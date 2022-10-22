@@ -94,12 +94,12 @@ public class TestTicketPurchase {
     public void testBadRequest () {
         var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken, null, null, null)));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken,"testing", null, reqIds)));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken, "testing", "testing", List.of())));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken, null, "testing", reqIds)));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken,"http://testing.com", null, reqIds)));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken, "http://testing.com", "http://testing.com", List.of())));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken, null, "http://testing.com", reqIds)));
 
-        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(null, "testing", "testing", reqIds)));
-        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(TestHelper.makeFakeJWT(), "testing", "testing", reqIds)));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(null, "http://testing.com", "http://testing.com", reqIds)));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(TestHelper.makeFakeJWT(), "http://testing.com", "http://testing.com", reqIds)));
 
         assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.RequestNew(authToken,"http://testing.com", "http://testing.com",
                 List.of(new TicketPurchase.TicketDetails(UUID.randomUUID().toString())))));

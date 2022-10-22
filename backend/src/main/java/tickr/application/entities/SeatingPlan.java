@@ -71,7 +71,7 @@ public class SeatingPlan {
         this.id = id;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 

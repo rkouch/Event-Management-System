@@ -106,9 +106,21 @@ create table ticket_reservation (
     price float not null,
     primary key (id),
     foreign key (user_id) references users(id),
-    foreign key (seating_id) references `seating_plan`(id),
+    foreign key (seating_id) references `seating_plan`(id)
     #foreign key (reservation_id) references event_reservation(id)
 );
+
+create table purchase_item (
+    id varchar(36) not null,
+    purchase_id varchar(36) not null,
+    ticket_id varchar(36) not null,
+    first_name varchar(255),
+    last_name varchar(255),
+    email varchar(255),
+    primary key (id),
+    foreign key (ticket_id) references ticket_reservation(id)
+);
+
 
 create table tickets (
     id          varchar(36) not null,

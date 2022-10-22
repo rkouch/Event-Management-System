@@ -86,4 +86,11 @@ public class Ticket {
         this.section = section;
         this.seatNumber = seatNumber;
     }
+
+    public Ticket (User user,SeatingPlan section, int seatNumber) {
+        this.user = user;
+        this.event = section.getEvent();
+        this.section = section;
+        this.seatNumber = seatNumber;
+    }
 }

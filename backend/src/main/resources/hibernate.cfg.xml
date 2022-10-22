@@ -35,6 +35,7 @@
         <!--<mapping class="tickr.application.entities.EventAdmin"/>-->
         <mapping class="tickr.application.entities.Group"/>
         <mapping class="tickr.application.entities.Location"/>
+        <mapping class="tickr.application.entities.PurchaseItem"/>
         <mapping class="tickr.application.entities.Reaction"/>
         <mapping class="tickr.application.entities.SeatingPlan"/>
         <mapping class="tickr.application.entities.Tag"/>
