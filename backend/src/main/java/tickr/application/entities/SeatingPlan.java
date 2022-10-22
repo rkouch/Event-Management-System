@@ -124,52 +124,6 @@ public class SeatingPlan {
         return ticketSet;
     }
 
-    public TicketReservation reserveSeat (ModelSession session, User user, EventReservation eventReservation, String firstName, String lastName, String email) {
-        if (availableSeats == 0) {
-            throw new ForbiddenException("No seats remaining!");
-        }
-        var ticketNums = getAllocatedNumbers().stream()
-                .sorted()
-                .collect(Collectors.toList());
-
-        int ticketNum;
-        if (ticketNums.size() == 0 || ticketNums.get(0) != 1) {
-            ticketNum = 1;
-        } else {
-            int index = 0;
-            while (index < ticketNums.size() - 1 && ticketNums.get(index) + 1 == ticketNums.get(index + 1)) {
-                index++;
-            }
-
-            ticketNum = ticketNums.get(index) + 1;
-        }
-
-        var reservation = new TicketReservation(user, this, ticketNum, eventReservation, ticketPrice, firstName, lastName, email);
-        session.save(reservation);
-
-        reservations.add(reservation);
-
-        availableSeats--;
-
-        return reservation;
-    }
-
-    public TicketReservation reserveSeat (ModelSession session, User user, int seatNum, EventReservation eventReservation, String firstName,
-                                          String lastName, String email) {
-        if (availableSeats == 0 || seatNum <= 0 || seatNum >= totalSeats || getAllocatedNumbers().contains(seatNum)) {
-            throw new ForbiddenException("Seat number is invalid!");
-        }
-
-        var reservation = new TicketReservation(user, this, seatNum, eventReservation, ticketPrice, firstName, lastName, email);
-        session.save(reservation);
-
-        reservations.add(reservation);
-
-        availableSeats--;
-
-        return reservation;
-    }
-
     private List<TicketReservation> makeReservations (ModelSession session, User user, List<Integer> seatNums) {
         var newReservations = new ArrayList<TicketReservation>();
         for (var i : seatNums) {
@@ -195,21 +149,6 @@ public class SeatingPlan {
 
         var reservedNums = new ArrayList<Integer>();
 
-        /*if (nums.size() == 0 || nums.get(0) != 1) {
-            reservedNums.add(1);
-            nums.add(0, 1);
-        }
-
-        for (int i = 1; i < nums.size(); i++) {
-            int start = nums.get(i - 1);
-            int end = nums.get(i);
-            for (int j = start + 1; j < end; j++) {
-                nums.add(i++, j);
-                reservedNums.add(j);
-            }
-        }
-
-        int next = nums.get(nums.size() - 1) + 1;*/
         int last = 0;
         int next = last;
         for (var i : nums) {

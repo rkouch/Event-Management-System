@@ -84,16 +84,6 @@ create table seating_plan (
     foreign key (event_id) references `events`(id)
 );
 
-create table event_reservation (
-    id varchar(36) not null,
-    user_id varchar(36) not null,
-    event_id varchar(36) not null,
-    price float not null,
-    primary key (id),
-    foreign key (user_id) references users(id),
-    foreign key (event_id) references `events`(id)
-);
-
 create table ticket_reservation (
     id varchar(36) not null,
     user_id varchar(36) not null,
@@ -128,7 +118,10 @@ create table tickets (
     event_id     varchar(36) not null,
     section_id    varchar(36) not null,
     seat_no      int,
-    reserved   boolean,
+    first_name varchar(255),
+    last_name varchar(255),
+    email varchar(255),
+
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (event_id) references `events`(id),

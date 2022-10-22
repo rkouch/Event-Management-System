@@ -589,31 +589,6 @@ public class TickrController {
 
     public TicketReserve.Response ticketReserve (ModelSession session, TicketReserve.Request request) {
         var user = authenticateToken(session, request.authToken);
-        if (request.eventId == null || request.ticketDateTime == null || request.ticketDetails == null) {
-            throw new BadRequestException("Invalid request!");
-        }
-
-        var ticketDatetime = request.getTicketTime();
-        var eventId = parseUUID(request.eventId);
-
-        for (var i : request.ticketDetails) {
-            if (i.section == null) {
-                throw new BadRequestException("Null section!");
-            } else if ((i.firstName == null) != (i.lastName == null)) {
-                throw new BadRequestException("Invalid ticket details names!");
-            } else if (i.email != null && !EMAIL_REGEX.matcher(i.email).matches()) {
-                throw new BadRequestException("Invalid ticket details email!");
-            }
-        }
-
-        return session.getById(Event.class, eventId)
-                .map(e -> e.makeReservation(session, user, ticketDatetime, request.ticketDetails))
-                .map(r -> new TicketReserve.Response(r.getId().toString(), Float.toString(r.getPrice())))
-                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
-    }
-
-    public TicketReserve.ResponseNew ticketReserve (ModelSession session, TicketReserve.RequestNew request) {
-        var user = authenticateToken(session, request.authToken);
         if (request.eventId == null || request.ticketDateTime == null || request.ticketDetails == null || request.ticketDetails.size() == 0) {
             throw new BadRequestException("Invalid request!");
         }
@@ -627,29 +602,11 @@ public class TickrController {
                         .flatMap(Collection::stream)
                         .map(TicketReservation::getDetails)
                         .collect(Collectors.toList()))
-                .map(TicketReserve.ResponseNew::new)
+                .map(TicketReserve.Response::new)
                 .orElseThrow(() -> new ForbiddenException("Invalid event!"));
     }
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
-        var user = authenticateToken(session, request.authToken);
-        if (request.reserveId == null || request.successUrl == null || request.cancelUrl == null
-                || !Utils.isValidUrl(request.successUrl) || !Utils.isValidUrl(request.cancelUrl)) {
-            throw new BadRequestException("Invalid request!");
-        }
-
-        var reservation = session.getById(EventReservation.class, parseUUID(request.reserveId))
-                .orElseThrow(() -> new ForbiddenException("Invalid reserve id!"));
-
-        var purchaseAPI = ApiLocator.locateApi(IPurchaseAPI.class);
-
-        var redirectUrl = purchaseAPI.registerOrder(reservation.buildOrder(user, purchaseAPI)
-                .withUrls(request.successUrl, request.cancelUrl));
-
-        return new TicketPurchase.Response(redirectUrl);
-    }
-
-    public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.RequestNew request) {
         var user = authenticateToken(session, request.authToken);
         if (request.ticketDetails == null || request.ticketDetails.size() == 0 || request.successUrl == null || request.cancelUrl == null
                 || !Utils.isValidUrl(request.successUrl) || !Utils.isValidUrl(request.cancelUrl)) {
@@ -672,11 +629,6 @@ public class TickrController {
 
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.debug("Ticket purchase {} success!", reserveId);
-        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
-                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
-
-        reservation.convertReservation(session);
-        session.remove(reservation);*/
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             session.save(i.convert(session));
             session.remove(i);
@@ -684,12 +636,6 @@ public class TickrController {
     }
 
     public void ticketPurchaseCancel (ModelSession session, String reserveId) {
-        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
-                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
-        logger.info("Ticket purchase {} was cancelled!", reservation.getId());
-
-        reservation.cancelReservation(session);
-        session.remove(reservation);*/
         logger.info("Order {} was cancelled!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             i.cancel(session);
@@ -698,12 +644,6 @@ public class TickrController {
     }
 
     public void ticketPurchaseFailure (ModelSession session, String reserveId) {
-        /*var reservation = session.getById(EventReservation.class, parseUUID(reserveId))
-                .orElseThrow(() -> new BadRequestException("Invalid reserve id!"));
-        logger.info("Ticket purchase {} failed!", reservation.getId());
-
-        reservation.cancelReservation(session);
-        session.remove(reservation);*/
         logger.info("Order {} failed!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             i.cancel(session);

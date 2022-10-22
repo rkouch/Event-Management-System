@@ -36,6 +36,14 @@ public class Ticket {
     @Column(name = "seat_no")
     private int seatNumber;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    private String email;
+
     private UUID getId () {
         return id;
     }
@@ -76,21 +84,32 @@ public class Ticket {
         this.seatNumber = seatNumber;
     }
 
+    public String getFirstName () {
+        return firstName != null ? firstName : user.getFirstName();
+    }
+
+    public String getLastName () {
+        return lastName != null ? lastName : user.getLastName();
+    }
+
+    public String getEmail () {
+        return email != null ? email : user.getEmail();
+    }
+
     public Ticket () {
 
     }
-
-    public Ticket (User user, Event event, SeatingPlan section, int seatNumber) {
-        this.user = user;
-        this.event = event;
-        this.section = section;
-        this.seatNumber = seatNumber;
+    public Ticket (User user,SeatingPlan section, int seatNumber) {
+        this(user, section, seatNumber, null, null, null);
     }
 
-    public Ticket (User user,SeatingPlan section, int seatNumber) {
+    public Ticket (User user,SeatingPlan section, int seatNumber, String firstName, String lastName, String email) {
         this.user = user;
         this.event = section.getEvent();
         this.section = section;
         this.seatNumber = seatNumber;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
     }
 }

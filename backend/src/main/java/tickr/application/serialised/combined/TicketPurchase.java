@@ -9,29 +9,6 @@ public class TicketPurchase {
         @SerializedName("auth_token")
         public String authToken;
 
-        @SerializedName("reserve_id")
-        public String reserveId;
-
-        @SerializedName("success_url")
-        public String successUrl;
-
-        @SerializedName("cancel_url")
-        public String cancelUrl;
-
-        public Request () {}
-
-        public Request (String authToken, String reserveId, String successUrl, String cancelUrl) {
-            this.authToken = authToken;
-            this.reserveId = reserveId;
-            this.successUrl = successUrl;
-            this.cancelUrl = cancelUrl;
-        }
-    }
-
-    public static class RequestNew {
-        @SerializedName("auth_token")
-        public String authToken;
-
         @SerializedName("ticket_details")
         public List<TicketDetails> ticketDetails;
 
@@ -41,11 +18,11 @@ public class TicketPurchase {
         @SerializedName("cancel_url")
         public String cancelUrl;
 
-        public RequestNew () {
+        public Request () {
 
         }
 
-        public RequestNew (String authToken, String successUrl, String cancelUrl, List<TicketDetails> ticketDetails) {
+        public Request (String authToken, String successUrl, String cancelUrl, List<TicketDetails> ticketDetails) {
             this.authToken = authToken;
             this.ticketDetails = ticketDetails;
             this.successUrl = successUrl;

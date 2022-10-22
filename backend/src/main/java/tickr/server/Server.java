@@ -22,13 +22,11 @@ import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ServerException;
-import tickr.util.Constants;
 import tickr.util.FileHelper;
 
 import java.util.Map;
@@ -86,8 +84,8 @@ public class Server {
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
 
-        post("/api/ticket/reserve", (TickrController c, ModelSession m, TicketReserve.Request r) -> c.ticketReserve(m, r), TicketReserve.Request.class);
-        post("/api/ticket/purchase", (TickrController c, ModelSession m, TicketPurchase.Request r) -> c.ticketPurchase(m, r), TicketPurchase.Request.class);
+        post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
+        post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
 
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {

@@ -24,19 +24,6 @@ public class TicketReservation {
     @JoinColumn(name = "user_id")
     private User user;
 
-    /*@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id")
-    private EventReservation eventReservation;*/
-
-    /*@Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
-
-    @Column(name = "email")
-    private String email;*/
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seating_id")
     private SeatingPlan section;
@@ -50,25 +37,10 @@ public class TicketReservation {
 
     }
 
-    public TicketReservation (User user, SeatingPlan section, int seatNum, EventReservation eventReservation, float price, String firstName, String lastName, String email) {
-        this.user = user;
-        this.section = section;
-        this.seatNum = seatNum;
-        //this.firstName = firstName;
-        //this.lastName = lastName;
-        //this.email = email;
-        //this.eventReservation = eventReservation;
-        this.price = price;
-    }
-
     public TicketReservation (User user, SeatingPlan section, int seatNum, float price) {
         this.user = user;
         this.section = section;
         this.seatNum = seatNum;
-        //this.firstName = firstName;
-        //this.lastName = lastName;
-        //this.email = email;
-        //this.eventReservation = eventReservation;
         this.price = price;
     }
 
@@ -78,14 +50,6 @@ public class TicketReservation {
 
     public float getPrice () {
         return price;
-    }
-
-    public LineItem makeLineItem () {
-        return new LineItem(this.section.getSection(), this.price);
-    }
-
-    public Ticket convert (Event event) {
-        return new Ticket(user, event, section, seatNum);
     }
 
     public TicketReserve.ReserveDetails getDetails () {
@@ -105,6 +69,6 @@ public class TicketReservation {
     }
 
     public Ticket convert (String firstName, String lastName, String email) {
-        return new Ticket(user, section, seatNum);
+        return new Ticket(user, section, seatNum, firstName, lastName, email);
     }
 }

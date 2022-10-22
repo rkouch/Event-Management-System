@@ -9,8 +9,6 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
-import tickr.application.entities.EventReservation;
-import tickr.application.entities.TicketReservation;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -71,9 +69,53 @@ public class TestTicketReserve {
         ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
-    @Test
+    /*@Test
     public void testBadRequest () {
         var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section"));
+
+        assertThrows(UnauthorizedException.class, () -> controller.ticketReserveOld(session, new TicketReserve.Request()));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(TestHelper.makeFakeJWT(), eventId, startTime, ticketDetails)));
+
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, null, startTime, ticketDetails)));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, (String)null, ticketDetails)));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime, List.of())));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails(null, "last", "test@example.com", "test_section")))));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("first", null, "test@example.com", "test_section")))));
+        assertThrows(BadRequestException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("first", "last", "test@", "test_section")))));
+
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, LocalDateTime.now(), ticketDetails)));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
+
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime, List.of(new TicketReserve.TicketDetails("testing")))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", 0)))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", -1)))));
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", 1000000)))));
+    }*/
+
+    @Test
+    public void testBadRequest () {
+        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section", 1, List.of()));
 
         assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session, new TicketReserve.Request()));
         assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session,
@@ -87,13 +129,10 @@ public class TestTicketReserve {
                 new TicketReserve.Request(authToken, eventId, startTime, List.of())));
         assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails(null, "last", "test@example.com", "test_section")))));
+                        List.of(new TicketReserve.TicketDetails(null, 1, List.of())))));
         assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails("first", null, "test@example.com", "test_section")))));
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails("first", "last", "test@", "test_section")))));
+                        List.of(new TicketReserve.TicketDetails("test_section", 2, List.of(1))))));
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
@@ -103,65 +142,24 @@ public class TestTicketReserve {
                 new TicketReserve.Request(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId, startTime, List.of(new TicketReserve.TicketDetails("testing")))));
+                new TicketReserve.Request(authToken, eventId, startTime,
+                        List.of(new TicketReserve.TicketDetails("testing", 1, List.of())))));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", 0)))));
+                        List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(0))))));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", -1)))));
+                        List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(-1))))));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetails("first", "last", "test@example.com", "test_section", 1000000)))));
-    }
-
-    @Test
-    public void testBadRequestNew () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()));
-
-        assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session, new TicketReserve.Request()));
-        assertThrows(UnauthorizedException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(TestHelper.makeFakeJWT(), eventId, startTime, ticketDetails)));
-
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, null, startTime, ticketDetails)));
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, (String)null, ticketDetails)));
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime, List.of())));
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew(null, 1, List.of())))));
-        assertThrows(BadRequestException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew("test_section", 2, List.of(1))))));
-
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, LocalDateTime.now(), ticketDetails)));
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
-
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew("testing", 1, List.of())))));
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(0))))));
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(-1))))));
-        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.RequestNew(authToken, eventId, startTime,
-                        List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(1000000))))));
+                        List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(1000000))))));
     }
 
     @Test
     public void testOneTicket () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()));
+        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section", 1, List.of()));
 
-        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
+        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
 
         //assertNotNull(response.reserveId);
         //assertEquals(1, Float.parseFloat(response.price));
@@ -180,10 +178,10 @@ public class TestTicketReserve {
                 new TicketReserve.TicketDetailsNew( null, null, null, "test_section", 5),
                 new TicketReserve.TicketDetails( null, null, null, "test_section", 6),
                 new TicketReserve.TicketDetails( null, null, null, "test_section", 7)*/
-                new TicketReserve.TicketDetailsNew("test_section", 4, List.of(4, 6, 7, 5))
+                new TicketReserve.TicketDetails("test_section", 4, List.of(4, 6, 7, 5))
         );
 
-        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
+        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
         assertEquals(4, response.reserveTickets.size());
         //assertNotNull(response.reserveId);
         //assertEquals(4, Float.parseFloat(response.price));
@@ -202,11 +200,11 @@ public class TestTicketReserve {
     @Test
     public void testMultipleSections () {
         var ticketDetails = List.of(
-                new TicketReserve.TicketDetailsNew("test_section", 4, List.of()),
-                new TicketReserve.TicketDetailsNew("test_section2", 5, List.of())
+                new TicketReserve.TicketDetails("test_section", 4, List.of()),
+                new TicketReserve.TicketDetails("test_section2", 5, List.of())
         );
 
-        var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime, ticketDetails));
+        var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
 
         //assertNotNull(response.reserveId);
         //assertEquals(5, Float.parseFloat(response.price));
@@ -238,15 +236,15 @@ public class TestTicketReserve {
         for (int i = 0; i < 10; i++) {
             /*reserveIds.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
                     List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of())))).reserveTickets.get(0).reserveId);*/
-            var response = controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
-                            List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of()))));
+            var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                            List.of(new TicketReserve.TicketDetails("test_section", 1, List.of()))));
             assertEquals(1, response.reserveTickets.size());
             seatNums.add(response.reserveTickets.get(0).seatNum);
             session = TestHelper.commitMakeSession(model, session);
         }
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetails(null, null, null, "test_section")))));
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))));
         session.rollback();
         session.close();
         session = model.makeSession();
@@ -272,21 +270,21 @@ public class TestTicketReserve {
         var reserveIds = new ArrayList<String>();
         var seatNums = new ArrayList<Integer>();
 
-        seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(3))))).reserveTickets.get(0).seatNum);
+        seatNums.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))).reserveTickets.get(0).seatNum);
         session = TestHelper.commitMakeSession(model, session);
-        seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of(9))))).reserveTickets.get(0).seatNum);
+        seatNums.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(9))))).reserveTickets.get(0).seatNum);
         session = TestHelper.commitMakeSession(model, session);
 
         for (int i = 0; i < 8; i++) {
-            seatNums.add(controller.ticketReserve(session, new TicketReserve.RequestNew(authToken, eventId, startTime,
-                    List.of(new TicketReserve.TicketDetailsNew("test_section", 1, List.of())))).reserveTickets.get(0).seatNum);
+            seatNums.add(controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                    List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))).reserveTickets.get(0).seatNum);
             session = TestHelper.commitMakeSession(model, session);
         }
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
-                List.of(new TicketReserve.TicketDetails(null, null, null, "test_section")))));
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))));
         session.rollback();
         session.close();
         session = model.makeSession();
