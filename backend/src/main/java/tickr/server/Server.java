@@ -23,13 +23,11 @@ import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ServerException;
-import tickr.util.Constants;
 import tickr.util.FileHelper;
 
 import java.util.Map;
