@@ -36,14 +36,17 @@ public class SeatingPlan {
 
     private String section;
 
-    @Column(name = "available_seats")
+    @Column(name = "seat_availability")
     public int availableSeats;
 
     @Column(name = "total_seats")
     private int totalSeats = 0;
 
     @Column(name = "ticket_price")
-    public int ticketPrice;
+    public float ticketPrice;
+
+    @Column(name = "has_seats")
+    public boolean hasSeats;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
     private Set<TicketReservation> reservations;
@@ -54,13 +57,14 @@ public class SeatingPlan {
 
     public SeatingPlan () {}    
 
-    public SeatingPlan(Event event, Location location, String section, int availableSeats, int ticketPrice) {
+    public SeatingPlan(Event event, Location location, String section, int availableSeats, float ticketPrice, boolean hasSeats) {
         this.event = event;
         this.location = location;
         this.section = section;
         this.availableSeats = availableSeats;
         this.totalSeats = availableSeats;
         this.ticketPrice = ticketPrice;
+        this.hasSeats = hasSeats;
     }
 
     private UUID getId () {
@@ -99,6 +103,10 @@ public class SeatingPlan {
         return availableSeats;
     }
 
+    public int getTotalSeats () {
+        return totalSeats;
+    }
+
     private void setAvailableSeats (int availableSeats) {
         this.availableSeats = availableSeats;
     }
@@ -113,6 +121,16 @@ public class SeatingPlan {
 
     public void updateLocation (Location location) {
         setLocation(location);
+    }
+
+    
+
+    public Set<TicketReservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(Set<TicketReservation> reservations) {
+        this.reservations = reservations;
     }
 
     private Set<Integer> getAllocatedNumbers () {

@@ -16,6 +16,7 @@ import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
@@ -96,7 +97,7 @@ public class TickrController {
         return token;
     }
 
-    private User authenticateToken (ModelSession session, String authTokenStr) {
+    public User authenticateToken (ModelSession session, String authTokenStr) {
         return getTokenFromStr(session, authTokenStr).getUser();
     }
 
@@ -279,12 +280,12 @@ public class TickrController {
 
         if (!request.isSeatingDetailsValid()) {
             logger.debug("Missing seating parameters!");
-            throw new BadRequestException("Invalid event request!");
+            throw new BadRequestException("Invalid seating details!");
         }
 
-        if (!request.isLocationValid()) {
+        if (request.location != null && !request.isLocationValid()) {
             logger.debug("Missing location parameters!");
-            throw new BadRequestException("Invalid event request!");
+            throw new BadRequestException("Invalid location details!");
         }
 
         LocalDateTime startDate;
@@ -304,25 +305,28 @@ public class TickrController {
 
 
         // getting user from token
-        var user = authenticateToken(session, request.authToken);
-        // creating location from request
-        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
+        var user = authenticateToken(session, request.authToken); 
+        // creating location from request 
+        Location location = null;
+        if (request.location != null) {
+            location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
                                         request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
-        session.save(location);
+            session.save(location);
+        }
 
         // creating event from request
         Event event;
         if (request.picture == null) {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(), "");
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "");
         } else {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatAvailability(),
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
                     FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
         }
         session.save(event);
         // creating seating plan for each section
         if (request.seatingDetails != null) {
             for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice);
+                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
                 session.save(seatingPlan);
             }
         }
@@ -475,22 +479,25 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
-        User user;
-        try {
-            user = authenticateToken(session, request.getAuthToken());
-        } catch (IllegalArgumentException e){
-            throw new UnauthorizedException("Invalid auth token");
-        }
+        User user = authenticateToken(session, request.getAuthToken());
         if (user.getId() != event.getHost().getId() && !event.getAdmins().contains(user)) {
             throw new ForbiddenException("User is not a host/admin of the event!");
         }
 
+        if (!request.isSeatingDetailsValid()) {
+            throw new BadRequestException("Invalid seating details!");
+        }
+
+        // if (event.hasTicketsBeenSold() && request.getSeatingDetails()!= null) {
+        //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
+        // }
+
         if (request.picture == null) {
-            event.editEvent(session, request.getEventName(), null, request.getLocation(),
+            event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         } else {
-            event.editEvent(session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
+            event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
             .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
@@ -508,7 +515,7 @@ public class TickrController {
 
         List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
         for (SeatingPlan seats : seatingDetails) {
-            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats(), seats.ticketPrice);
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats(), seats.ticketPrice, seats.getTotalSeats(), seats.hasSeats);
             seatingResponse.add(newSeats);
         }
         Set<String> tags = new HashSet<String>();
@@ -527,7 +534,22 @@ public class TickrController {
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
         return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
-                                    admins, categories, tags, event.isPublished());
+                                    admins, categories, tags, event.isPublished(), event.getSeatAvailability(), event.getSeatCapacity());
+    }
+
+    public void makeHost (ModelSession session, EditHostRequest request) {
+        User newHost = session.getByUnique(User.class, "email", request.newHostEmail)
+                            .orElseThrow(() -> new ForbiddenException("Invalid user"));
+        User oldHost = authenticateToken(session, request.authToken);
+        Event event = session.getById(Event.class, UUID.fromString(request.eventId))
+                        .orElseThrow(() -> new ForbiddenException("Invalid event"));
+        
+        if (!event.getAdmins().contains(newHost)) {
+            throw new BadRequestException("User is not an admin!");
+        }
+        event.getAdmins().remove(newHost);
+        event.addAdmin(oldHost);
+        event.setHost(newHost);
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {

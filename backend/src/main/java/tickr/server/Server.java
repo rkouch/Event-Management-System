@@ -13,6 +13,7 @@ import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
@@ -76,11 +77,11 @@ public class Server {
         get("/api/user/profile", TickrController::userGetProfile);
         put("/api/user/editprofile", TickrController::userEditProfile, EditProfileRequest.class);
         delete("/api/user/delete", TickrController::userDeleteAccount, UserDeleteRequest.class);
-
         get("/api/user/search", TickrController::userSearch);
 
 
         put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
+        put("/api/event/make_host", TickrController::makeHost, EditHostRequest.class);
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
 

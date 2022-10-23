@@ -36,17 +36,33 @@ public class EventViewResponse {
 
     public boolean published;
 
+    @SerializedName("seat_availability")
+    public int seatAvailability = 0;
+
+    @SerializedName("seat_capacity")
+    public int seatCapacity = 0;
+
     public static class SeatingDetails {
         public String section;
-        public int availability;
 
         @SerializedName("ticket_price") 
-        public int ticketPrice; 
+        public float ticketPrice; 
+
+        @SerializedName("available_seats")
+        public int availableSeats;
+
+        @SerializedName("total_seats")
+        public int totalSeats; 
+
+        @SerializedName("has_seats")
+        public boolean hasSeats;
         
-        public SeatingDetails(String section, int availability, int cost) {
+        public SeatingDetails(String section, int availableSeats, float cost, int totalSeats, boolean hasSeats) {
             this.section = section;
-            this.availability = availability;
             this.ticketPrice = cost;
+            this.availableSeats = availableSeats;
+            this.totalSeats = totalSeats;
+            this.hasSeats = hasSeats;
         }
     }
 
@@ -54,7 +70,7 @@ public class EventViewResponse {
 
     public EventViewResponse(String host_id, String eventName, String picture, SerializedLocation location, String startDate,
             String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins,
-            Set<String> categories, Set<String> tags, boolean published) {
+            Set<String> categories, Set<String> tags, boolean published, int seatAvailability, int seatCapacity) {
         this.eventName = eventName;
         this.picture = picture;
         this.location = location;
@@ -67,6 +83,8 @@ public class EventViewResponse {
         this.tags = tags;
         this.host_id = host_id;
         this.published = published;
+        this.seatAvailability = seatAvailability;
+        this.seatCapacity = seatCapacity;
     }
 
     

@@ -65,8 +65,8 @@ public class TestCreateEvent {
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
@@ -102,17 +102,29 @@ public class TestCreateEvent {
             null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, null, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
             null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", seats, admins, categories, null)));
-        CreateEventRequest.SeatingDetails invalidSeats2 = new CreateEventRequest.SeatingDetails(null, 50, 50);
+        CreateEventRequest.SeatingDetails invalidSeats1 = new CreateEventRequest.SeatingDetails(null, 50, 50, true);
         List<CreateEventRequest.SeatingDetails> invalidSeatsList1 = new ArrayList<CreateEventRequest.SeatingDetails>();
-        invalidSeatsList1.add(invalidSeats2);
+        invalidSeatsList1.add(invalidSeats1);
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
             null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList1, admins, categories, tags)));
 
-        CreateEventRequest.SeatingDetails invalidSeats1 = new CreateEventRequest.SeatingDetails("", 100, 50);
+        CreateEventRequest.SeatingDetails invalidSeats2 = new CreateEventRequest.SeatingDetails("", 100, 50, true);
         List<CreateEventRequest.SeatingDetails> invalidSeatsList2 = new ArrayList<CreateEventRequest.SeatingDetails>();
-        invalidSeatsList2.add(invalidSeats1);
+        invalidSeatsList2.add(invalidSeats2);
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
             null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList2, admins, categories, tags)));
+
+        // CreateEventRequest.SeatingDetails invalidSeats3 = new CreateEventRequest.SeatingDetails("SectionA", 0, 50, true);
+        // List<CreateEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<CreateEventRequest.SeatingDetails>();
+        // invalidSeatsList3.add(invalidSeats3);
+        // assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
+        //     null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList3, admins, categories, tags)));
+
+        // CreateEventRequest.SeatingDetails invalidSeats4 = new CreateEventRequest.SeatingDetails("SectionA", 100, 50, false);
+        // List<CreateEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<CreateEventRequest.SeatingDetails>();
+        // invalidSeatsList4.add(invalidSeats4);
+        // assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
+        //     null, location, "2011-12-03T10:15:30", "2011-12-04T10:15:30", "description", invalidSeatsList4, admins, categories, tags)));
     }
 
     @Test 
@@ -122,8 +134,8 @@ public class TestCreateEvent {
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);
@@ -154,8 +166,8 @@ public class TestCreateEvent {
     @Test 
     public void testInvalidToken () {
         var session = model.makeSession();
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
@@ -182,8 +194,8 @@ public class TestCreateEvent {
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
@@ -216,8 +228,8 @@ public class TestCreateEvent {
         .parseClaimsJws(authTokenString);
         var id = authToken.getBody().getSubject();
         assertNotNull(id);
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 70);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, (float)50.5, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 70, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);
@@ -257,7 +269,7 @@ public class TestCreateEvent {
         List<SeatingPlan> seatings = session.getAllWith(SeatingPlan.class, "event", event1);
         assertEquals(seatings.get(0).getSection(), "sectionA");
         assertEquals(seatings.get(0).availableSeats, 100);
-        assertEquals(seatings.get(0).ticketPrice, 50);
+        assertEquals(seatings.get(0).ticketPrice, 50.5);
         assertEquals(seatings.get(1).getSection(), "sectionB");
         assertEquals(seatings.get(1).availableSeats, 50);
         assertEquals(seatings.get(1).ticketPrice, 70);
@@ -296,8 +308,8 @@ public class TestCreateEvent {
         .parseClaimsJws(authTokenString);
         var id = authToken.getBody().getSubject();
         assertNotNull(id);
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         seats.add(seats1);

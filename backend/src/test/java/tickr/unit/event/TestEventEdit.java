@@ -70,8 +70,8 @@ public class TestEventEdit {
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
 
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);
@@ -115,6 +115,28 @@ public class TestEventEdit {
             "asd", null, null, null , null, null, null, null, null, false)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
             null, null, null, null , null, null, null, null, null, false)));
+        EditEventRequest.SeatingDetails invalidSeats1 = new EditEventRequest.SeatingDetails(null, 50, 50, true);
+        List<EditEventRequest.SeatingDetails> invalidSeatsList1 = new ArrayList<EditEventRequest.SeatingDetails>();
+        invalidSeatsList1.add(invalidSeats1);
+        assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        null, null, null,null, null, invalidSeatsList1, null, null, null, false)));
+
+            EditEventRequest.SeatingDetails invalidSeats2 = new EditEventRequest.SeatingDetails("", 100, 50, true);
+        List<EditEventRequest.SeatingDetails> invalidSeatsList2 = new ArrayList<EditEventRequest.SeatingDetails>();
+        invalidSeatsList2.add(invalidSeats2);
+        assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        null, null, null,null, null, invalidSeatsList2, null, null, null, false)));
+        //     EditEventRequest.SeatingDetails invalidSeats3 = new EditEventRequest.SeatingDetails("SectionA", 0, 50, true);
+        // List<EditEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<EditEventRequest.SeatingDetails>();
+        // invalidSeatsList3.add(invalidSeats3);
+        // assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        //     null, null, null,null, null, invalidSeatsList3, null, null, null, false)));
+
+        // EditEventRequest.SeatingDetails invalidSeats4 = new EditEventRequest.SeatingDetails("SectionA", 100, 50, false);
+        // List<EditEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<EditEventRequest.SeatingDetails>();
+        // invalidSeatsList4.add(invalidSeats4);
+        // assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        //     null, null, null,null, null, invalidSeatsList4, null, null, null, false)));
     }
 
     @Test 
@@ -129,8 +151,8 @@ public class TestEventEdit {
         var id = authToken.getBody().getSubject();
         assertNotNull(id);
 
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);
@@ -173,9 +195,9 @@ public class TestEventEdit {
         assertEquals("description", response.description);
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
-        assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availability);
+        assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availableSeats);
         assertEquals(seats.get(1).section, response.seatingDetails.get(1).section);
-        assertEquals(seats.get(1).availability, response.seatingDetails.get(1).availability);
+        assertEquals(seats.get(1).availability, response.seatingDetails.get(1).availableSeats);
 
         assertEquals(admins, response.admins);
         assertEquals(categories, response.categories);
@@ -205,13 +227,13 @@ public class TestEventEdit {
         var idTest = authTokenTest.getBody().getSubject();
         assertNotNull(idTest);
 
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);
-        EditEventRequest.SeatingDetails seats3 = new EditEventRequest.SeatingDetails("sectionC", 101, 51);
-        EditEventRequest.SeatingDetails seats4 = new EditEventRequest.SeatingDetails("sectionD", 51, 51);
+        EditEventRequest.SeatingDetails seats3 = new EditEventRequest.SeatingDetails("sectionC", 101, (float)51.5, true);
+        EditEventRequest.SeatingDetails seats4 = new EditEventRequest.SeatingDetails("sectionD", 51, 51, true);
         List<EditEventRequest.SeatingDetails> updatedSeats = new ArrayList<EditEventRequest.SeatingDetails>();
         updatedSeats.add(seats3);
         updatedSeats.add(seats4);
@@ -261,10 +283,10 @@ public class TestEventEdit {
         assertEquals("updated description", response.description);
 
         assertEquals(updatedSeats.get(0).section, response.seatingDetails.get(0).section);
-        assertEquals(updatedSeats.get(0).availability, response.seatingDetails.get(0).availability);
+        assertEquals(updatedSeats.get(0).availability, response.seatingDetails.get(0).availableSeats);
         assertEquals(updatedSeats.get(0).ticketPrice, response.seatingDetails.get(0).ticketPrice);
         assertEquals(updatedSeats.get(1).section, response.seatingDetails.get(1).section);
-        assertEquals(updatedSeats.get(1).availability, response.seatingDetails.get(1).availability);
+        assertEquals(updatedSeats.get(1).availability, response.seatingDetails.get(1).availableSeats);
         assertEquals(updatedSeats.get(1).ticketPrice, response.seatingDetails.get(1).ticketPrice);
 
         assertEquals(admins, response.admins);
@@ -296,8 +318,8 @@ public class TestEventEdit {
         var id = authToken.getBody().getSubject();
         assertNotNull(id);
 
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);
@@ -359,8 +381,8 @@ public class TestEventEdit {
         var idAdmin = authTokenAdmin.getBody().getSubject();
         assertNotNull(idAdmin);
 
-        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50);
-        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, 50, true);
         List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
         seats.add(seats1);
         seats.add(seats2);

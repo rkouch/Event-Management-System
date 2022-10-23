@@ -42,13 +42,20 @@ public class EditEventRequest {
 
     public static class SeatingDetails {
         public String section;
+
         public int availability; 
+
         @SerializedName("ticket_price") 
-        public int ticketPrice; 
-        public SeatingDetails(String section, int availability, int cost) {
+        public float ticketPrice; 
+
+        @SerializedName("has_seats")
+        public boolean hasSeats;
+
+        public SeatingDetails(String section, int availability, float cost, boolean hasSeats) {
             this.section = section;
             this.availability = availability;
             this.ticketPrice = cost;
+            this.hasSeats = hasSeats;
         }
     }
     public EditEventRequest () {}
@@ -71,6 +78,28 @@ public class EditEventRequest {
         this.categories = categories;
         this.tags = tags;
         this.published = published;
+    }
+
+    public boolean isSeatingDetailsValid() {
+        if (seatingDetails != null) {
+            for (SeatingDetails seats : seatingDetails) {
+                if (seats.section == null || seats.section.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public int getSeatCapacity() {
+        if (seatingDetails == null) {
+            return 0;
+        }
+        int count = 0;
+        for (SeatingDetails details : seatingDetails) {
+            count += details.availability;
+        }
+        return count; 
     }
 
     public String getEventId() {

@@ -66,8 +66,8 @@ public class TestTicketPurchase {
         endTime = startTime.plus(Duration.ofHours(1));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
-                new CreateEventRequest.SeatingDetails("test_section", 10, 1),
-                new CreateEventRequest.SeatingDetails("test_section2", 20, 4)
+                new CreateEventRequest.SeatingDetails("test_section", 10, 1, true),
+                new CreateEventRequest.SeatingDetails("test_section2", 20, 4, true)
         );
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
