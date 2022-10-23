@@ -305,17 +305,11 @@ public class TickrController {
 
 
         // getting user from token
-<<<<<<< HEAD
         var user = authenticateToken(session, request.authToken); 
         // creating location from request 
         Location location = null;
         if (request.location != null) {
             location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-=======
-        var user = authenticateToken(session, request.authToken);
-        // creating location from request
-        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
->>>>>>> main
                                         request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
             session.save(location);
         }
@@ -485,12 +479,7 @@ public class TickrController {
     public void editEvent (ModelSession session, EditEventRequest request) {
         Event event = session.getById(Event.class, UUID.fromString(request.getEventId()))
                         .orElseThrow(() -> new ForbiddenException("Invalid event"));
-        User user;
-        try {
-            user = authenticateToken(session, request.getAuthToken());
-        } catch (IllegalArgumentException e){
-            throw new UnauthorizedException("Invalid auth token");
-        }
+        User user = authenticateToken(session, request.getAuthToken());
         if (user.getId() != event.getHost().getId() && !event.getAdmins().contains(user)) {
             throw new ForbiddenException("User is not a host/admin of the event!");
         }
