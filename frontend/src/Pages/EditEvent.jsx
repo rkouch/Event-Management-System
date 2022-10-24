@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -187,7 +187,7 @@ export default function EditEvent({}) {
     setFieldInState('start', dayjs(event.start_date), start, setStartValue)
     setFieldInState('end', dayjs(event.end_date), end, setEndValue)
     setEventPicture(event.picture)
-    setPublished(published)
+    setPublished(event.published)
 
     const currentSeatingDetails = []
     for (const i in event.seating_details) {
@@ -523,14 +523,14 @@ export default function EditEvent({}) {
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
                   {isHost
                     ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Checkbox disabled={(event.published)} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Switch disabled={(event.published)} checked={(published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
                         {!event.published
                           ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
                           : <></>
                         }
                       </FormGroup>
                     : <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Switch disabled={true} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
                         {!event.published
                           ? <FormHelperText>Only the host can publish an event</FormHelperText>
                           : <></>

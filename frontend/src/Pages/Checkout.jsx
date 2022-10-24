@@ -4,15 +4,124 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { getEventData, getToken } from "../Helpers";
-import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
+import { borderRadius, styled, alpha } from '@mui/system';
+import { checkValidEmail, getEventData, getToken, setFieldInState } from "../Helpers";
+import { Alert, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import SeatSelector from "../Components/SeatSelection";
 import QuantitySelector from "../Components/QuantitySelector";
-import { TkrButton } from "../Styles/InputStyles";
+import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShadowInput from "../Components/ShadowInput";
+import Collapse from '@mui/material/Collapse';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Switch from '@mui/material/Switch';
+
+const ExpandMore = styled((props) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  marginLeft: 'auto',
+  transition: theme.transitions.create('transform', {
+    duration: theme.transitions.duration.shortest,
+  }),
+}));
+
+function Section ({section, getTicketDetails, handleTicketInput, handleSectionExpanded}) {
+  return (
+    <Box sx={{display: 'flex', justifyContent: 'center', boxShadow: 5, p: 1, borderRadius: 2, flexDirection: 'column'}}>
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <Typography sx={{fontSize: 30}}>
+            {section.quantity} x {section.section}
+          </Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
+            <ExpandMore
+              sx={{
+                m:0
+              }}
+              expand={section.expanded}
+              onClick={(e)=> {handleSectionExpanded(section)}}
+              aria-expanded={section.expanded}
+              aria-label="show more"
+            >
+              <ExpandMoreIcon />
+            </ExpandMore>
+          </Box>
+          
+        </Grid>
+      </Grid>
+      <Collapse in={section.expanded}>
+        {section.seat_number.map((seat_num, key) => {
+          return (
+            <Ticket key={key} seatNum={seat_num} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput}/>
+          )
+        })}
+      </Collapse>
+    </Box>
+  )
+}
+
+function Ticket ({seatNum, section, getTicketDetails, handleTicketInput}) {
+  return (
+    <Box sx={{pt: 1, pb: 1}}>
+      <Grid container spacing={2}>
+        <Grid item xs={2}>
+        </Grid>
+        <Grid item xs={2}>
+          <CentredBox sx={{backgroundColor: alpha('#6A7B8A', 0.3), height: '100%', width: '100%', borderRadius: 3}}>
+            <Typography xs={{}}>
+              {section.section[0]}{seatNum}
+            </Typography>
+          </CentredBox>
+        </Grid>
+        <Grid item xs>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <ContrastInputWrapper>
+                <ContrastInput
+                  fullWidth
+                  placeholder="First Name"
+                  onChange={(e) => {handleTicketInput(seatNum, 'first_name', e.target.value)}}
+                  value={getTicketDetails('first_name', seatNum)}
+                >
+                </ContrastInput>
+              </ContrastInputWrapper>
+            </Grid>
+            <Grid item xs={6}>
+              <ContrastInputWrapper>
+                <ContrastInput
+                  fullWidth
+                  placeholder="Last Name"
+                  onChange={(e) => {handleTicketInput(seatNum, 'last_name', e.target.value)}}
+                  value={getTicketDetails('last_name', seatNum)}
+                >
+                </ContrastInput>
+              </ContrastInputWrapper>
+            </Grid>
+            <Grid item xs={12}>
+              <ContrastInputWrapper>
+                <ContrastInput
+                  placeholder="Email"
+                  fullWidth
+                  onChange={(e) => {handleTicketInput(seatNum, 'email', e.target.value)}}
+                  value={getTicketDetails('email', seatNum)}
+                >
+                </ContrastInput>
+              </ContrastInputWrapper>
+            </Grid>
+          </Grid>
+        </Grid>
+        <Grid item xs={2}>
+        </Grid>
+      </Grid>
+    </Box>
+  )
+}
 
 export default function Checkout ({ticketOrder}) {
   const params = useParams()
@@ -49,16 +158,45 @@ export default function Checkout ({ticketOrder}) {
   const [error, setError] = React.useState(false)
   const [errorMsg, setErrorMsg] = React.useState('')
 
-  const [firstName, setFirstName] = React.useState({
-    value: '',
-    error: false,
-    errorMsg: ''
+  const [customNames, setCustomNames] = React.useState(false)
+
+  const [ticketDetails, setTicketDetails] = React.useState([])
+
+  const [userDetails, setUserDetails] = React.useState({
+    firstName: '',
+    lastName: '',
+    email: ''
   })
 
+
   React.useEffect(()=> {
-    getEventData(params.event_id, setEvent)
-    console.log(ticketOrder)
-    setOrderDetails(ticketOrder.ticket_details)
+    try {
+      getEventData(params.event_id, setEvent)
+
+      const ticketDetails_t = []
+      const orderDetails_t = []
+      ticketOrder.ticket_details.forEach(function (section) {
+        section['expanded'] = false
+        orderDetails_t.push(section)
+
+        section.seat_number.forEach(function(seat_num) {
+          const body = {
+            first_name: '',
+            last_name: '',
+            email: '',
+            seat_num: seat_num,
+            reserve_id: '',
+          }
+          ticketDetails_t.push(body)
+        })
+      })
+      setTicketDetails(ticketDetails_t)
+      setOrderDetails(orderDetails_t)
+
+    } catch (e) {
+      navigate(`/purchase_ticket/${params.event_id}`)
+    }
+    
   },[])
 
   React.useEffect(() => {
@@ -85,8 +223,69 @@ export default function Checkout ({ticketOrder}) {
   }
 
   const handlePayment = async () => {
-    console.log(orderDetails)
+    console.log(ticketDetails)
+
+    var errorStatus = false
+    // If custom names, check all fields are filled
+    if (customNames) {
+      ticketDetails.forEach(function (ticket) {
+        if (ticket.first_name === '' || ticket.last_name === '' || ticket.email === '' || !checkValidEmail(ticket.email)) {
+          errorStatus = true
+        }
+      })
+      if (errorStatus) {
+        setError(true)
+        setErrorMsg("Invalid form details. Check all fields have been filled.")
+        return
+      }
+    } else {
+      if (userDetails.firstName === '' || userDetails.lastName === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
+        setError(true)
+        setErrorMsg("Invalid form details. Check all fields have been filled.")
+        return
+      } 
+      // Fill in remaining ticket details
+      const newState = ticketDetails.map(ticket => {
+        return {...ticket, first_name: userDetails.firstName, last_name: userDetails.lastName, email: userDetails.email}
+      })
+      setTicketDetails(newState)
+    }
   }
+
+
+  const handleTicketInput = (seat_num, field, value) => {
+    // Find tciket within ticket details
+    setError(false)
+    setErrorMsg('')
+    const newState = ticketDetails.map(ticket => {
+      if (ticket.seat_num ===  seat_num) {
+        ticket[field] = value
+        console.log(ticket)
+        return ticket;
+      }
+      return ticket
+    })
+    setTicketDetails(newState)
+  }
+
+  const handleSectionExpanded = (section) => {
+    const newState = orderDetails.map(obj => {
+      if (obj === section) {
+        return {...obj, expanded: !section.expanded}
+      }
+      return obj
+    })
+    setOrderDetails(newState)
+  }
+
+  const getTicketDetails = (field, seatNum) => {
+    for (const i in ticketDetails) {
+      const ticket = ticketDetails[i]
+      if (ticket.seat_num === seatNum) {
+        return ticket[field]
+      }
+    }
+  }   
 
   return (
     <BackdropNoBG>
@@ -116,6 +315,13 @@ export default function Checkout ({ticketOrder}) {
                 <Grid item xs={7}>
                   <Grid container>
                     <Grid item xs={1}>
+                    <CentredBox sx={{height: '100%'}}>
+                      <Tooltip title="Back to event">
+                        <IconButton onClick={()=>{navigate(`/purchase_ticket/${params.event_id}`)}}>
+                          <ArrowBackIcon/>
+                        </IconButton>
+                      </Tooltip>
+                    </CentredBox>
                     </Grid>
                     <Grid item xs={10}>
                       <CentredBox sx={{flexDirection: 'column'}}>
@@ -129,25 +335,82 @@ export default function Checkout ({ticketOrder}) {
                   </Grid>
                   <Divider/>
                   <br/>
-                  <CentredBox sx={{width: '100%', flexDirection: 'column'}}>
+                  <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
                     <Grid container spacing={2}>
+                      <Grid item xs={3}/>
                       <Grid item xs={6}>
-                      <ShadowInput 
-                        state={firstName} 
-                        setState={setFirstName} 
-                        sx={{
-                          '.MuiOutlinedInput-notchedOutline': {
-                            borderColor: firstName.error ? "red" : "rgba(0,0,0,0)"
-                          },
-                        }}
-                        defaultValue={firstName.value} 
-                        field='value' 
-                        placeholder="First Name"
-                        setError={setError}
-                      />
+                        <Typography sx={{fontWeight: 'bold', fontSize: 30, pt: 1}}>
+                          Provide Ticket Details
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={3}>
+                        <FormGroup >
+                          <FormLabel component="legend">Assign details per ticket</FormLabel>
+                          <FormControlLabel sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
+                        </FormGroup>
                       </Grid>
                     </Grid>
-                    
+                    {customNames
+                      ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
+                          {orderDetails.map((section, key) => {
+                            return (
+                              <Section key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
+                            )
+                          })}
+                        </Box>
+                      : <Grid container spacing={2}>
+                          <Grid item xs={2}></Grid>
+                          <Grid item xs={4}>
+                            <ContrastInputWrapper>
+                              <ContrastInput
+                                fullWidth
+                                placeholder="First Name"
+                                value={userDetails.firstName}
+                                onChange={(e) => {
+                                  setError(false)
+                                  setErrorMsg('')
+                                  setFieldInState('firstName', e.target.value, userDetails, setUserDetails)
+                                }}
+                              >
+                              </ContrastInput>
+                            </ContrastInputWrapper>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <ContrastInputWrapper>
+                              <ContrastInput
+                                fullWidth
+                                placeholder="Last Name"
+                                value={userDetails.lastName}
+                                onChange={(e) => {
+                                  setError(false)
+                                  setErrorMsg('')
+                                  setFieldInState('lastName', e.target.value, userDetails, setUserDetails)
+                                }}
+                              >
+                              </ContrastInput>
+                            </ContrastInputWrapper>
+                          </Grid>
+                          <Grid item xs={2}></Grid>
+                          <Grid item xs={2}></Grid>
+                          <Grid item xs={8}>
+                            <ContrastInputWrapper>
+                              <ContrastInput
+                                placeholder="Email"
+                                fullWidth
+                                value={userDetails.email}
+                                onChange={(e) => {
+                                  setError(false)
+                                  setErrorMsg('')
+                                  setFieldInState('email', e.target.value, userDetails, setUserDetails)
+                                }}
+                              >
+                              </ContrastInput>
+                            </ContrastInputWrapper>
+                          </Grid>
+                          <Grid item xs={2}></Grid>
+                        </Grid>
+
+                    }
                   </CentredBox>
                 </Grid>
                 <Divider orientation="vertical" flexItem></Divider>
@@ -181,10 +444,10 @@ export default function Checkout ({ticketOrder}) {
                                     <Typography sx={{fontSize: 20}}>
                                       {section.quantity} x {section.section} - ${section.ticket_price}
                                     </Typography>
-                                    {(section.seatsSelected)
+                                    {(section.seat_number)
                                       ? <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
-                                          {section.seatsSelected.map((seat, key) => {
-                                            if (key !== section.seatsSelected.length - 1) {
+                                          {section.seat_number.map((seat, key) => {
+                                            if (key !== section.seat_number.length - 1) {
                                               return (
                                                 <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
                                                   {section.section[0]}{seat},
@@ -233,32 +496,19 @@ export default function Checkout ({ticketOrder}) {
                       </Box>
                     </Box>
                     <br/>
-                    {allSeatsSelected()
-                      ? <TkrButton
-                          sx={{width: '100%'}}
-                          onClick={handlePayment}
-                          startIcon={<ShoppingCartOutlinedIcon/>}
-                        >
-                          Checkout
-                        </TkrButton>
-                      : <FormControl sx={{width: '100%'}}>
-                          <TkrButton
-                            sx={{width: '100%'}}
-                            disabled={true}
-                            startIcon={<ShoppingCartOutlinedIcon/>}
-                          >
-                            Checkout
-                          </TkrButton>
-                          <FormHelperText sx={{display:'flex', justifyContent: 'center'}} required={true}>
-                            <Typography sx={{color: 'rgba(0, 0, 0, 0.6)', textAlign: 'center'}} component={'span'}>
-                              Select all seats to purchase
-                            </Typography>
-                          </FormHelperText>
-                        </FormControl>
-                    }
+                    <TkrButton
+                      sx={{width: '100%'}}
+                      onClick={handlePayment}
+                      startIcon={<ShoppingCartOutlinedIcon/>}
+                    >
+                      Checkout
+                    </TkrButton>
+                    <br/>
                     <br/>
                     <Collapse in={error}>
-                      <Alert severity="error">{errorMsg}</Alert>
+                      <CentredBox>
+                        <Alert severity="error">{errorMsg}</Alert>
+                      </CentredBox>
                     </Collapse>
                   </Box>
                 </Grid>

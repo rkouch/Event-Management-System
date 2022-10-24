@@ -80,6 +80,13 @@ public class CreateEventRequest {
     }
 
     public boolean isSeatingDetailsValid() {
+        if (seatingDetails != null) {
+            for (SeatingDetails seats : seatingDetails) {
+                if (seats.section == null || seats.section.isEmpty()) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 

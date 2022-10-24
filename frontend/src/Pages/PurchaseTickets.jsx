@@ -120,7 +120,7 @@ export default function PurchaseTicket ({setTicketOrder}) {
         const sectionBody = {
           section: section.section,
           quantity: section.quantity,
-          seatsSelected: seatsSelected.length > 0 ? seatsSelected : null,
+          seat_number: seatsSelected.length > 0 ? seatsSelected : null,
           ticket_price: section.ticket_price
         }
 
