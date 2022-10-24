@@ -21,11 +21,12 @@ import tickr.util.HTTPHelper;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTicketReserve {
     private DataModel hibernateModel;
@@ -61,7 +62,7 @@ public class TestTicketReserve {
         );
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
-                .withStartDate(startTime)
+                .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken));
@@ -80,7 +81,7 @@ public class TestTicketReserve {
 
     @Test
     public void testBadRequests () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section"));
+        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section", 1, List.of()));
         var response = httpHelper.post("/api/ticket/reserve",
                 new TicketReserve.Request(authToken, null, (String)null, null));
         assertEquals(400, response.getStatus());
@@ -104,36 +105,50 @@ public class TestTicketReserve {
 
     @Test
     public void testOneTicket () {
-        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section"));
+        var ticketDetails = List.of(new TicketReserve.TicketDetails("test_section", 1, List.of()));
 
         var response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
         assertEquals(200, response.getStatus());
-        assertEquals(1, Float.parseFloat(response.getBody(TicketReserve.Response.class).price));
+        assertEquals(1, response.getBody(TicketReserve.Response.class).reserveTickets.get(0).price);
     }
 
     @Test
     public void testMultipleTickets () {
         var ticketDetails = List.of(
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
+                /*new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
                 new TicketReserve.TicketDetails( null, null, null, "test_section", 5),
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 6),
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 7)
+                new TicketReserve.TicketDetails( null, null, null, "test_section", 6),*/
+                new TicketReserve.TicketDetails("test_section", 4, List.of(4, 6, 7, 5))
         );
 
         var response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
         assertEquals(200, response.getStatus());
-        assertEquals(4, Float.parseFloat(response.getBody(TicketReserve.Response.class).price));
+        //assertEquals(4, Float.parseFloat(response.getBody(TicketReserve.ResponseNew.class).price));
+        var reserveTickets = response.getBody(TicketReserve.Response.class).reserveTickets;
+        assertEquals(4, reserveTickets.size());
+        //assertNotNull(response.reserveId);
+        //assertEquals(4, Float.parseFloat(response.price));
+        reserveTickets.sort(Comparator.comparing(r -> r.seatNum));
+        var seenIds = new HashSet<String>();
+        for (int i = 0; i < 4; i++) {
+            var reservation = reserveTickets.get(i);
+            assertEquals(4 + i, reservation.seatNum);
+            assertEquals("test_section", reservation.section);
+            assertFalse(seenIds.contains(reservation.reserveId));
+            assertEquals(1, reservation.price);
+            seenIds.add(reservation.reserveId);
+        }
     }
 
     @Test
     public void testMultipleSections () {
         var ticketDetails = List.of(
-                new TicketReserve.TicketDetails( null, null, null, "test_section", 4),
-                new TicketReserve.TicketDetails(null, null, null, "test_section2", 5)
+                new TicketReserve.TicketDetails("test_section", 4, List.of()),
+                new TicketReserve.TicketDetails("test_section2", 5, List.of())
         );
 
         var response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, ticketDetails));
         assertEquals(200, response.getStatus());
-        assertEquals(5, Float.parseFloat(response.getBody(TicketReserve.Response.class).price));
+        assertEquals(9, response.getBody(TicketReserve.Response.class).reserveTickets.size());
     }
 }

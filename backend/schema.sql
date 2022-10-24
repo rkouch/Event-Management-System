@@ -86,31 +86,33 @@ create table seating_plan (
     foreign key (event_id) references `events`(id)
 );
 
-create table event_reservation (
-    id varchar(36) not null,
-    user_id varchar(36) not null,
-    event_id varchar(36) not null,
-    price float not null,
-    primary key (id),
-    foreign key (user_id) references users(id),
-    foreign key (event_id) references `events`(id)
-);
-
 create table ticket_reservation (
     id varchar(36) not null,
     user_id varchar(36) not null,
-    first_name varchar(255),
-    last_name varchar(255),
-    email varchar(255),
+    #first_name varchar(255),
+    #last_name varchar(255),
+    #email varchar(255),
     seating_id varchar(36) not null,
     seat_num int not null,
-    reservation_id varchar(36) not null,
+    #reservation_id varchar(36) not null,
     price float not null,
     primary key (id),
     foreign key (user_id) references users(id),
-    foreign key (seating_id) references `seating_plan`(id),
-    foreign key (reservation_id) references event_reservation(id)
+    foreign key (seating_id) references `seating_plan`(id)
+    #foreign key (reservation_id) references event_reservation(id)
 );
+
+create table purchase_item (
+    id varchar(36) not null,
+    purchase_id varchar(36) not null,
+    ticket_id varchar(36) not null,
+    first_name varchar(255),
+    last_name varchar(255),
+    email varchar(255),
+    primary key (id),
+    foreign key (ticket_id) references ticket_reservation(id)
+);
+
 
 create table tickets (
     id          varchar(36) not null,
@@ -118,7 +120,10 @@ create table tickets (
     event_id     varchar(36) not null,
     section_id    varchar(36) not null,
     seat_no      int,
-    reserved   boolean,
+    first_name varchar(255),
+    last_name varchar(255),
+    email varchar(255),
+
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (event_id) references `events`(id),

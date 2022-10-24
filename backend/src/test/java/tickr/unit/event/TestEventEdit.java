@@ -115,18 +115,28 @@ public class TestEventEdit {
             "asd", null, null, null , null, null, null, null, null, false)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
             null, null, null, null , null, null, null, null, null, false)));
-
-            EditEventRequest.SeatingDetails invalidSeats3 = new EditEventRequest.SeatingDetails("SectionA", 0, 50, true);
-        List<EditEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<EditEventRequest.SeatingDetails>();
-        invalidSeatsList3.add(invalidSeats3);
+        EditEventRequest.SeatingDetails invalidSeats1 = new EditEventRequest.SeatingDetails(null, 50, 50, true);
+        List<EditEventRequest.SeatingDetails> invalidSeatsList1 = new ArrayList<EditEventRequest.SeatingDetails>();
+        invalidSeatsList1.add(invalidSeats1);
         assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, null,null, null, invalidSeatsList3, null, null, null, false)));
+        null, null, null,null, null, invalidSeatsList1, null, null, null, false)));
 
-        EditEventRequest.SeatingDetails invalidSeats4 = new EditEventRequest.SeatingDetails("SectionA", 100, 50, false);
-        List<EditEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<EditEventRequest.SeatingDetails>();
-        invalidSeatsList4.add(invalidSeats4);
+            EditEventRequest.SeatingDetails invalidSeats2 = new EditEventRequest.SeatingDetails("", 100, 50, true);
+        List<EditEventRequest.SeatingDetails> invalidSeatsList2 = new ArrayList<EditEventRequest.SeatingDetails>();
+        invalidSeatsList2.add(invalidSeats2);
         assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, null,null, null, invalidSeatsList4, null, null, null, false)));
+        null, null, null,null, null, invalidSeatsList2, null, null, null, false)));
+        //     EditEventRequest.SeatingDetails invalidSeats3 = new EditEventRequest.SeatingDetails("SectionA", 0, 50, true);
+        // List<EditEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<EditEventRequest.SeatingDetails>();
+        // invalidSeatsList3.add(invalidSeats3);
+        // assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        //     null, null, null,null, null, invalidSeatsList3, null, null, null, false)));
+
+        // EditEventRequest.SeatingDetails invalidSeats4 = new EditEventRequest.SeatingDetails("SectionA", 100, 50, false);
+        // List<EditEventRequest.SeatingDetails> invalidSeatsList4 = new ArrayList<EditEventRequest.SeatingDetails>();
+        // invalidSeatsList4.add(invalidSeats4);
+        // assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
+        //     null, null, null,null, null, invalidSeatsList4, null, null, null, false)));
     }
 
     @Test 

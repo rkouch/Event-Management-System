@@ -31,10 +31,10 @@
         <mapping class="tickr.application.entities.Category"/>
         <mapping class="tickr.application.entities.Comment"/>
         <mapping class="tickr.application.entities.Event"/>
-        <mapping class="tickr.application.entities.EventReservation"/>
         <!--<mapping class="tickr.application.entities.EventAdmin"/>-->
         <mapping class="tickr.application.entities.Group"/>
         <mapping class="tickr.application.entities.Location"/>
+        <mapping class="tickr.application.entities.PurchaseItem"/>
         <mapping class="tickr.application.entities.Reaction"/>
         <mapping class="tickr.application.entities.SeatingPlan"/>
         <mapping class="tickr.application.entities.Tag"/>

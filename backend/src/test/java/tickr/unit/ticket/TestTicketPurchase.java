@@ -9,7 +9,8 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
-import tickr.application.entities.EventReservation;
+import tickr.application.entities.PurchaseItem;
+import tickr.application.entities.SeatingPlan;
 import tickr.application.entities.Ticket;
 import tickr.application.entities.TicketReservation;
 import tickr.application.serialised.combined.TicketPurchase;
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TestTicketPurchase {
     private DataModel model;
@@ -41,6 +43,7 @@ public class TestTicketPurchase {
     private String eventId;
 
     private String requestId;
+    private List<String> requestIds;
     private float requestPrice;
 
     private LocalDateTime startTime;
@@ -68,18 +71,18 @@ public class TestTicketPurchase {
         session = TestHelper.commitMakeSession(model, session);
 
         eventId = controller.createEvent(session, new CreateEventReqBuilder()
-                .withStartDate(startTime)
+                .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
-                new TicketReserve.TicketDetails(null, null, null, "test_section"),
-                new TicketReserve.TicketDetails(null, null, null, "test_section2")
+                new TicketReserve.TicketDetails("test_section", 1, List.of()),
+                new TicketReserve.TicketDetails("test_section2", 1, List.of())
         )));
-        requestId = response.reserveId;
-        requestPrice = Float.parseFloat(response.price);
+        requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
+        requestPrice = response.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
     }
 
     @AfterEach
@@ -90,26 +93,36 @@ public class TestTicketPurchase {
 
     @Test
     public void testBadRequest () {
+        var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, null, null, null)));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId, "testing", null)));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, null, "testing", "testing")));
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId, null, "testing")));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,"http://testing.com", null, reqIds)));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, "http://testing.com", "http://testing.com", List.of())));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, null, "http://testing.com", reqIds)));
 
-        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(null, requestId, "testing", "testing")));
-        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(TestHelper.makeFakeJWT(), requestId, "testing", "testing")));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(null, "http://testing.com", "http://testing.com", reqIds)));
+        assertThrows(UnauthorizedException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(TestHelper.makeFakeJWT(), "http://testing.com", "http://testing.com", reqIds)));
 
-        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, UUID.randomUUID().toString(), "http://testing.com", "http://testing.com")));
+        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,"http://testing.com", "http://testing.com",
+                List.of(new TicketPurchase.TicketDetails(UUID.randomUUID().toString())))));
 
         var newUser = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(newUser, requestId, "http://testing.com", "http://testing.com")));
+        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(newUser,"http://testing.com", "http://testing.com", reqIds)));
+
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,"http://testing.com", "http://testing.com",
+                List.of(new TicketPurchase.TicketDetails(requestIds.get(0), null, "test", "test@example.com")))));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,"http://testing.com", "http://testing.com",
+                List.of(new TicketPurchase.TicketDetails(requestIds.get(0), "test", null, "test@example.com")))));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,"http://testing.com", "http://testing.com",
+                List.of(new TicketPurchase.TicketDetails(requestIds.get(0), "test", "test", "test@")))));
     }
 
     @Test
     public void testPurchase () {
+        var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer", 10);
-        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
-                "https://example.com/success", "https://example.com/cancel")).redirectUrl;
+        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
 
         assertTrue(purchaseAPI.isUrlValid(redirectUrl));
@@ -121,14 +134,15 @@ public class TestTicketPurchase {
 
         assertEquals(2, session.getAll(Ticket.class).size());
         assertEquals(0, session.getAll(TicketReservation.class).size());
-        assertEquals(0, session.getAll(EventReservation.class).size());
+        assertEquals(0, session.getAll(PurchaseItem.class).size());
     }
 
     @Test
     public void testCancel () {
+        var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer", 10);
-        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
-                "https://example.com/success", "https://example.com/cancel")).redirectUrl;
+        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
 
         var result = purchaseAPI.cancelOrder(redirectUrl);
@@ -137,14 +151,15 @@ public class TestTicketPurchase {
         assertEquals(10, purchaseAPI.getCustomer("test_customer").getBalance());
         assertEquals(0, session.getAll(Ticket.class).size());
         assertEquals(0, session.getAll(TicketReservation.class).size());
-        assertEquals(0, session.getAll(EventReservation.class).size());
+        assertEquals(0, session.getAll(PurchaseItem.class).size());
     }
 
     @Test
     public void testLowBalance () {
+        var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer", 0.5f);
-        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
-                "https://example.com/success", "https://example.com/cancel")).redirectUrl;
+        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
 
         var result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
@@ -153,17 +168,47 @@ public class TestTicketPurchase {
         assertEquals(0.5f, purchaseAPI.getCustomer("test_customer").getBalance());
         assertEquals(0, session.getAll(Ticket.class).size());
         assertEquals(0, session.getAll(TicketReservation.class).size());
-        assertEquals(0, session.getAll(EventReservation.class).size());
+        assertEquals(0, session.getAll(PurchaseItem.class).size());
     }
 
     @Test
     public void testBadUrls () {
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
-                "example.com/success", "https://example.com/cancel")));
+        var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "example.com/success", "https://example.com/cancel", reqIds)));
         session.rollback();
         session.close();
         session = model.makeSession();
-        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken, requestId,
-                "https://example.com/success", "not-real://example.com/cancel")));
+        assertThrows(BadRequestException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "not-real://example.com/cancel", reqIds)));
+    }
+
+    @Test
+    public void testNamesEmail () {
+        var reqIds = List.of(
+                new TicketPurchase.TicketDetails(requestIds.get(0), "John", "Doe", null),
+                new TicketPurchase.TicketDetails(requestIds.get(1), null, null, "test@gmail.com")
+        );
+        purchaseAPI.addCustomer("test_customer", 10);
+        var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
+
+        var section1 = session.getAllWith(SeatingPlan.class, "section", "test_section").get(0);
+        var section2 = session.getAllWith(SeatingPlan.class, "section", "test_section2").get(0);
+
+        var ticket1 = session.getAllWith(Ticket.class, "section", section1).get(0);
+        var ticket2 = session.getAllWith(Ticket.class, "section", section2).get(0);
+
+        assertEquals("John", ticket1.getFirstName());
+        assertEquals("Doe", ticket1.getLastName());
+        assertEquals("test@example.com", ticket1.getEmail());
+
+        assertEquals("Test", ticket2.getFirstName());
+        assertEquals("User", ticket2.getLastName());
+        assertEquals("test@gmail.com", ticket2.getEmail());
     }
 }
