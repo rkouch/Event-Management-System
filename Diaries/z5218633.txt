@@ -5,3 +5,24 @@ I was assigned mainly backend. I researched Java backend frameworks for potentia
 
 Week 2
 ===
+We decided together on the libraries and frameworks we are going to use. I started designing and implementing
+the backend architecture.
+
+Week 3
+===
+I finished implementing the backend architecture and worked on the tasks required for Sprint 1, mainly 
+user registration and login as well as event page viewing and integrating the email APIs.
+
+Week 4
+===
+We demoed our Sprint 1 for our tutor. We had a retrospective meeting, and decided on things to
+improve on. I started researching the Stripe card handling API.
+
+Week 5
+===
+I mainly worked on implemented ticket purchasing flow, including integration with the Stripe API.
+
+Week 6
+===
+My team decided to change the interface for ticket purchasing, so I updated my implementation of ticket
+purchasing to match. Additionally, I started work on additional search options.
