@@ -137,7 +137,7 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
   }
 
   return (
-    <CentredBox sx={{pl: 10, pr: 10, flexDirection: 'column'}}>
+    <CentredBox sx={{pl: 7, pr: 7, flexDirection: 'column'}}>
       <Grid container  spacing={2} >
         <Grid item xs={10}>
           <Typography sx={{fontSize: 30, fontWeight: 'bold'}}>

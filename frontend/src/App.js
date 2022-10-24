@@ -78,7 +78,7 @@ function App() {
     },
     {
       path: "/purchase_ticket/:event_id",
-      element: <PurchaseTicket setTicketOrder={setTicketOrder}/>
+      element: <PurchaseTicket setTicketOrder={setTicketOrder} ticketOrder={ticketOrder}/>
     },
     {
       path: "/checkout/:event_id",

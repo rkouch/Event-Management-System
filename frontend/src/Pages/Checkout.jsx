@@ -9,7 +9,7 @@ import { checkValidEmail, getEventData, getToken, setFieldInState } from "../Hel
 import { Alert, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import SeatSelector from "../Components/SeatSelection";
+import SeatSelector from "../Components/SeatSelector";
 import QuantitySelector from "../Components/QuantitySelector";
 import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -56,7 +56,7 @@ function Section ({section, getTicketDetails, handleTicketInput, handleSectionEx
         </Grid>
       </Grid>
       <Collapse in={section.expanded}>
-        {section.seat_number.map((seat_num, key) => {
+        {section.seat_numbers.map((seat_num, key) => {
           return (
             <Ticket key={key} seatNum={seat_num} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput}/>
           )
@@ -172,32 +172,52 @@ export default function Checkout ({ticketOrder}) {
   React.useEffect(()=> {
     try {
       getEventData(params.event_id, setEvent)
-
       const ticketDetails_t = []
       const orderDetails_t = []
       ticketOrder.ticket_details.forEach(function (section) {
         section['expanded'] = false
-        orderDetails_t.push(section)
-
-        section.seat_number.forEach(function(seat_num) {
-          const body = {
-            first_name: '',
-            last_name: '',
-            email: '',
-            seat_num: seat_num,
-            reserve_id: '',
-          }
-          ticketDetails_t.push(body)
-        })
+        
+        // Fill in section details
+        if (section.seat_number.length !== 0) {
+          section.seat_numbers.forEach(function(seat_num) {
+            const body = {
+              first_name: '',
+              last_name: '',
+              email: '',
+              seat_num: seat_num,
+              section: section.section,
+              reserve_id: ticketOrder.reserve_Tickets.forEach(function (reserve) {
+                if (reserve.seat_number === seat_num) {
+                  return reserve.reserve_id
+                }
+              })
+            }
+            ticketDetails_t.push(body)
+          })
+          orderDetails_t.push(section)
+        } else {
+          ticketOrder.reserve_Tickets.forEach(function (reserve) {
+            if (reserve.section === section.section) {
+              reserve['first_name'] = ''
+              reserve['last_name'] = ''
+              reserve['email'] = ''
+              ticketDetails_t.push(reserve)
+              section.seat_number.push(reserve.seat_number)
+            }
+          })
+          orderDetails_t.push(section)
+        }
       })
       setTicketDetails(ticketDetails_t)
+      console.log(ticketDetails_t)
+      console.log(orderDetails_t)
       setOrderDetails(orderDetails_t)
 
     } catch (e) {
-      navigate(`/purchase_ticket/${params.event_id}`)
+      // navigate(`/purchase_ticket/${params.event_id}`)
     }
     
-  },[])
+  },[ticketOrder])
 
   React.useEffect(() => {
     var total = 0
@@ -316,11 +336,12 @@ export default function Checkout ({ticketOrder}) {
                   <Grid container>
                     <Grid item xs={1}>
                     <CentredBox sx={{height: '100%'}}>
-                      <Tooltip title="Back to event">
+                      {/* can be reintroduced later */}
+                      {/* <Tooltip title="Back to ticket menu">
                         <IconButton onClick={()=>{navigate(`/purchase_ticket/${params.event_id}`)}}>
                           <ArrowBackIcon/>
                         </IconButton>
-                      </Tooltip>
+                      </Tooltip> */}
                     </CentredBox>
                     </Grid>
                     <Grid item xs={10}>

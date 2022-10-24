@@ -4,16 +4,33 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { getEventData, getToken } from "../Helpers";
-import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
+import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState } from "../Helpers";
+import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import SeatSelector from "../Components/SeatSelection";
+import SeatSelector from "../Components/SeatSelector";
 import QuantitySelector from "../Components/QuantitySelector";
-import { TkrButton } from "../Styles/InputStyles";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { borderRadius, styled, alpha } from '@mui/system';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Switch from '@mui/material/Switch';
+import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
+import SectionDetails from "../Components/SectionDetails";
 
-export default function PurchaseTicket ({setTicketOrder}) {
+
+const ExpandMore = styled((props) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  marginLeft: 'auto',
+  transition: theme.transitions.create('transform', {
+    duration: theme.transitions.duration.shortest,
+  }),
+}));
+
+
+export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   const params = useParams()
   const navigate = useNavigate()
   var calendar = require('dayjs/plugin/calendar')
@@ -46,6 +63,24 @@ export default function PurchaseTicket ({setTicketOrder}) {
   const [error, setError] = React.useState(false)
   const [errorMsg, setErrorMsg] = React.useState('')
 
+  const [error2, setError2] = React.useState(false)
+  const [errorMsg2, setErrorMsg2] = React.useState('')
+
+  const [ticketSelect, setTicketSelect] = React.useState(true)
+  const [detailsInput, setDetailsInput] = React.useState(false)
+  const [customNames, setCustomNames] = React.useState(false)
+  const [areTicketsReserved, setAreTicketsReserved] = React.useState(false)
+
+  const [reservedTickets, setReservedTickets] = React.useState([])
+  const [orderDetails, setOrderDetails] = React.useState([])
+
+  const [userDetails, setUserDetails] = React.useState({
+    firstName: '',
+    lastName: '',
+    email: ''
+  })
+
+
   // Set up seat selector
   React.useEffect(() => {
     for (const m in event.seating_details) {
@@ -60,7 +95,7 @@ export default function PurchaseTicket ({setTicketOrder}) {
         ticket_price: section.ticket_price,
         section: section.section,
         available_seats: section.available_seats,
-        capacity: section.available_seats,
+        capacity: section.total_seats,
         seats: seats,
         quantity: 0,
         selectable: section.has_seats,
@@ -106,6 +141,40 @@ export default function PurchaseTicket ({setTicketOrder}) {
     return allSelected
   }
 
+
+  const handleTicketInput = (reserve_id, field, value) => {
+    // Find tciket within ticket details
+    setError(false)
+    setErrorMsg('')
+    const newState = reservedTickets.map(ticket => {
+      if (ticket.reserve_id ===  reserve_id) {
+        ticket[field] = value
+        return ticket;
+      }
+      return ticket
+    })
+    setReservedTickets(newState)
+  }
+
+  const handleSectionExpanded = (section) => {
+    const newState = orderDetails.map(obj => {
+      if (obj === section) {
+        return {...obj, expanded: !section.expanded}
+      }
+      return obj
+    })
+    setOrderDetails(newState)
+  }
+
+  const getTicketDetails = (field, reserve_id) => {
+    for (const i in reservedTickets) {
+      const ticket = reservedTickets[i]
+      if (ticket.reserve_id === reserve_id) {
+        return ticket[field]
+      }
+    }
+  }
+
   const handleCheckout = async () => {
     // Prepare data package
     const ticketDetails = []
@@ -120,7 +189,7 @@ export default function PurchaseTicket ({setTicketOrder}) {
         const sectionBody = {
           section: section.section,
           quantity: section.quantity,
-          seat_number: seatsSelected.length > 0 ? seatsSelected : null,
+          seat_numbers: seatsSelected.length > 0 ? seatsSelected : [],
           ticket_price: section.ticket_price
         }
 
@@ -131,25 +200,117 @@ export default function PurchaseTicket ({setTicketOrder}) {
     const body = {
       auth_token: getToken(),
       event_id: params.event_id,
-      ticket_datetime: Date(),
+      ticket_datetime: event.start_date,
       ticket_details: ticketDetails,
     }
 
     try {
       // Send API call
       console.log('Make api call')
+      const response = await apiFetch('POST', '/api/ticket/reserve', body)
+      
+      const reservedTickets_t = []
+      response.reserve_tickets.forEach((function (reserve) {
+        reserve['first_name'] = ''
+        reserve['last_name'] = ''
+        reserve['email'] = ''
+        reserve['request_id'] = reserve.reserve_id
+        reservedTickets_t.push(reserve)
+      }))
+      setReservedTickets(reservedTickets_t)
 
-      setTicketOrder(body)
-      // Navigate to purchasing page
-      navigate(`/checkout/${params.event_id}`)
 
+      // Set section details with matching reserveid
+      const orderDetails_t = []
+      ticketDetails.forEach(function (section) {
+        section['expanded'] = false
+        section['reserved_seats'] = []
+        response.reserve_tickets.forEach((function (reserve) {
+          if (reserve.section === section.section)
+            section['reserved_seats'].push(reserve)
+        }))
+        orderDetails_t.push(section)
+      })
+      console.log(orderDetails_t)
+      setOrderDetails(orderDetails_t)
+
+      body['reserve_tickets'] = response.reserve_tickets
+      console.log(body)
+      setAreTicketsReserved(true)
+      setTicketSelect(false)
+      setDetailsInput(true)
     } catch (error) {
       // Display error message in error collapse
       setError(true)
       setErrorMsg(error.reason)
     }
+  }
+
+  React.useEffect(() => {
+    if (error2)  {
+      setError2(false)
+      setErrorMsg2('')
+    }
+  }, [reservedTickets])
+
+  const handlePayment = async () => {
+    var errorStatus = false
+    // If custom names, check all fields are filled
+    if (customNames) {
+      reservedTickets.forEach(function (ticket) {
+        if (ticket.first_name === '' || ticket.last_name === '' || ticket.email === '' || !checkValidEmail(ticket.email)) {
+          errorStatus = true
+        }
+      })
+      if (errorStatus) {
+        setError2(true)
+        setErrorMsg2("Invalid form details. Check all fields have been filled.")
+        return
+      }
+      console.log(reservedTickets)
+      const body = {
+        auth_token: getToken(),
+        ticket_details: reservedTickets,
+        success_url: `http://localhost:3000/view_ticket/${params.event_id}`,
+        cancel_url: `http://localhost:3000/view_event/${params.event_id}`
+      }
+      try {
+        const response = await apiFetch('POST', '/api/ticket/purchase', body)
+        console.log(response)
+      } catch (error) {
+        console.log(error)
+      }
+
+    } else {
+      if (userDetails.firstName === '' || userDetails.lastName === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
+        setError2(true)
+        setErrorMsg2("Invalid form details. Check all fields have been filled.")
+        return
+      } 
+      // Fill in remaining ticket details
+      const newState = reservedTickets.map(ticket => {
+        return {...ticket, first_name: userDetails.firstName, last_name: userDetails.lastName, email: userDetails.email}
+      })
+
+      console.log(newState)
+      const body = {
+        auth_token: getToken(),
+        ticket_details: newState,
+        success_url: `http://localhost:3000/view_ticket/${params.event_id}`,
+        cancel_url: `http://localhost:3000/view_event/${params.event_id}`
+      }
+
+      try {
+        const response = await apiFetch('POST', '/api/ticket/purchase', body)
+        console.log(response)
+      } catch (error) {
+        console.log(error)
+      }
+    }
 
     
+    
+
   }
 
   return (
@@ -210,17 +371,194 @@ export default function PurchaseTicket ({setTicketOrder}) {
                   <Divider/>
                   <br/>
                   <br/>
-                  {(sectionDetails).map((section, key) => {
-                    return (
-                      <div key={key}>
-                        {section.selectable
-                          ? <SeatSelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
-                          : <QuantitySelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
-                        }
-                      </div>
-                      
-                    )
-                  })}
+                  <Box sx={{pl: 1, pr: 1}}>
+                    <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: ticketSelect ? '#FFFFFF' : '#EEEEEE'}}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                          <Typography sx={{fontSize: 30, fontWeight: 'bold', color: !areTicketsReserved ? 'black' : 'rgba(0, 0, 0, 0.26)'}}>
+                            1. Select Tickets
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                          {/* <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
+                            <ExpandMore
+                              sx={{
+                                m:0
+                              }}
+                              expand={ticketSelect}
+                              onClick={(e)=> {setTicketSelect(!ticketSelect)}}
+                              aria-expanded={ticketSelect}
+                              aria-label="show more"
+                              disabled={areTicketsReserved}
+                            >
+                              <ExpandMoreIcon />
+                            </ExpandMore>
+                          </Box> */}
+                        </Grid>
+                      </Grid>
+                      <Collapse in={ticketSelect}>
+                        {(sectionDetails).map((section, key) => {
+                          return (
+                            <div key={key}>
+                              {section.selectable
+                                ? <SeatSelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                                : <QuantitySelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                              }
+                            </div>
+                          )
+                        })}
+                        <Divider variant="middle" />
+                        <br/>
+                        <Box sx={{ml: 5, mr: 5}}>
+                          <CentredBox sx={{width: '100%', flexDirection: 'column'}}>
+                            {(allSeatsSelected() && selectedSeats.length !== 0)
+                              ? <TkrButton
+                                sx={{width: '100%'}}
+                                  onClick={handleCheckout}
+                                >
+                                  Confirm Seats
+                                </TkrButton>
+                              : <FormControl sx={{width: '100%'}}>
+                                  <TkrButton
+                                    sx={{width: '100%'}}
+                                    disabled={true}
+                                  >
+                                    Checkout
+                                  </TkrButton>
+                                  <FormHelperText sx={{display:'flex', justifyContent: 'center'}} required={true}>
+                                    <Typography sx={{color: 'rgba(0, 0, 0, 0.6)', textAlign: 'center'}} component={'span'}>
+                                      Select all seats to purchase
+                                    </Typography>
+                                  </FormHelperText>
+                                </FormControl>
+                            }
+                            <br/>
+                            <Collapse in={error}>
+                              <Alert severity="error">{errorMsg}</Alert>
+                            </Collapse>
+                          </CentredBox>
+                        </Box>
+                      </Collapse>
+                    </Box>
+                    <br/>
+                    <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: detailsInput ? '#FFFFFF' : '#EEEEEE'}}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                          <Typography sx={{fontSize: 30, fontWeight: 'bold', color: areTicketsReserved ? 'black' : 'rgba(0, 0, 0, 0.26)'}}>
+                            2. Enter Order Details
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                          {/* <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
+                            <ExpandMore
+                              sx={{
+                                m:0
+                              }}
+                              expand={detailsInput}
+                              onClick={(e)=> {setDetailsInput(!detailsInput)}}
+                              aria-expanded={detailsInput}
+                              aria-label="show more"
+                              disabled={!areTicketsReserved}
+                            >
+                              <ExpandMoreIcon />
+                            </ExpandMore>
+                          </Box> */}
+                        </Grid>
+                      </Grid>
+                      <Collapse in={detailsInput}>
+                        <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
+                          <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                            </Grid>
+                            <Grid item xs={6}>
+                              <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+                                <FormGroup >
+                                  <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
+                                </FormGroup>
+                              </Box>  
+                            </Grid>
+                          </Grid>
+                          {customNames
+                            ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
+                                {orderDetails.map((section, key) => {
+                                  return (
+                                    <SectionDetails key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
+                                  )
+                                })}
+                              </Box>
+                            : <Grid container spacing={2}>
+                                <Grid item xs={2}></Grid>
+                                <Grid item xs={4}>
+                                  <ContrastInputWrapper>
+                                    <ContrastInput
+                                      fullWidth
+                                      placeholder="First Name"
+                                      value={userDetails.firstName}
+                                      onChange={(e) => {
+                                        setError2(false)
+                                        setErrorMsg2('')
+                                        setFieldInState('firstName', e.target.value, userDetails, setUserDetails)
+                                      }}
+                                    >
+                                    </ContrastInput>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                                <Grid item xs={4}>
+                                  <ContrastInputWrapper>
+                                    <ContrastInput
+                                      fullWidth
+                                      placeholder="Last Name"
+                                      value={userDetails.lastName}
+                                      onChange={(e) => {
+                                        setError2(false)
+                                        setErrorMsg2('')
+                                        setFieldInState('lastName', e.target.value, userDetails, setUserDetails)
+                                      }}
+                                    >
+                                    </ContrastInput>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                                <Grid item xs={2}></Grid>
+                                <Grid item xs={2}></Grid>
+                                <Grid item xs={8}>
+                                  <ContrastInputWrapper>
+                                    <ContrastInput
+                                      placeholder="Email"
+                                      fullWidth
+                                      value={userDetails.email}
+                                      onChange={(e) => {
+                                        setError2(false)
+                                        setErrorMsg2('')
+                                        setFieldInState('email', e.target.value, userDetails, setUserDetails)
+                                      }}
+                                    >
+                                    </ContrastInput>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                                <Grid item xs={2}></Grid>
+                              </Grid>
+                          }
+                          <br/>
+                          <TkrButton
+                            sx={{width: '100%'}}
+                            onClick={handlePayment}
+                            startIcon={<ShoppingCartOutlinedIcon/>}
+                          >
+                            Checkout
+                          </TkrButton>
+                          <br/>
+                          <br/>
+                          <Collapse in={error2}>
+                            <CentredBox>
+                              <Alert severity="error">{errorMsg2}</Alert>
+                            </CentredBox>
+                          </Collapse>
+                        </CentredBox>
+                      </Collapse>
+                    </Box>
+                  </Box>
+                  
+                  
                 </Grid>
                 <Divider orientation="vertical" flexItem></Divider>
                 <Grid item xs={4}>
@@ -309,38 +647,6 @@ export default function PurchaseTicket ({setTicketOrder}) {
                       }
                     </Box>
                     <br/>
-                    {(selectedSeats.length === 0)
-                      ? <></>
-                      : <CentredBox sx={{width: '100%', flexDirection: 'column'}}>
-                          {allSeatsSelected()
-                            ? <TkrButton
-                                sx={{width: '100%'}}
-                                onClick={handleCheckout}
-                                startIcon={<ShoppingCartOutlinedIcon/>}
-                              >
-                                Checkout
-                              </TkrButton>
-                            : <FormControl sx={{width: '100%'}}>
-                                <TkrButton
-                                  sx={{width: '100%'}}
-                                  disabled={true}
-                                  startIcon={<ShoppingCartOutlinedIcon/>}
-                                >
-                                  Checkout
-                                </TkrButton>
-                                <FormHelperText sx={{display:'flex', justifyContent: 'center'}} required={true}>
-                                  <Typography sx={{color: 'rgba(0, 0, 0, 0.6)', textAlign: 'center'}} component={'span'}>
-                                    Select all seats to purchase
-                                  </Typography>
-                                </FormHelperText>
-                              </FormControl>
-                          }
-                          <br/>
-                          <Collapse in={error}>
-                            <Alert severity="error">{errorMsg}</Alert>
-                          </Collapse>
-                        </CentredBox>
-                    }
                   </Box>
                 </Grid>
               </Grid>
