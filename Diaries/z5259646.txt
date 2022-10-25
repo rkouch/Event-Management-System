@@ -12,8 +12,20 @@ Our group also formed our key functionalities, split them into sprints and draft
 I created the document for the business proposal including formating as well as splitting up sections based upon the rubric
 
 Week 3
-- Finished business proposla by the end of the week. Responsible for creating interface flow diagrams that covered all user stories
+- Finished business proposal by the end of the week. Responsible for creating interface flow diagrams that covered all user stories
 - began coding the front end pages for log in and register
 - create the landing page for Tickr
 
 Week 4
+- Finished login and register pages
+- created view profile and edit profile screens
+- created create event and view event pages for Tickr
+
+Week 5
+- Worked on retrospective with team
+- updated create event page to enable seating arangements in sections
+- began working on initial pruchase ticket screens
+
+Week 6
+- finalise purchase ticket screens, including seat selection
+- hooked up seating with the backend
