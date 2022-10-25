@@ -1,1 +1,14 @@
+Week 1
+- Met with group members and had a discussion about which project we wanted to choose
+
+Week 2 
+- Had our tutorial and discussed our novel functionalities with Dylan. 
+- We delegated our roles (backend/frontend)
+- Split up the work for our proposal
+
+Week 3 
+- Finished the business proposal - I was responsible for creating the SQL schema and writing up explanations for our functionalities. 
+
+Week 4 
+- Worked on event user stories, mainly backend. A bit of frontend was done for events. 
 

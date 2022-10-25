@@ -1,4 +1,5 @@
 import { ThemeProvider, createTheme,  alpha} from '@mui/material/styles';
+import { pink } from '@mui/material/colors';
 
 export const TickrTheme = createTheme({
   components: {
@@ -38,6 +39,21 @@ export const TickrTheme = createTheme({
           "&.Mui-checked" : {
             color: "#AE759F",
           }
+        }
+      }
+    },
+    MuiSwitch: {
+      styleOverrides: {
+        root: {
+          '& .MuiSwitch-switchBase.Mui-checked': {
+            color: '#73B5D3',
+            '&:hover': {
+              backgroundColor: alpha('#73B5D3', 0.1),
+            },
+          },
+          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+            backgroundColor: '#73B5D3',
+          },
         }
       }
     }

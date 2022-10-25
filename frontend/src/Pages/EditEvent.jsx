@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormGroup, FormLabel, List, ListItem, Typography } from "@mui/material";
+import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -33,7 +33,7 @@ import Checkbox from '@mui/material/Checkbox';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import UserAvatar from "../Components/UserAvatar";
 
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
@@ -125,7 +125,9 @@ export default function EditEvent({}) {
 
   const [newSection, setNewSection] = React.useState({
     section: '',
-    availability: 0,
+    available_seats: 0,
+    ticket_price: 0,
+    has_seats: false,
     error: false,
     errorMsg: '',
   });
@@ -185,7 +187,17 @@ export default function EditEvent({}) {
     setFieldInState('start', dayjs(event.start_date), start, setStartValue)
     setFieldInState('end', dayjs(event.end_date), end, setEndValue)
     setEventPicture(event.picture)
-    setSeatingList(event.seating_details)
+    setPublished(event.published)
+
+    const currentSeatingDetails = []
+    for (const i in event.seating_details) {
+      const section = event.seating_details[i]
+      console.log(section)
+      section['availability'] = section.total_seats
+      currentSeatingDetails.push(section)
+    }
+    console.log(currentSeatingDetails)
+    setSeatingList(currentSeatingDetails)
     // setPublished(response.published)
 
     // Set if it is the host who is logged in
@@ -303,7 +315,9 @@ export default function EditEvent({}) {
     sectionList.push(newSection.stateCopy);
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
-    setFieldInState('availability', 0, newSection, setNewSection)
+    setFieldInState('available_seats', 0, newSection, setNewSection)
+    setFieldInState('ticket_price', 0, newSection, setNewSection)
+    setFieldInState('has_seats', false, newSection, setNewSection)
   };
 
   const removeSeating = (index) => {
@@ -392,7 +406,7 @@ export default function EditEvent({}) {
       setErrorStatus(true)
       setFieldInState('error', true, newSection, setNewSection)
       setErrorMsg('Please allocate seating')
-      
+      return
     }
     
 
@@ -448,7 +462,7 @@ export default function EditEvent({}) {
       categories: [],
       tags: [],
       admins: adminList,
-      published: false,
+      published:published,
     };
 
     
@@ -477,12 +491,30 @@ export default function EditEvent({}) {
           borderRadius: "15px",
           paddingBottom: 5,
           paddingTop: 1,
+          boxShadow: 5,
         }}
       >
         {(eventName.value !== '')
           ? <>
-            <Grid container spacing={2}>
-              <Grid item xs={3}>
+            <Grid 
+              container
+              spacing={2}
+              sx={{
+                marginLeft: 1,
+                marginRight: 5,
+              }}
+            >
+              <Grid item xs={3} sx={{p: 2}}>
+                {isHost
+                  ? <FormInput>
+                      <CentredBox>
+                        <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
+                          Delete Event
+                        </DeleteButton>
+                      </CentredBox>
+                    </FormInput>
+                  : <></>
+                }
               </Grid>
               <Grid item xs={6}>
                 <H3 sx={{ fontSize: "30px" }}>Edit Event</H3>
@@ -491,14 +523,14 @@ export default function EditEvent({}) {
                 <Box sx={{display: 'flex', justifyContent: 'flex-end', pr: 2, height: '100%', alignItems: 'center'}}>
                   {isHost
                     ? <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end', pr: 0}} control={<Switch disabled={(event.published)} checked={(published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" onChange={(e) => setPublished(!published)}/>
                         {!event.published
                           ? <FormHelperText>Once published an event cannot be unpublished</FormHelperText>
                           : <></>
                         }
                       </FormGroup>
                     : <FormGroup sx={{alignItems: 'right', justifyContent:'flex-end'}}>
-                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Checkbox disabled={true} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
+                        <FormControlLabel sx={{alignItems: 'right', justifyContent:'flex-end'}} control={<Switch disabled={true} checked={(event.published)} sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}/>} label="Published" />
                         {!event.published
                           ? <FormHelperText>Only the host can publish an event</FormHelperText>
                           : <></>
@@ -799,142 +831,288 @@ export default function EditEvent({}) {
                   </Grid>
                   <Grid item xs={1}></Grid>
                   <Grid item xs={5}>
-                    <Box>
-                      <h3> Ticket Allocations </h3>
-                      <Grid container spacing={2}>
-                        <Grid item xs={7}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Section
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Availability
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        <Grid item xs={2}>
-                          <Typography sx={{fontWeight: 'bold'}}>
-                            Delete
-                          </Typography>
-                          <Divider/>
-                        </Grid>
-                        {seatingList.map((value, index) => {
-                          return (
-                            <Grid item key={index} sx={{width: '100%'}}>
-                              <ContrastInputWrapper>
-                                <Grid container spacing={1}>
-                                  <Grid item xs={7}>
-                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 'bold',
-                                        }}
-                                      >
-                                        {value.section}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  <Grid item xs={3}>
-                                    <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 'bold',
-                                        }}
-                                      >
-                                        {value.availability}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  <Grid item xs={2}>
-                                    <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                      <IconButton
-                                        edge="end"
-                                        aria-label="delete"
-                                        onClick={() => removeSeating(index)}
-                                        sx={{marginRight: 0}}
-                                      >
-                                        <DeleteIcon />
-                                      </IconButton>
-                                    </Box>
-                                  </Grid>
-                                </Grid>
-                              </ContrastInputWrapper>
+                    {!event.published
+                      ? <Box>
+                          <h3> Ticket Allocations </h3>
+                          <Grid container spacing={2}>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Section
+                              </Typography>
+                              <Divider/>
                             </Grid>
-                          );
-                        })}
-                      </Grid>
-                      <Box sx={{marginRight: 4, width: '100%'}}>
-                        <Grid container spacing={1}>
-                          <Grid item xs={7}>
-                            <ContrastInputWrapper>
-                              <ContrastInput
-                                placeholder={'Section Name'}
-                                fullWidth 
-                                onChange={(e) => {
-                                  setFieldInState('section', e.target.value, newSection, setNewSection)
-                                  setFieldInState('error', false, newSection, setNewSection)
-                                  setErrorStatus(false)
-                                }}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
-                                value = {newSection.section}
-                              />
-                            </ContrastInputWrapper>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Availability
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Cost
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Seating
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            {seatingList.map((value, index) => {
+                              return (
+                                <Grid item key={index} sx={{width: '100%'}}>
+                                  <ContrastInputWrapper>
+                                    <Grid container spacing={1}>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.section}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                              width: '100%'
+                                            }}
+                                          >
+                                            {value.available_seats}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%', width: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                              width: '100%'
+                                            }}
+                                          >
+                                            ${value.ticket_price}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={2}>
+                                        <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                          <Checkbox disabled checked={value.has_seats}/>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={1}>
+                                        <Box sx={{height: "100%", width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                          <IconButton
+                                            edge="end"
+                                            aria-label="delete"
+                                            onClick={() => removeSeating(index)}
+                                            sx={{marginRight: 0}}
+                                          >
+                                            <DeleteIcon />
+                                          </IconButton>
+                                        </Box>
+                                      </Grid>
+                                    </Grid>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                              );
+                            })}
                           </Grid>
-                          <Grid item xs={3}>
-                            <ContrastInputWrapper>
-                              <ContrastInput 
-                                type="number"
-                                placeholder="Spots"
-                                fullWidth 
-                                onChange={(e) => {
-                                  const val = e.target.value
-                                  if (val < 0) {
-                                    setFieldInState('availability', 0, newSection, setNewSection)
-                                  } else {
-                                    setFieldInState('availability', val, newSection, setNewSection)
-                                  } 
-                                  setFieldInState('error', false, newSection, setNewSection)
-                                  setErrorStatus(false)
-                                }}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
-                                value = {newSection.availability}
-                              />
-                            </ContrastInputWrapper>
+                          <Box sx={{marginRight: 4, width: '100%'}}>
+                            <Grid container spacing={1}>
+                              <Grid item xs={3}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput
+                                    placeholder={'Section'}
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      setFieldInState('section', e.target.value, newSection, setNewSection)
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    value = {newSection.section}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={3}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput 
+                                    type="number"
+                                    placeholder="Spots"
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      const val = e.target.value
+                                      if (val < 0) {
+                                        setFieldInState('available_seats', 0, newSection, setNewSection)
+                                      } else {
+                                        setFieldInState('available_seats', val, newSection, setNewSection)
+                                      } 
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    value = {newSection.available_seats}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={3}>
+                                <ContrastInputWrapper>
+                                  <ContrastInput 
+                                    type="number"
+                                    placeholder="Cost"
+                                    fullWidth 
+                                    onChange={(e) => {
+                                      const val = e.target.value
+                                      if (val < 0) {
+                                        setFieldInState('ticket_price', 0, newSection, setNewSection)
+                                      } else {
+                                        setFieldInState('ticket_price', val, newSection, setNewSection)
+                                      } 
+                                      setFieldInState('error', false, newSection, setNewSection)
+                                      setErrorStatus(false)
+                                    }}
+                                    sx={{
+                                      '.MuiOutlinedInput-notchedOutline': {
+                                        borderColor: newSection.error ? "red" : "rgba(0,0,0,0)"
+                                      },
+                                    }}
+                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                    value = {newSection.ticket_price}
+                                  />
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={2}>
+                                <ContrastInputWrapper sx={{ height: '100%'}}>
+                                  <CentredBox sx={{ height: '100%'}}>
+                                    <Checkbox
+                                      checked={newSection.has_seats}
+                                      onChange={(e) => {
+                                        setFieldInState('has_seats', e.target.checked, newSection, setNewSection)
+                                        setFieldInState('error', false, newSection, setNewSection)
+                                        setErrorStatus(false)
+                                      }}
+                                    />
+                                  </CentredBox>
+                                </ContrastInputWrapper>
+                              </Grid>
+                              <Grid item xs={1}>
+                                <ContrastInputWrapper 
+                                  sx={{
+                                    height: "100%",
+                                    width: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: ((newSection.section.length > 0) && (newSection.available_seats > 0)) ? alpha('#6A7B8A', 0.3) : "rgba(0, 0, 0, 0.08)",
+                                    '&:hover': {
+                                      backgroundColor: ((newSection.section.length > 0) && (newSection.available_seats > 0)) ? alpha('#6A7B8A', 0.5): "rgba(0, 0, 0, 0.08)",
+                                    },
+                                  }}
+                                >
+                                  <IconButton
+                                    edge="end"
+                                    onClick={addSection}
+                                    sx={{marginRight: 0}}
+                                    disabled = {((newSection.section.length === 0)|| (newSection.available_seats === 0))}
+                                  >
+                                    <AddIcon/>
+                                  </IconButton>
+                                </ContrastInputWrapper>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        </Box>
+                      : <Box>
+                          <h3> Ticket Allocations </h3>
+                          <Grid container spacing={2}>
+                            <Grid item xs={4}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Section
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Availability
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Cost
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Typography sx={{fontWeight: 'bold'}}>
+                                Seats
+                              </Typography>
+                              <Divider/>
+                            </Grid>
+                            {seatingList.map((value, index) => {
+                              return (
+                                <Grid item key={index} sx={{width: '100%'}}>
+                                  <ContrastInputWrapper>
+                                    <Grid container spacing={1}>
+                                      <Grid item xs={4}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.section}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {value.available_seats}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={3}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Typography
+                                            sx={{
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            ${value.ticket_price}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                      <Grid item xs={2}>
+                                        <Box sx={{display: 'flex', alignItems:'center', height: '100%'}}>
+                                          <Checkbox checked={value.has_seats} disabled/>
+                                        </Box>
+                                      </Grid>
+                                    </Grid>
+                                  </ContrastInputWrapper>
+                                </Grid>
+                              );
+                            })}
                           </Grid>
-                          <Grid item xs={2}>
-                            <ContrastInputWrapper 
-                              sx={{
-                                height: "100%",
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: ((newSection.section.length === 0)|| (newSection.availability === 0)) ? "rgba(0, 0, 0, 0.08)" : alpha('#6A7B8A', 0.3)
-                              }}
-                            >
-                              <IconButton
-                                edge="end"
-                                onClick={addSection}
-                                sx={{marginRight: 0}}
-                                disabled = {((newSection.section.length === 0)|| (newSection.availability === 0))}
-                              >
-                                <AddIcon/>
-                              </IconButton>
-                            </ContrastInputWrapper>
-                          </Grid>
-                        </Grid>
                       </Box>
-                    </Box>
+                    }
                     <br/>
                     <Box>
                       <h3> Tags </h3>
@@ -945,16 +1123,19 @@ export default function EditEvent({}) {
               </EventForm>
               <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
                 <Grid item xs={3}>
-                  {isHost
-                    ? <FormInput>
-                        <CentredBox>
-                          <DeleteButton variant="contained" sx={{textTransform: "none", textAlign: "left",  width: 200}} startIcon={<DeleteIcon/>} onClick={()=>setOpenDeleteMenu(true)}>
-                            Delete
-                          </DeleteButton>
-                        </CentredBox>
-                      </FormInput>
-                    : <></>
-                  }
+                  <FormInput>
+                    <CentredBox>
+                      <TkrButton2 variant="contained" onClick={() => navigate(`/view_event/${params.event_id}`)} startIcon={<DeleteIcon/>} sx={{textTransform: "none", textAlign: "left"}}>
+                        <Typography
+                          sx={{
+                            fontSize: "20px"
+                          }}
+                        >
+                          Discard Changes
+                        </Typography>
+                      </TkrButton2>
+                    </CentredBox>
+                  </FormInput>
                 </Grid>
                 <Grid item xs={6}>
                 </Grid> 
