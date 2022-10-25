@@ -249,6 +249,16 @@ public class Event {
         this.seatCapacity = seatCapacity;
     }
 
+    public Set<String> getUserTicketIds (User user) {
+        Set<String> set = new HashSet<>();
+        for (Ticket ticket : tickets) {
+            if (ticket.getUser() == user) {
+                set.add(ticket.getId().toString());
+            }
+        }
+        return set; 
+    }
+
     public void editEvent (EditEventRequest request, ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
                              Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
         if (eventName != null) {

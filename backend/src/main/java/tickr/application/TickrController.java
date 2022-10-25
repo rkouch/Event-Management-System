@@ -30,6 +30,8 @@ import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
+import tickr.application.serialised.responses.TicketBookingsResponse;
+import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
@@ -671,5 +673,24 @@ public class TickrController {
             i.cancel(session);
             session.remove(i);
         }
+    }
+
+    public TicketViewResponse ticketView (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("ticket_id")) {
+            throw new BadRequestException("Missing ticket ID!");
+        }
+        Ticket ticket = session.getById(Ticket.class, UUID.fromString(params.get("ticket_id")))
+                            .orElseThrow(() -> new ForbiddenException("Invalid ticket ID!"));
+        return new TicketViewResponse(ticket.getEvent().getId().toString(), ticket.getUser().getId().toString(), ticket.getSection().getSection(), ticket.getSeatNumber());
+    }
+
+    public TicketBookingsResponse ticketBookings (ModelSession session, Map<String, String> params) {
+        User user = authenticateToken(session, params.get("auth_token"));
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        // if (event.getHost() != user && !event.getAdmins().contains(user)) {
+        //     throw new BadRequestException("User is not admin/host of the event!");
+        // }
+        return new TicketBookingsResponse(event.getUserTicketIds(user));
     }
 }

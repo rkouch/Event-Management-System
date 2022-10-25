@@ -44,7 +44,7 @@ public class Ticket {
 
     private String email;
 
-    private UUID getId () {
+    public UUID getId () {
         return id;
     }
 
@@ -52,7 +52,7 @@ public class Ticket {
         this.id = id;
     }
 
-    private User getUser () {
+    public User getUser () {
         return user;
     }
 
@@ -60,7 +60,7 @@ public class Ticket {
         this.user = user;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 
@@ -68,7 +68,7 @@ public class Ticket {
         this.event = event;
     }
 
-    private SeatingPlan getSection () {
+    public SeatingPlan getSection () {
         return section;
     }
 
