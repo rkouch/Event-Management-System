@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.TicketViewResponse;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -111,5 +113,10 @@ public class Ticket {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+    }
+
+    public TicketViewResponse getTicketViewResponse () {
+        return new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
+                                        this.firstName, this.lastName, this.email);
     }
 }
