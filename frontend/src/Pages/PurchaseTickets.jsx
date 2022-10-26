@@ -467,7 +467,9 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                       </Grid>
                       <Collapse in={detailsInput}>
                         <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
-                          <Grid container spacing={2}>
+                          <br/>
+                          {/* Custom Name Seating */}
+                          {/* <Grid container spacing={2}>
                             <Grid item xs={6}>
                             </Grid>
                             <Grid item xs={6}>
@@ -477,7 +479,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                                 </FormGroup>
                               </Box>  
                             </Grid>
-                          </Grid>
+                          </Grid> */}
                           {customNames
                             ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
                                 {orderDetails.map((section, key) => {
