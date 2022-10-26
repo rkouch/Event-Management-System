@@ -51,25 +51,28 @@ public class User {
     @Column(name = "profile_pic")
     private String profilePicture;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AuthToken> tokens = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<ResetToken> resetTokens = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "host", cascade = CascadeType.ALL)
     private Set<Event> hostingEvents = new HashSet<>();
 
     //@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     //private Set<EventAdmin> adminEvents;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "admins")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "admins", cascade = {})
     private Set<Event> adminEvents = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "leader")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "leader", cascade = CascadeType.ALL)
     private Set<Group> ownedGroups = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "users")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "users", cascade = {})
     private Set<Group> groups = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
@@ -77,6 +80,9 @@ public class User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
     private Set<Reaction> reactions = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<TicketReservation> reservations;
 
     public User () {
 
@@ -356,5 +362,11 @@ public class User {
     public void invalidateToken (ModelSession session, AuthToken token) {
         getTokens().remove(token);
         session.remove(token);
+    }
+
+    public void onDelete (ModelSession session) {
+        if (profilePicture != null) {
+            FileHelper.deleteFileAtUrl(profilePicture);
+        }
     }
 }
