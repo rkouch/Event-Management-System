@@ -3,11 +3,11 @@ import { Box } from '@mui/system'
 import React from 'react'
 import { CentredBox, UploadPhoto } from '../Styles/HelperStyles'
 import dayjs from 'dayjs'
-import { getEventData, getToken, getUserData } from '../Helpers'
+import { apiFetch, getEventData, getToken, getUserData } from '../Helpers'
 
 export default function TicketCard({event, ticket_id}) {
   
-  const [ticketDetails, setTicketDetails] = React.useState({})
+  const [ticketDetails, setTicketDetails] = React.useState(null)
 
   const testTicketData = {
     event_id: '77ff1d93-e3c2-4d44-9ced-6375de70048b',
@@ -19,21 +19,39 @@ export default function TicketCard({event, ticket_id}) {
   const [sectionSeating, setSectionSeating] = React.useState(false)
 
   const [userData, setUserData] = React.useState(null)
+  const [sectionName, setSectionName] = React.useState('')
 
   const getTicketData = async () => {
     // Send API call to get ticket details
-    setTicketDetails(testTicketData)
-    getUserData(`auth_token=${getToken()}`, setUserData)
-    event.seating_details.forEach(function(section) {
-      if (section.section === ticketDetails.section) {
-        setSectionSeating(section.has_seats)
-        return
+    const paramsObj = {
+      ticket_id: ticket_id,
+    }
+    const searchParams = new URLSearchParams(paramsObj)
+    try {
+      const response = await apiFetch('GET', `/api/ticket/view?${searchParams}`)
+      setTicketDetails(response)
+      const name = response.section
+      if (name.split(' ').length > 1) {
+        const names = name.split(' ')
+        setSectionName(names[0][0]+name[1][0])
+      } else {
+        setSectionName(name)
       }
-    })
+      // getUserData(`user_id=${response.user_id}`, setUserData)
+      event.seating_details.forEach(function(section) {
+        if (section.section === response.section) {
+          setSectionSeating(section.has_seats)
+          return
+        }
+      })
+    } catch (e) {
+      console.log(e)
+    }
+    
   }
 
   React.useEffect(()=> {
-    if (event.seating_details != null) {
+    if (event !== null) {
       getTicketData()  
     }
   },[event])
@@ -41,7 +59,7 @@ export default function TicketCard({event, ticket_id}) {
 
   return (
     <Box sx={{boxShadow: 5, backgroundColor: '#FFFFFFF', m: 1, p: 3, borderRadius: 1}}>
-      {(userData === null)
+      {(ticketDetails === null)
         ? <>
             <CentredBox sx={{flexDirection: 'column', width: '100%'}}>
               <Skeleton variant="rounded" width={560} height={400}/>
@@ -81,7 +99,7 @@ export default function TicketCard({event, ticket_id}) {
                         textAlign: 'center'
                       }}
                     >
-                      {ticketDetails.section}{ticketDetails.seat_num}
+                      {sectionName}{ticketDetails.seat_num}
                     </Typography>
                   : <Typography
                       sx={{
@@ -100,7 +118,7 @@ export default function TicketCard({event, ticket_id}) {
                       textAlign: 'center'
                     }}
                   >
-                    {userData.firstName} {userData.lastName}
+                    {ticketDetails.first_name} {ticketDetails.last_name}
                   </Typography>
                   <Divider orientation="vertical" flexItem />
                   <Typography
@@ -109,7 +127,7 @@ export default function TicketCard({event, ticket_id}) {
                       textAlign: 'center'
                     }}
                   >
-                    {userData.email}
+                    {ticketDetails.email}
                   </Typography>
                 </CentredBox>
               </Box>

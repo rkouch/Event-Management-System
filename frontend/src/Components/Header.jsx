@@ -53,12 +53,13 @@ export default function Header({}) {
               display = "flex"
               alignItems ='center'
               justifyContent = 'flex-start'
+              sx={{p: '8px'}}
             >
               <AdjustableLogo width='100px' height='auto'/>
             </Box>
           </Grid>
           <Grid item xs={8}>
-            <CentredBox sx={{alignItems: 'center'}}>
+            <CentredBox sx={{alignItems: 'center', height: '100%'}}>
               <FormControl
                 sx={{
                   width: '60%',
@@ -89,7 +90,8 @@ export default function Header({}) {
                   alignItems ='center'
                   justifyContent = 'flex-end'
                   sx = {{
-                    marginRight: "10px"
+                    marginRight: "10px",
+                    height: '100%'
                   }}
                 >
                   <AccountMenu> </AccountMenu>
@@ -100,6 +102,7 @@ export default function Header({}) {
                   display = "flex"
                   alignItems ='center'
                   justifyContent = 'flex-end'
+                  sx={{height: '100%'}}
                 >
                   <Button
                     sx={{

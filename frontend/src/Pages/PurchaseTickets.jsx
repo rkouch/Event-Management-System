@@ -277,6 +277,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
         console.log(response)
+        const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
+        console.log(redirect_url)
+
+        navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }
@@ -302,7 +306,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
-        console.log(response)
+        const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
+        console.log(redirect_url)
+
+        navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }
@@ -398,14 +405,16 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                       </Grid>
                       <Collapse in={ticketSelect}>
                         {(sectionDetails).map((section, key) => {
-                          return (
-                            <div key={key}>
-                              {section.selectable
-                                ? <SeatSelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
-                                : <QuantitySelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
-                              }
-                            </div>
-                          )
+                          if (section.available_seats > 0) {
+                            return (
+                              <div key={key}>
+                                {section.selectable
+                                  ? <SeatSelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                                  : <QuantitySelector section={section} key={key} index={key} sectionDetails={sectionDetails} setSectionDetails={setSectionDetails}/>
+                                }
+                              </div>
+                            )
+                          }
                         })}
                         <Divider variant="middle" />
                         <br/>
@@ -469,7 +478,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
                           <br/>
                           {/* Custom Name Seating */}
-                          {/* <Grid container spacing={2}>
+                          <Grid container spacing={2}>
                             <Grid item xs={6}>
                             </Grid>
                             <Grid item xs={6}>
@@ -479,7 +488,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                                 </FormGroup>
                               </Box>  
                             </Grid>
-                          </Grid> */}
+                          </Grid>
                           {customNames
                             ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
                                 {orderDetails.map((section, key) => {

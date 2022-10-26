@@ -33,12 +33,30 @@ export default function EventReview({isAttendee}) {
             <Box sx={{display: 'flex', justifyContent: 'center'}}>
               <Grid container sx={{maxWidth: 700}}>
                 <Grid item xs={10}>
-                  <ContrastInputWrapper sx={{width: '100%'}}>
-                    <ContrastInput
-                      fullWidth
-                      placeholder="Review Title"
-                    />
-                  </ContrastInputWrapper>
+                  <Grid container>
+                    <Grid item xs={9}>
+                      <ContrastInputWrapper sx={{width: '100%', height: '100%'}}>
+                        <ContrastInput
+                          fullWidth
+                          placeholder="Review Title"
+                          sx={{fontWeight: 'bold'}}
+                        />
+                      </ContrastInputWrapper>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <ContrastInputWrapper 
+                        sx={{
+                          display: 'flex', 
+                          justifyContent: 'flex-end', 
+                          alignItems: 'center',
+                          height: '100%'
+                        }}
+                      >
+                        <Rating sx={{pr: '14px'}} precision={0.5}/>
+                      </ContrastInputWrapper>
+                    </Grid>
+                  </Grid>
+                  
                   <ContrastInputWrapper sx={{width: '100%'}}>
                     <ContrastInput
                       multiline
@@ -46,19 +64,6 @@ export default function EventReview({isAttendee}) {
                       fullWidth
                       placeholder="Review..."
                     />
-                  </ContrastInputWrapper>
-                  <ContrastInputWrapper 
-                    sx={{
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      gap: 1
-                    }}
-                  >
-                    <Typography sx={{color: "#999999", pt:'14px', pl: '14px', pb: '14px'}}>
-                      Rating
-                    </Typography>
-                    <Rating sx={{pr: '14px'}} precision={0.5}/>
                   </ContrastInputWrapper>
                 </Grid>
                 <Grid item xs>

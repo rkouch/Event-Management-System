@@ -89,6 +89,9 @@ export function fileToDataUrl (file) {
   return dataUrlPromise;
 }
 
+// Either use
+// auth_token=...
+// user_id=....
 export const getUserData = async (body, setUserData=null) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?${body}`)
@@ -208,4 +211,18 @@ export const checkIfUser= async (userId, setState) => {
 }
 
 export function doNothing() {  
+}
+
+export const getTicketIds = async (event_id, setTicketIds) => {
+  const paramsObj = {
+    auth_token: getToken(),
+    event_id: event_id
+  }
+  const searchParams = new URLSearchParams(paramsObj)
+  try {
+    const response = await apiFetch('GET', `/api/event/bookings?${searchParams}`, null)
+    setTicketIds(response.tickets)
+  } catch (e) {
+    console.log(e)
+  }
 }

@@ -1,7 +1,7 @@
 import React from "react"
 import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles"
 import Header from "../Components/Header"
-import { getEventData } from "../Helpers"
+import { getEventData, getTicketIds } from "../Helpers"
 import { useParams, useNavigate } from "react-router-dom"
 import { EventForm } from "./CreateEvent"
 import { Box } from "@mui/system"
@@ -24,24 +24,7 @@ export default function ViewTicket({}) {
   const navigate = useNavigate()
   const theme = useTheme();
 
-  const [event, setEvent] = React.useState({
-    event_name: "",
-    location: {
-      street_no: "",
-      street_name: "",
-      postcode: "",
-      state: "",
-      country: ""
-    },
-    host_id: '',
-    start_date: '',
-    end_date: '',
-    description: "",
-    tags: [],
-    admins: [],
-    picture: "",
-    host_id: ''
-  })
+  const [event, setEvent] = React.useState(null)
 
   const [ticketIds, setTicketIds] = React.useState([])
 
@@ -62,10 +45,11 @@ export default function ViewTicket({}) {
 
   React.useEffect(() => {
     getEventData(params.event_id, setEvent)
-    setTicketIds(testTicketIds)
+
+    // Fetch Ticket ids
+    getTicketIds(params.event_id, setTicketIds)
   }, [])
 
-  const testTicketIds = ['asdasdasd', '123asd21e', 'qse1da2d1w']
 
   return (
     <BackdropNoBG>

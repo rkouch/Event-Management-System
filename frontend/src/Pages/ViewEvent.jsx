@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch, checkIfUser, getEventData, getToken, getUserData } from "../Helpers";
+import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -44,10 +44,10 @@ export default function ViewEvent({}) {
   const params = useParams()
   const navigate = useNavigate()
   const [editable, setEditable] = React.useState(false)
-  const [hasTickets, setHasTickets] = React.useState(true)
   const [eventOver, setEventOver] = React.useState(true)
   const [soldOut, setSoldOut] = React.useState(false)
-  const [isAttendee, setIsAttendee] = React.useState(true)
+  const [isAttendee, setIsAttendee] = React.useState(false)
+  const [ticketIds, setTicketIds] = React.useState([])
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -68,22 +68,6 @@ export default function ViewEvent({}) {
     host_id: ''
   })
 
-
-  const checkTickets = async() => {
-    const paramsObj = {
-      auth_token: getToken(),
-      event_id: params.event_id
-    }
-  
-    const searchParams = new URLSearchParams(paramsObj)
-    try {
-      const response = await apiFetch('GET', `/api/event/bookings?${searchParams}`, null)
-      console.log(response)
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
     // getUserData(`auth_token=${getToken()}`,setUserData)
@@ -98,27 +82,32 @@ export default function ViewEvent({}) {
         }
       }
     }
-    checkTickets()
+    getTicketIds(params.event_id, setTicketIds)
   },[event.host_id])
 
   // Check if event is sold out
   React.useEffect(() => {
+    var isSoldOut = true
     try {
       if (event.seating_details !== null) {
         event.seating_details.forEach(function (section) {
-          if (section.availability > 0 ) {
-            setSoldOut(false)
+          if (section.available_seats > 0 ) {
+            isSoldOut = false
+            console.log('Event not sold out')
             return
           }
         })
-        console.log('Event not sold out')
-        setSoldOut(true)
+        setSoldOut(isSoldOut)
       }
     } catch (e) {
-
     }
-
   }, [event.seating_details])
+
+  // Set if user has tickets for this event
+  React.useEffect(() => {
+    console.log(ticketIds.length > 0)
+    setIsAttendee(ticketIds.length > 0)
+  },[ticketIds])
 
   const goEdit = (e) => {
     e.stopPropagation();
@@ -309,19 +298,21 @@ export default function ViewEvent({}) {
                         </TableHead>
                         <TableBody>
                           {event.seating_details.map((section, key) => {
-                            return (
-                              <TableRow key={key}>
-                                <TableCell>{section.section}</TableCell>
-                                <TableCell align="center">{section.available_seats}</TableCell>
-                                <TableCell align="center">${section.ticket_price}</TableCell>
-                              </TableRow>
-                            )
+                            if (section.available_seats > 0) {
+                              return (
+                                <TableRow key={key}>
+                                  <TableCell>{section.section}</TableCell>
+                                  <TableCell align="center">{section.available_seats}</TableCell>
+                                  <TableCell align="center">${section.ticket_price}</TableCell>
+                                </TableRow>
+                              )
+                            }
                           })}
                         </TableBody>
                       </Table>
                     </TableContainer>
                     <br/>
-                    {hasTickets
+                    {isAttendee
                       ? <Grid container>
                           <Grid item xs={6}>
                             <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_ticket/${params.event_id}`)}>
@@ -330,15 +321,26 @@ export default function ViewEvent({}) {
                           </Grid>
                           <Divider orientation="vertical" flexItem/>
                           <Grid item xs>
-                            <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                              Purchase tickets
-                            </TkrButton>
+                            {!soldOut
+                              ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                  Purchase tickets
+                                </TkrButton>
+                              : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                  Sold Out
+                                </TkrButton>
+                            }
+                            
                           </Grid>
                         </Grid> 
                       : <CentredBox>
-                          <TkrButton onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                            Purchase tickets
-                          </TkrButton>
+                          {!soldOut
+                            ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                Purchase tickets
+                              </TkrButton>
+                            : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                Sold Out
+                              </TkrButton>
+                          }
                         </CentredBox>
                     }
                   </Box>
