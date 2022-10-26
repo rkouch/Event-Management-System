@@ -32,7 +32,7 @@ public class Comment {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parent")
     private Set<Comment> children;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "comment")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "comment", cascade = CascadeType.REMOVE)
     private Set<Reaction> reactions;
 
     //@Column(name = "author_id")

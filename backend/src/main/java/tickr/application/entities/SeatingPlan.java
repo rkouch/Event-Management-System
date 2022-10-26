@@ -30,7 +30,7 @@ public class SeatingPlan {
 
     //@Column(name = "location_id")
     //private int locationId;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "location_id")
     private Location location;
 
@@ -48,11 +48,11 @@ public class SeatingPlan {
     @Column(name = "has_seats")
     public boolean hasSeats;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "section", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "section")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "section", cascade = CascadeType.REMOVE)
     private Set<Ticket> tickets;
 
     public SeatingPlan () {}    

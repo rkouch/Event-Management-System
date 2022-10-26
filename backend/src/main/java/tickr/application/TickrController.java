@@ -604,10 +604,11 @@ public class TickrController {
         var token = getTokenFromStr(session, request.authToken);
         User user = token.getUser();
         user.authenticatePassword(session, request.password, AUTH_TOKEN_EXPIRY);
-        var tokenSet = new HashSet<>(user.getTokens());
+        /*var tokenSet = new HashSet<>(user.getTokens());
         for (var i : tokenSet) {
             user.invalidateToken(session, i);
-        }
+        }*/
+        user.onDelete(session);
         session.remove(user);
     }
 
@@ -655,7 +656,7 @@ public class TickrController {
         logger.info("Ticket purchase {} success!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             session.save(i.convert(session));
-            session.remove(i);
+            //session.remove(i);
         }
     }
 
@@ -663,7 +664,7 @@ public class TickrController {
         logger.info("Order {} was cancelled!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             i.cancel(session);
-            session.remove(i);
+            //session.remove(i);
         }
     }
 
@@ -671,7 +672,7 @@ public class TickrController {
         logger.info("Order {} failed!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             i.cancel(session);
-            session.remove(i);
+            //session.remove(i);
         }
     }
 
