@@ -33,6 +33,9 @@ public class TicketReservation {
     @Column(name = "seat_num")
     private int seatNum;
 
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "ticketReservation", cascade = CascadeType.REMOVE)
+    private PurchaseItem purchaseItem;
+
     public TicketReservation () {
 
     }

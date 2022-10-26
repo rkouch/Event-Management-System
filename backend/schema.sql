@@ -63,7 +63,7 @@ create table admins (
     foreign key (user_id) references users(id)
 );
 
-create table `groups` (
+create table `user_groups` (
     id          varchar(36) not null,
     leader_id    varchar(36) not null,
     size        int not null,
@@ -196,7 +196,7 @@ create table group_users (
     user_id varchar(36) not null,
 
     primary key (group_id, user_id),
-    foreign key (group_id) references `groups`(id),
+    foreign key (group_id) references `user_groups`(id),
     foreign key (user_id) references users(id)
 );
 
