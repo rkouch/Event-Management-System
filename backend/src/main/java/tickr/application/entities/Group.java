@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "user_groups")
 public class Group {
     @Id
     @UuidGenerator

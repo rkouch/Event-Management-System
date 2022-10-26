@@ -22,7 +22,7 @@ public class ResetToken {
     @Column(name = "expiry_time")
     private LocalDateTime expiryTime;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
