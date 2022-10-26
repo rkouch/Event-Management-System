@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.TicketViewResponse;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -44,7 +46,7 @@ public class Ticket {
 
     private String email;
 
-    private UUID getId () {
+    public UUID getId () {
         return id;
     }
 
@@ -52,7 +54,7 @@ public class Ticket {
         this.id = id;
     }
 
-    private User getUser () {
+    public User getUser () {
         return user;
     }
 
@@ -60,7 +62,7 @@ public class Ticket {
         this.user = user;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 
@@ -68,7 +70,7 @@ public class Ticket {
         this.event = event;
     }
 
-    private SeatingPlan getSection () {
+    public SeatingPlan getSection () {
         return section;
     }
 
@@ -111,5 +113,10 @@ public class Ticket {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+    }
+
+    public TicketViewResponse getTicketViewResponse () {
+        return new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
+                                        this.firstName, this.lastName, this.email);
     }
 }

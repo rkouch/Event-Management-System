@@ -463,7 +463,7 @@ export default function CreateEvent({}) {
                           />
                         </Button>
                       : <>
-                          {(eventPicture === '')
+                          {(eventPicture === null)
                             ? <h3>
                                 Event cover photo
                               </h3>

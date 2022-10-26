@@ -45,10 +45,6 @@ public class TestMakeHost {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
 
-        // List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
-        //         new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true),
-        //         new CreateEventRequest.SeatingDetails("SectionB", 20, 30, true)
-        // );
         List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionB", 20, 30, true));

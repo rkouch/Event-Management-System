@@ -1,6 +1,9 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -32,6 +35,8 @@ public class PurchaseItem {
     private String lastName;
     @Column(name = "email")
     private String email;
+
+    static final Logger logger = LogManager.getLogger();
 
     public PurchaseItem () {
 

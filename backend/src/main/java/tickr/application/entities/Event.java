@@ -6,6 +6,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -247,6 +248,24 @@ public class Event {
 
     public void setSeatCapacity(int seatCapacity) {
         this.seatCapacity = seatCapacity;
+    }
+
+    public List<String> getUserTicketIds (User user) {
+        List<String> set = new ArrayList<>();
+        Set<Ticket> tmpTickets = this.tickets;
+        List<Ticket> tickets = new ArrayList<>(tmpTickets);
+        Collections.sort(tickets, new Comparator<Ticket>() {
+            @Override
+            public int compare(Ticket t1, Ticket t2) {
+                return t1.getSection().getSection().compareTo(t2.getSection().getSection());
+            }
+        });
+        for (Ticket ticket : tickets) {
+            if (ticket.getUser() == user) {
+                set.add(ticket.getId().toString());
+            }
+        }
+        return set; 
     }
 
     public void editEvent (EditEventRequest request, ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
