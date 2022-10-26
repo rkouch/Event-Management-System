@@ -150,23 +150,19 @@ public class TestTicketView {
     public void testTicketView () {
         List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         User user = controller.authenticateToken(session, authToken);
-        var response = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))); 
-        assertEquals("SectionA", response.section);
-        assertEquals(1, response.seatNum);
-        // int count = 0;
-        // for (String ticketId : ticketIds) {
-        //     var response = controller.ticketView(session, Map.of("ticket_id", ticketId)); 
-        //     assertEquals(eventId, response.eventId);
-        //     assertEquals(user.getId().toString(), response.userId);
-        //     if (count == 0) {
-        //         assertEquals("SectionB", response.section);
-        //         assertEquals(2, response.seatNum);
-        //     } else {
-        //         assertEquals("SectionA", response.section);
-        //         assertEquals(1, response.seatNum);
-        //     }
-        //     count += 1;
-        // }
+        var response1 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))); 
+        var response2 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(1))); 
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(eventId, response1.eventId);
+        assertEquals(user.getId().toString(), response1.userId);
+        // assertEquals("first", response1.firstName);
+        // assertEquals("last", response1.lastName);
+        // assertEquals("test1@example.com", response1.email);
+        assertTrue(response1.section == "SectionA" || response1.section == "SectionB");
+        assertTrue(response1.seatNum == 1 || response1.seatNum == 2);
+        assertTrue(response2.section == "SectionA" || response2.section == "SectionB");
+        assertTrue(response2.seatNum == 1 || response2.seatNum == 2);
+        
     }
 
     @Test 

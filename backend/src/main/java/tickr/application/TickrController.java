@@ -682,7 +682,7 @@ public class TickrController {
         }
         Ticket ticket = session.getById(Ticket.class, UUID.fromString(params.get("ticket_id")))
                             .orElseThrow(() -> new ForbiddenException("Invalid ticket ID!"));
-        return new TicketViewResponse(ticket.getEvent().getId().toString(), ticket.getUser().getId().toString(), ticket.getSection().getSection(), ticket.getSeatNumber());
+        return ticket.getTicketViewResponse();
     }
 
     public TicketBookingsResponse ticketBookings (ModelSession session, Map<String, String> params) {

@@ -16,11 +16,22 @@ public class TicketViewResponse {
 
     public String section;
 
-    public TicketViewResponse(String eventId, String userId, String section, int seatNum) {
+    @SerializedName("first_name")
+    public String firstName;
+
+    @SerializedName("last_name")
+    public String lastName;
+
+    public String email;
+
+    public TicketViewResponse(String eventId, String userId, String section, int seatNum, String firstName, String lastName, String email) {
         this.eventId = eventId;
         this.userId = userId;
         this.seatNum = seatNum;
         this.section = section;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
     } 
 
     

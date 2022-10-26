@@ -6,6 +6,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -256,7 +257,6 @@ public class Event {
                 set.add(ticket.getId().toString());
             }
         }
-        Collections.sort(set);
         return set; 
     }
 
