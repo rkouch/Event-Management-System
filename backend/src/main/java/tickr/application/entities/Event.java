@@ -252,6 +252,14 @@ public class Event {
 
     public List<String> getUserTicketIds (User user) {
         List<String> set = new ArrayList<>();
+        Set<Ticket> tmpTickets = this.tickets;
+        List<Ticket> tickets = new ArrayList<>(tmpTickets);
+        Collections.sort(tickets, new Comparator<Ticket>() {
+            @Override
+            public int compare(Ticket t1, Ticket t2) {
+                return t1.getSection().getSection().compareTo(t2.getSection().getSection());
+            }
+        });
         for (Ticket ticket : tickets) {
             if (ticket.getUser() == user) {
                 set.add(ticket.getId().toString());
