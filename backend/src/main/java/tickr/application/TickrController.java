@@ -652,7 +652,7 @@ public class TickrController {
     }
 
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
-        logger.debug("Ticket purchase {} success!", reserveId);
+        logger.info("Ticket purchase {} success!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
             session.save(i.convert(session));
             session.remove(i);
@@ -685,6 +685,12 @@ public class TickrController {
     }
 
     public TicketBookingsResponse ticketBookings (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing token!");
+        }
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event ID!");
+        }
         User user = authenticateToken(session, params.get("auth_token"));
         Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
                         .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));

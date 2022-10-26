@@ -113,7 +113,7 @@ public class TestTicketView {
     @Test 
     public void testTicketBookings () {
         // Event event = session.getById(Event.class, eventId).orElse(null);
-        Set<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
+        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         assertTrue(ticketIds.size() == 2);
 
         var authToken2 = controller.userRegister(session,
@@ -134,7 +134,7 @@ public class TestTicketView {
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer2");
 
-        Set<String> ticketIds2 = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken2)).tickets;
+        List<String> ticketIds2 = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken2)).tickets;
         assertTrue(ticketIds2.size() == 2);
         assertTrue(ticketIds.size() == 2);
 
@@ -148,27 +148,30 @@ public class TestTicketView {
 
     @Test 
     public void testTicketView () {
-        Set<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
+        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         User user = controller.authenticateToken(session, authToken);
-        int count = 0;
-        for (String ticketId : ticketIds) {
-            var response = controller.ticketView(session, Map.of("ticket_id", ticketId)); 
-            assertEquals(eventId, response.eventId);
-            assertEquals(user.getId().toString(), response.userId);
-            if (count == 0) {
-                assertEquals("SectionB", response.section);
-                assertEquals(2, response.seatNum);
-            } else {
-                assertEquals("SectionA", response.section);
-                assertEquals(1, response.seatNum);
-            }
-            count += 1;
-        }
+        var response = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))); 
+        assertEquals("SectionA", response.section);
+        assertEquals(1, response.seatNum);
+        // int count = 0;
+        // for (String ticketId : ticketIds) {
+        //     var response = controller.ticketView(session, Map.of("ticket_id", ticketId)); 
+        //     assertEquals(eventId, response.eventId);
+        //     assertEquals(user.getId().toString(), response.userId);
+        //     if (count == 0) {
+        //         assertEquals("SectionB", response.section);
+        //         assertEquals(2, response.seatNum);
+        //     } else {
+        //         assertEquals("SectionA", response.section);
+        //         assertEquals(1, response.seatNum);
+        //     }
+        //     count += 1;
+        // }
     }
 
     @Test 
     public void testTicketViewExceptions () {
-        Set<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
+        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         for (String ticketId : ticketIds) {
             assertThrows(BadRequestException.class, () -> controller.ticketView(session, Map.of("ticketid", ticketId)));
             assertThrows(ForbiddenException.class, () -> controller.ticketView(session, Map.of("ticket_id", UUID.randomUUID().toString())));

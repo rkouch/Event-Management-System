@@ -249,13 +249,14 @@ public class Event {
         this.seatCapacity = seatCapacity;
     }
 
-    public Set<String> getUserTicketIds (User user) {
-        Set<String> set = new HashSet<>();
+    public List<String> getUserTicketIds (User user) {
+        List<String> set = new ArrayList<>();
         for (Ticket ticket : tickets) {
             if (ticket.getUser() == user) {
                 set.add(ticket.getId().toString());
             }
         }
+        Collections.sort(set);
         return set; 
     }
 
