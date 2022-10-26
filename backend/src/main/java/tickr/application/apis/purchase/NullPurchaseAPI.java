@@ -42,13 +42,20 @@ public class NullPurchaseAPI implements IPurchaseAPI {
         }
         logger.info("Fulfilling order and returning success url \"{}\"", orderBuilder.getSuccessUrl());
 
+        var thread = new Thread(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignored) {
 
-        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("success", orderBuilder.getReserveId()),
-                Map.of(getSignatureHeader(), signature), 1000);
-        if (response.getStatus() != 200) {
-            logger.warn("Null webhook returned status code {} with body: \n{}", response.getStatus(), response.getBodyRaw());
-            throw new RuntimeException("Null webhook returned non-OK status code!");
-        }
+            }
+            var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("success", orderBuilder.getReserveId()),
+                    Map.of(getSignatureHeader(), signature), 1000);
+            if (response.getStatus() != 200) {
+                logger.warn("Null webhook returned status code {} with body: \n{}", response.getStatus(), response.getBodyRaw());
+            }
+        });
+
+        thread.start();
 
         return orderBuilder.getSuccessUrl();
     }
