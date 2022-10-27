@@ -4,7 +4,7 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState } from "../Helpers";
+import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, sortSection } from "../Helpers";
 import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -83,6 +83,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
   // Set up seat selector
   React.useEffect(() => {
+    const sectionDetails_t = []
     for (const m in event.seating_details) {
       const section = event.seating_details[m]
       var seats = []
@@ -101,8 +102,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         selectable: section.has_seats,
         seatsSelected: []
       }
-      setSectionDetails(current => [section_det, ...current])
+      sectionDetails_t.push(section_det)
     }
+    sortSection(sectionDetails_t)
+    setSectionDetails(sectionDetails_t)
   }, [event.event_name])
 
   React.useEffect(() => {

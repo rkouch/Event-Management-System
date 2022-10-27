@@ -19,12 +19,14 @@ import { autoPlay } from 'react-swipeable-views-utils';
 import { Divider, Grid, IconButton, Tooltip } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 
+
 export default function ViewTicket({}) {
   const params = useParams()
   const navigate = useNavigate()
   const theme = useTheme();
 
   const [event, setEvent] = React.useState(null)
+  const [retrievedTicket, setRetrievedTickets] = React.useState(true)
 
   const [ticketIds, setTicketIds] = React.useState([])
 
@@ -44,12 +46,20 @@ export default function ViewTicket({}) {
   };
 
   React.useEffect(() => {
-    getEventData(params.event_id, setEvent)
-
-    // Fetch Ticket ids
-    getTicketIds(params.event_id, setTicketIds)
+    if (ticketIds.length === 0) {
+      getEventData(params.event_id, setEvent)
+    }
   }, [])
 
+  React.useEffect(() => {
+    if (event !== null) {
+      // Fetch Ticket ids
+      console.log('fetching tickets')
+      getTicketIds(params.event_id, setTicketIds)
+    } else {
+      console.log('null event')
+    }
+  }, [event])
 
   return (
     <BackdropNoBG>
@@ -82,20 +92,24 @@ export default function ViewTicket({}) {
             <CentredBox sx={{display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center'}}>
               <br/>
               <Box sx={{display: 'flex', flexDirection: 'column', width: '60%'}}>
-                <SwipeableViews
-                  axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                  index={activeStep}
-                  onChangeIndex={handleStepChange}
-                  enableMouseEvents
-                >
-                  {ticketIds.map((ticketId, key) => (
-                    <div key={key}>
-                      {Math.abs(activeStep - key) <= 2 ? (
-                        <TicketCard event={event} ticket_id={ticketId}/>
-                      ) : null}
-                    </div>
-                  ))}
-                </SwipeableViews>
+                <Box>
+                  <SwipeableViews
+                    axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                    index={activeStep}
+                    onChangeIndex={handleStepChange}
+                    enableMouseEvents
+                  >
+                    {ticketIds.map((ticketId, key) => (
+                      <div key={key}>
+                        {Math.abs(activeStep - key) <= 2 ? (
+                          <TicketCard event={event} ticket_id={ticketId}/>
+                        ) : null}
+                      </div>
+                    ))}
+                  </SwipeableViews>
+                </Box>
+              </Box>
+              <Box width={'60%'}>
                 <MobileStepper
                   sx={{color: 'red'}}
                   steps={maxSteps}

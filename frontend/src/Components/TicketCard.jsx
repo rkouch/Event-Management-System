@@ -33,7 +33,7 @@ export default function TicketCard({event, ticket_id}) {
       const name = response.section
       if (name.split(' ').length > 1) {
         const names = name.split(' ')
-        setSectionName(names[0][0]+name[1][0])
+        setSectionName(names[0][0]+names[1][0])
       } else {
         setSectionName(name)
       }
@@ -108,7 +108,7 @@ export default function TicketCard({event, ticket_id}) {
                         textAlign: 'center'
                       }}
                     >
-                      {ticketDetails.section} x 1
+                      {sectionName} x 1
                     </Typography>
                 }
                 <CentredBox sx={{gap: 1}}>

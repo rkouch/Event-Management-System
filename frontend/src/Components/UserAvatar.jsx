@@ -67,14 +67,14 @@ export default function UserAvatar({userId, size=35, host=false}) {
                     >
                       {(userData.profilePicture !== "")
                         ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
-                        : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                        : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Avatar>
                       } 
                     </Badge>
                   </Tooltip>
                 : <Tooltip title={`@${userData.userName}`}>
                     {(userData.profilePicture !== "")
                       ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
-                      : <Avatar sx={{ width: size, height: size }}>{userData.firstName[0]}{userData.lastName[0]}</Avatar>
+                      : <Avatar sx={{ width: size, height: size }}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Avatar>
                     } 
                   </Tooltip>
               }
