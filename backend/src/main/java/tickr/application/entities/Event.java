@@ -12,6 +12,8 @@ import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.FileHelper;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "events")
 public class Event {
+    static final Logger logger = LogManager.getLogger();
+
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
@@ -257,6 +261,11 @@ public class Event {
         Collections.sort(tickets, new Comparator<Ticket>() {
             @Override
             public int compare(Ticket t1, Ticket t2) {
+                if (t1.getSection().getSection().compareTo(t2.getSection().getSection()) == 0) {
+                    Integer i1 = t1.getSeatNumber();
+                    Integer i2 = t2.getSeatNumber();
+                    return i1.compareTo(i2);
+                }
                 return t1.getSection().getSection().compareTo(t2.getSection().getSection());
             }
         });
@@ -341,19 +350,24 @@ public class Event {
                 userAdmin.addAdminEvents(this);
             }
         }
-
-        if (seatingDetails != null) {
-            for (SeatingPlan seat : seatingPlans) {
-                session.remove(seat);
+        if (seatAvailability == seatCapacity) {
+            if (seatingDetails != null) {
+                // error here
+                for (SeatingPlan seat : seatingPlans) {
+                    session.remove(seat);
+                }
+                //
+                seatingPlans.clear();
+                for (EditEventRequest.SeatingDetails seats : seatingDetails) {
+                    SeatingPlan seatingPlan = new SeatingPlan(this, this.location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
+                    session.save(seatingPlan);
+                    seatingPlans.add(seatingPlan);
+                }
+                this.seatAvailability = request.getSeatCapacity();
+                this.seatCapacity = request.getSeatCapacity();
             }
-            seatingPlans.clear();
-            for (EditEventRequest.SeatingDetails seats : seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
-                session.save(seatingPlan);
-                seatingPlans.add(seatingPlan);
-            }
-            this.seatAvailability = request.getSeatCapacity();
-            this.seatCapacity = request.getSeatCapacity();
+        } else {
+            throw new BadRequestException("Cannot edit seating details for an event where tickets have been reserved/purchased!");
         }
 
         if (locations != null) {

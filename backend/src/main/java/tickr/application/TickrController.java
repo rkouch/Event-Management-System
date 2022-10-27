@@ -276,17 +276,14 @@ public class TickrController {
         }
 
         if (!request.isValid() ) {
-            logger.debug("Missing parameters!");
             throw new BadRequestException("Invalid event request!");
         }
 
         if (!request.isSeatingDetailsValid()) {
-            logger.debug("Missing seating parameters!");
             throw new BadRequestException("Invalid seating details!");
         }
 
         if (request.location != null && !request.isLocationValid()) {
-            logger.debug("Missing location parameters!");
             throw new BadRequestException("Invalid location details!");
         }
 
@@ -297,7 +294,6 @@ public class TickrController {
             startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
             endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
-            logger.debug("Date is in incorrect format!");
             throw new ForbiddenException("Invalid date time string!");
         }
 
