@@ -151,6 +151,7 @@ public class TestTicketView {
         List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         User user = controller.authenticateToken(session, authToken);
         var response1 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))); 
+        session = TestHelper.commitMakeSession(model, session);
         var response2 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(1))); 
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(eventId, response1.eventId);

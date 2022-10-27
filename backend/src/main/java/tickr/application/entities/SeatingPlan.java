@@ -30,7 +30,7 @@ public class SeatingPlan {
 
     //@Column(name = "location_id")
     //private int locationId;
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
     private Location location;
 
