@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { checkIfUser, getEventData, getToken, getUserData } from "../Helpers";
+import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -22,7 +22,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
-import { TkrButton } from "../Styles/InputStyles";
+import { TkrButton, TkrButton2 } from "../Styles/InputStyles";
+import EventReview from "../Components/EventReview";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -38,12 +39,15 @@ export const EventForm = styled("div")({
 });
 
 export default function ViewEvent({}) {
+  var calendar = require('dayjs/plugin/calendar')
+  dayjs.extend(calendar)
   const params = useParams()
   const navigate = useNavigate()
   const [editable, setEditable] = React.useState(false)
-  var calendar = require('dayjs/plugin/calendar')
-  dayjs.extend(calendar)
-  
+  const [eventOver, setEventOver] = React.useState(true)
+  const [soldOut, setSoldOut] = React.useState(false)
+  const [isAttendee, setIsAttendee] = React.useState(false)
+  const [ticketIds, setTicketIds] = React.useState([])
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -64,11 +68,13 @@ export default function ViewEvent({}) {
     host_id: ''
   })
 
-
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
     // getUserData(`auth_token=${getToken()}`,setUserData)
     if (event.host_id !== '') {
+      if (dayjs() > dayjs(event.end_date)) {
+        setEventOver(true)
+      }
       checkIfUser(event.host_id, setEditable)
       if (!editable) {
         for (const i in event.admins) {
@@ -76,7 +82,32 @@ export default function ViewEvent({}) {
         }
       }
     }
+    getTicketIds(params.event_id, setTicketIds)
   },[event.host_id])
+
+  // Check if event is sold out
+  React.useEffect(() => {
+    var isSoldOut = true
+    try {
+      if (event.seating_details !== null) {
+        event.seating_details.forEach(function (section) {
+          if (section.available_seats > 0 ) {
+            isSoldOut = false
+            console.log('Event not sold out')
+            return
+          }
+        })
+        setSoldOut(isSoldOut)
+      }
+    } catch (e) {
+    }
+  }, [event.seating_details])
+
+  // Set if user has tickets for this event
+  React.useEffect(() => {
+    console.log(ticketIds.length > 0)
+    setIsAttendee(ticketIds.length > 0)
+  },[ticketIds])
 
   const goEdit = (e) => {
     e.stopPropagation();
@@ -267,28 +298,62 @@ export default function ViewEvent({}) {
                         </TableHead>
                         <TableBody>
                           {event.seating_details.map((section, key) => {
-                            return (
-                              <TableRow key={key}>
-                                <TableCell>{section.section}</TableCell>
-                                <TableCell align="center">{section.available_seats}</TableCell>
-                                <TableCell align="center">${section.ticket_price}</TableCell>
-                              </TableRow>
-                            )
+                            if (section.available_seats > 0) {
+                              return (
+                                <TableRow key={key}>
+                                  <TableCell>{section.section}</TableCell>
+                                  <TableCell align="center">{section.available_seats}</TableCell>
+                                  <TableCell align="center">${section.ticket_price}</TableCell>
+                                </TableRow>
+                              )
+                            }
                           })}
                         </TableBody>
                       </Table>
                     </TableContainer>
                     <br/>
-                    <CentredBox>
-                      <TkrButton onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                        Purchase tickets
-                      </TkrButton>
-                    </CentredBox>
+                    {isAttendee
+                      ? <Grid container>
+                          <Grid item xs={6}>
+                            <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_ticket/${params.event_id}`)}>
+                              View Tickets
+                            </TkrButton2>
+                          </Grid>
+                          <Divider orientation="vertical" flexItem/>
+                          <Grid item xs>
+                            {!soldOut
+                              ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                  Purchase tickets
+                                </TkrButton>
+                              : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                  Sold Out
+                                </TkrButton>
+                            }
+                            
+                          </Grid>
+                        </Grid> 
+                      : <CentredBox>
+                          {!soldOut
+                            ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                Purchase tickets
+                              </TkrButton>
+                            : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                Sold Out
+                              </TkrButton>
+                          }
+                        </CentredBox>
+                    }
                   </Box>
                   <br/>
                 </Grid>
               </Grid>
             </EventForm>
+            {eventOver
+              ? <EventReview isAttendee={isAttendee}/>
+              : <>
+                </>
+            }
+            
           </div>
         }
       </Box>
