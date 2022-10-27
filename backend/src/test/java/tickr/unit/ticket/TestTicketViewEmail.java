@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
@@ -27,14 +28,17 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.AbstractMockPurchaseAPI;
+import tickr.mock.MockEmailAPI;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -44,11 +48,12 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 
-public class TestTicketView {
+public class TestTicketViewEmail {
     private DataModel model;
     private TickrController controller;
     private ModelSession session;
     private AbstractMockPurchaseAPI purchaseAPI;
+    private MockEmailAPI emailAPI;
 
     private String eventId;
     private String authToken; 
@@ -57,6 +62,8 @@ public class TestTicketView {
 
     private List<String> requestIds;
     private float requestPrice;
+
+    private List<String> ticketIds; 
 
     @BeforeEach
     public void setup () {
@@ -103,23 +110,46 @@ public class TestTicketView {
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
 
-    }
+        ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
 
-    @AfterEach
-    public void cleanup () {
-        model.cleanup();
+        emailAPI = new MockEmailAPI();
+        ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
     }
 
     @Test 
-    public void testTicketBookings () {
-        // Event event = session.getById(Event.class, eventId).orElse(null);
-        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
-        assertTrue(ticketIds.size() == 2);
+    public void testTicketEmail() {
+        controller.TicketViewSendEmail(session, new TicketViewEmailRequest(authToken, ticketIds.get(0), "test1@example.com"));
+
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertEquals(1, emailAPI.getSentMessages().size());
+        var message = emailAPI.getSentMessages().get(0);
+        assertEquals("test1@example.com", message.getToEmail());
+        assertEquals("View user ticket details", message.getSubject());
+
+        var pattern = Pattern.compile("<a href=\"http://localhost:3000/ticket/(.*)\">.*</a>");
+        var matcher = pattern.matcher(message.getBody());
+        assertTrue(matcher.find());
+    }
+
+    @Test 
+    public void testExceptions() {
+        assertThrows(UnauthorizedException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest("authToken", ticketIds.get(0), "test1@example.com")));
+        assertThrows(ForbiddenException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(authToken, UUID.randomUUID().toString(), "test1@example.com")));
+        assertThrows(ForbiddenException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(authToken, ticketIds.get(0), "invalid@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(null, ticketIds.get(0), "test1@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(authToken, null, "test1@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(authToken, ticketIds.get(0), null)));
 
         var authToken2 = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
-
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken2, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("SectionA", 1, List.of(3)),
                 new TicketReserve.TicketDetails("SectionB", 1, List.of(4))
@@ -128,54 +158,15 @@ public class TestTicketView {
         requestPrice = response.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
 
         var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
-        purchaseAPI.addCustomer("test_customer2", 100);
+        purchaseAPI.addCustomer("test_customer", 100);
         var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
                 "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
-        purchaseAPI.fulfillOrder(redirectUrl, "test_customer2");
+        purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
 
-        List<String> ticketIds2 = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken2)).tickets;
-        assertTrue(ticketIds2.size() == 2);
-        assertTrue(ticketIds.size() == 2);
+        var ticketIds2 = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken2)).tickets;
 
-    }
-
-    @Test
-    public void testTicketBookingsExceptions () {
-        assertThrows(ForbiddenException.class, () -> controller.ticketBookings(session, Map.of("event_id", UUID.randomUUID().toString(), "auth_token", authToken)));
-        assertThrows(UnauthorizedException.class, () -> controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", "authToken")));
-        assertThrows(BadRequestException.class, () -> controller.ticketBookings(session, Map.of( "auth_token", authToken)));
-        assertThrows(BadRequestException.class, () -> controller.ticketBookings(session, Map.of("event_id", eventId)));
-    }
-
-    @Test 
-    public void testTicketView () {
-        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
-        User user = controller.authenticateToken(session, authToken);
-        var response1 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))); 
-        session = TestHelper.commitMakeSession(model, session);
-        var response2 = controller.ticketView(session, Map.of("ticket_id", ticketIds.get(1))); 
-        session = TestHelper.commitMakeSession(model, session);
-        assertEquals(eventId, response1.eventId);
-        assertEquals(user.getId().toString(), response1.userId);
-        // assertEquals("first", response1.firstName);
-        // assertEquals("last", response1.lastName);
-        // assertEquals("test1@example.com", response1.email);
-        assertTrue(response1.section == "SectionA" || response1.section == "SectionB");
-        assertTrue(response1.seatNum == 1 || response1.seatNum == 2);
-        assertTrue(response2.section == "SectionA" || response2.section == "SectionB");
-        assertTrue(response2.seatNum == 1 || response2.seatNum == 2);
-        
-    }
-
-    @Test 
-    public void testTicketViewExceptions () {
-        List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
-        for (String ticketId : ticketIds) {
-            assertThrows(BadRequestException.class, () -> controller.ticketView(session, Map.of("ticketid", ticketId)));
-            assertThrows(ForbiddenException.class, () -> controller.ticketView(session, Map.of("ticket_id", UUID.randomUUID().toString())));
-            break;
-        }
-        
+        assertThrows(BadRequestException.class, () -> controller.TicketViewSendEmail(session, 
+                new TicketViewEmailRequest(authToken, ticketIds2.get(0), "test1@example.com")));
     }
 }

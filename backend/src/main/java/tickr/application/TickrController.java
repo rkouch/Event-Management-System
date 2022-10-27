@@ -18,6 +18,7 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
 import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
@@ -27,10 +28,12 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.RequestChangePasswordResponse;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.application.serialised.responses.TicketBookingsResponse;
+import tickr.application.serialised.responses.TicketViewEmailResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
@@ -695,5 +698,45 @@ public class TickrController {
         //     throw new BadRequestException("User is not admin/host of the event!");
         // }
         return new TicketBookingsResponse(event.getUserTicketIds(user));
+    }
+
+    public TicketViewEmailResponse TicketViewSendEmail (ModelSession session, TicketViewEmailRequest request) {
+        // logger.info("{}", request.authToken);
+        // logger.info("{}", request.email);
+        // logger.info("{}", request.ticketId);
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request details!");
+        }
+
+        User recipient = session.getByUnique(User.class, "email", request.email)
+                            .orElseThrow(() -> new ForbiddenException("Invalid email!"));
+        Ticket ticket = session.getById(Ticket.class, UUID.fromString(request.ticketId))
+                            .orElseThrow(() -> new ForbiddenException("Invalid Ticket ID"));
+        User user = authenticateToken(session, request.authToken);
+        if (!user.getTicketIds().contains(request.ticketId)) {
+            throw new BadRequestException("User does not contain this ticket!");
+        }
+
+        var ticketUrl = String.format("http://localhost:3000/ticket/%s", request.ticketId);
+
+        var message = String.format("Please click the below to view your tickets <a href=\"%s\">here</a>.\n", ticketUrl);
+
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(recipient.getEmail(), "View user ticket details", message);
+
+        return new TicketViewEmailResponse(true);
+    } 
+
+    public EventAttendeesResponse GetEventAttendees (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing token!");
+        }
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event ID!");
+        }
+
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                            .orElseThrow(() -> new ForbiddenException("Invalid Event ID!")); 
+       
+        return new EventAttendeesResponse(event.getAttendees()); 
     }
 }
