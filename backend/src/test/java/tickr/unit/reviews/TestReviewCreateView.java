@@ -25,6 +25,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,18 +43,19 @@ public class TestReviewCreateView {
     private LocalDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
+    private MockUnitPurchaseAPI purchaseAPI;
 
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
-                new CreateEventRequest.SeatingDetails("test_section", 10, 1, true),
-                new CreateEventRequest.SeatingDetails("test_section2", 20, 4, true)
+                new CreateEventRequest.SeatingDetails("test_section", 101, 1, true),
+                new CreateEventRequest.SeatingDetails("test_section2", 201, 4, true)
         );
 
         session = model.makeSession();
@@ -61,8 +63,8 @@ public class TestReviewCreateView {
                 "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
 
-        eventId = controller.createEvent(session, new CreateEventReqBuilder()
-                .withStartDate(startTime.minusMinutes(2))
+        eventId = controller.createEventUnsafe(session, new CreateEventReqBuilder()
+                .withStartDate(startTime)
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
@@ -74,13 +76,13 @@ public class TestReviewCreateView {
         )));
         session = TestHelper.commitMakeSession(model, session);
         var requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
-        var purchaseAPI = new MockUnitPurchaseAPI(controller, model);
+        purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
         var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
                 "http://example.com/success", "http://example.com/failure", requestIds.stream()
                 .map(i -> new TicketPurchase.TicketDetails(i, null, null, null)).collect(Collectors.toList()))).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
-        purchaseAPI.addCustomer("test_customer", 10);
+        purchaseAPI.addCustomer("test_customer", 1000000);
         assertEquals("http://example.com/success", purchaseAPI.fulfillOrder(redirectUrl, "test_customer"));
         //session = TestHelper.commitMakeSession(model, session);
     }
@@ -114,6 +116,34 @@ public class TestReviewCreateView {
                 new ReviewCreate.Request(TestHelper.makeFakeJWT(), eventId, "title", "text", 1.0f)));
         assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session,
                 new ReviewCreate.Request(authToken, UUID.randomUUID().toString(), "title", "text", 1.0f)));
+        session.rollback();
+        session.close();
+        session = model.makeSession();
+        var authToken2 = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+        assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session,
+                new ReviewCreate.Request(authToken2, eventId, "title", "null", 1.0f)));
+
+        var eventId2 = controller.createEvent(session, new CreateEventReqBuilder()
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1).plusHours(1))
+                .withSeatingDetails(seatingDetails)
+                .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        var reqIds2 = controller.ticketReserve(session,
+                new TicketReserve.Request(authToken, eventId2, LocalDateTime.now(ZoneId.of("UTC")).plusDays(1), List.of(
+                        new TicketReserve.TicketDetails("test_section", 1, List.of())
+                ))).reserveTickets.stream().map(r -> r.reserveId).collect(Collectors.toList());
+        session = TestHelper.commitMakeSession(model, session);
+
+        var url = controller.ticketPurchase(session, new TicketPurchase.Request(authToken, "http://success.com", "http://failure.com",
+                reqIds2.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList()))).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+        purchaseAPI.fulfillOrder(url, "test_customer");
+        controller.reviewCreate(session,
+                new ReviewCreate.Request(authToken, eventId2, "test", "test", 1.0f));
+
+        assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session,
+                new ReviewCreate.Request(authToken, eventId2, "test", "test", 1.0f)));
     }
 
     @Test
@@ -139,6 +169,10 @@ public class TestReviewCreateView {
                 Map.of("auth_token", authToken, "event_id", eventId, "page_start", "0", "max_results", "-1")));
         assertThrows(ForbiddenException.class, () -> controller.reviewsView(session,
                 Map.of("auth_token", authToken, "event_id", eventId, "page_start", "-1", "max_results", "257")));
+        assertThrows(ForbiddenException.class, () -> controller.reviewsView(session,
+                Map.of("auth_token", authToken, "event_id", eventId, "page_start", "abc", "max_results", "257")));
+        assertThrows(ForbiddenException.class, () -> controller.reviewsView(session,
+                Map.of("auth_token", authToken, "event_id", eventId, "page_start", "0", "max_results", "def")));
     }
 
     @Test
@@ -178,5 +212,67 @@ public class TestReviewCreateView {
         TestHelper.commitMakeSession(model, session);
         assertEquals(1, viewResponse.numResults);
         assertEquals(1, viewResponse.reviews.size());
+    }
+
+    @Test
+    public void testPagination () {
+        int numTest = 100;
+        var reviewIds1 = new HashSet<String>();
+        for (int i = 0; i < numTest; i++) {
+            var authToken1 = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+            session = TestHelper.commitMakeSession(model, session);
+            var ticketIds = controller.ticketReserve(session,
+                    new TicketReserve.Request(authToken1, eventId, startTime,
+                            List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))).reserveTickets.stream()
+                    .map(t -> t.reserveId)
+                    .collect(Collectors.toList());
+            session = TestHelper.commitMakeSession(model, session);
+            var orderUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken1, "https://example.com",
+                    "https://example.com",
+                    ticketIds.stream()
+                            .map(TicketPurchase.TicketDetails::new)
+                            .collect(Collectors.toList()))).redirectUrl;
+            session = TestHelper.commitMakeSession(model, session);
+            purchaseAPI.fulfillOrder(orderUrl, "test_customer");
+            var reviewId = controller.reviewCreate(session,
+                    new ReviewCreate.Request(authToken1, eventId, "a", "b", 1.0f)).reviewId;
+            session = TestHelper.commitMakeSession(model, session);
+            reviewIds1.add(reviewId);
+        }
+
+        int pageTest = 15;
+        int curr = 0;
+        var reviewIds2 = new HashSet<String>();
+        for (int i = 0; i < numTest / pageTest; i++) {
+            var response = controller.reviewsView(session, Map.of(
+                    "event_id", eventId,
+                    "page_start", Integer.toString(curr),
+                    "max_results", Integer.toString(pageTest)
+            ));
+            assertEquals(numTest, response.numResults);
+            assertEquals(pageTest, response.reviews.size());
+            reviewIds2.addAll(response.reviews.stream().map(r -> r.reviewId).collect(Collectors.toList()));
+            curr += pageTest;
+        }
+
+        var response = controller.reviewsView(session, Map.of(
+                "event_id", eventId,
+                "page_start", Integer.toString(curr),
+                "max_results", Integer.toString(pageTest)
+        ));
+        assertEquals(numTest, response.numResults);
+        assertEquals(numTest % pageTest, response.reviews.size());
+        reviewIds2.addAll(response.reviews.stream().map(r -> r.reviewId).collect(Collectors.toList()));
+
+        response = controller.reviewsView(session, Map.of(
+                "event_id", eventId,
+                "page_start", Integer.toString(numTest),
+                "max_results", Integer.toString(pageTest)
+        ));
+        assertEquals(numTest, response.numResults);
+        assertEquals(0, response.reviews.size());
+
+        assertTrue(reviewIds1.containsAll(reviewIds2));
+        assertEquals(reviewIds1.size(), reviewIds2.size());
     }
 }

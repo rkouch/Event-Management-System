@@ -260,7 +260,7 @@ public class TickrController {
         return user.getProfile();
     }
 
-    public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
+    private CreateEventResponse createEventInternal (ModelSession session, CreateEventRequest request, boolean checkDates) {
         if (request.authToken == null) {
             throw new UnauthorizedException("Missing auth token!");
         }
@@ -295,14 +295,18 @@ public class TickrController {
             throw new BadRequestException("Event start time is later than event end time!");
         }
 
+        if (checkDates && startDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+            throw new ForbiddenException("Cannot create event in the past!");
+        }
+
 
         // getting user from token
-        var user = authenticateToken(session, request.authToken); 
-        // creating location from request 
+        var user = authenticateToken(session, request.authToken);
+        // creating location from request
         Location location = null;
         if (request.location != null) {
             location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                                        request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+                    request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
             session.save(location);
         }
 
@@ -346,7 +350,7 @@ public class TickrController {
                 User userAdmin;
                 try {
                     userAdmin = session.getById(User.class, UUID.fromString(admin))
-                    .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                            .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
                 } catch (IllegalArgumentException e) {
                     throw new ForbiddenException("invalid admin Id");
                 }
@@ -359,6 +363,14 @@ public class TickrController {
         event.setLocation(location);
 
         return new CreateEventResponse(event.getId().toString());
+    }
+
+    public CreateEventResponse createEvent (ModelSession session, CreateEventRequest request) {
+        return createEventInternal(session, request, true);
+    }
+
+    public CreateEventResponse createEventUnsafe (ModelSession session, CreateEventRequest request) {
+        return createEventInternal(session, request, false);
     }
 
     public void userEditProfile (ModelSession session, EditProfileRequest request) {

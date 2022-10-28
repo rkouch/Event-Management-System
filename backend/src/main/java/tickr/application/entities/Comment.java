@@ -11,13 +11,13 @@ import tickr.server.exceptions.ForbiddenException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Entity
 @Table(name = "event_comments")
 public class Comment {
     @Id
@@ -41,7 +41,7 @@ public class Comment {
     private Set<Comment> children;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "comment", cascade = CascadeType.REMOVE)
-    private Set<Reaction> reactions;
+    private Set<Reaction> reactions = new HashSet<>();
 
     //@Column(name = "author_id")
     //private int authorId;
