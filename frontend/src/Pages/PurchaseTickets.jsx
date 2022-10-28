@@ -4,7 +4,7 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState } from "../Helpers";
+import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, sortSection } from "../Helpers";
 import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -81,8 +81,9 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   })
 
 
-  // Set up seat selector
-  React.useEffect(() => {
+  // Get section details and available seats
+  const getSectionDetails = async () => {
+    const sectionDetails_t = []
     for (const m in event.seating_details) {
       const section = event.seating_details[m]
       var seats = []
@@ -99,11 +100,50 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         seats: seats,
         quantity: 0,
         selectable: section.has_seats,
-        seatsSelected: []
+        seatsSelected: [],
+        takenSeats: []
       }
-      setSectionDetails(current => [section_det, ...current])
+      sectionDetails_t.push(section_det)
     }
+    // sortSection(sectionDetails_t)
+    console.log(sectionDetails_t)
+    
+    // Check available seats
+    try {
+      const body = {
+        auth_token: getToken(),
+        event_id: params.event_id
+      }
+      const param = new URLSearchParams(body)
+      const response = await apiFetch('GET', `/api/event/attendees?${param}`, null)
+      const attendees = response.attendees
+
+      // Sort through tickets bought and attach to respective section
+      attendees.forEach(function(attendee) {
+        const tickets = attendee.tickets
+        tickets.forEach(async function (ticket) {
+          const ticketData = await apiFetch('GET', `/api/ticket/view?ticket_id=${ticket}`)
+          sectionDetails_t.forEach(function (section) {
+            if (section.section === ticketData.section && section.selectable) {
+              section.takenSeats.push(section.section[0]+ticketData.seat_num)
+            }
+          })
+        })
+      })
+
+    } catch (e) {
+      console.log(e)
+    }
+
+    setSectionDetails(sectionDetails_t)
+  } 
+
+  // Set up seat selector
+  React.useEffect(() => {
+    getSectionDetails()
   }, [event.event_name])
+
+
 
   React.useEffect(() => {
     setSelectedSeats([])
@@ -271,7 +311,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const body = {
         auth_token: getToken(),
         ticket_details: reservedTickets,
-        success_url: `http://localhost:3000/view_ticket/${params.event_id}`,
+        success_url: `http://localhost:3000/view_tickets/${params.event_id}`,
         cancel_url: `http://localhost:3000/view_event/${params.event_id}`
       }
       try {
@@ -300,7 +340,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const body = {
         auth_token: getToken(),
         ticket_details: newState,
-        success_url: `http://localhost:3000/view_ticket/${params.event_id}`,
+        success_url: `http://localhost:3000/view_tickets/${params.event_id}`,
         cancel_url: `http://localhost:3000/view_event/${params.event_id}`
       }
 

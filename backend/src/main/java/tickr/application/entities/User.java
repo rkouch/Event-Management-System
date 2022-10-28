@@ -260,7 +260,7 @@ public class User {
         this.groups = groups;
     }
 
-    private Set<Ticket> getTickets () {
+    public Set<Ticket> getTickets () {
         return tickets;
     }
 
@@ -368,5 +368,13 @@ public class User {
         if (profilePicture != null) {
             FileHelper.deleteFileAtUrl(profilePicture);
         }
+    }
+
+    public Set<String> getTicketIds () {
+        Set<String> tickets = new HashSet<>();
+        for (Ticket ticket : this.tickets) {
+            tickets.add(ticket.getId().toString());
+        }
+        return tickets; 
     }
 }

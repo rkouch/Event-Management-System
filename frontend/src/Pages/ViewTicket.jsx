@@ -1,55 +1,30 @@
-import React from "react"
-import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles"
-import Header from "../Components/Header"
-import { getEventData, getTicketIds } from "../Helpers"
-import { useParams, useNavigate } from "react-router-dom"
-import { EventForm } from "./CreateEvent"
+import { Grid, IconButton, Divider, Tooltip, Skeleton, Typography } from "@mui/material"
 import { Box } from "@mui/system"
-import EventCard from "../Components/EventCard"
-import TicketCard from "../Components/TicketCard"
-import { useTheme } from '@mui/material/styles';
-import MobileStepper from '@mui/material/MobileStepper';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
-import SwipeableViews from 'react-swipeable-views';
-import { autoPlay } from 'react-swipeable-views-utils';
-import { Divider, Grid, IconButton, Tooltip } from "@mui/material"
+import React from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import Header from "../Components/Header"
+import { BackdropNoBG, CentredBox, UploadPhoto} from "../Styles/HelperStyles"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
+import { getEventData, getTicketDetails } from "../Helpers"
+import dayjs from 'dayjs'
 
 export default function ViewTicket({}) {
   const params = useParams()
   const navigate = useNavigate()
-  const theme = useTheme();
 
+  const [ticketDetails, setTicketDetails] = React.useState(null)
   const [event, setEvent] = React.useState(null)
 
-  const [ticketIds, setTicketIds] = React.useState([])
-
-  const [activeStep, setActiveStep] = React.useState(0);
-  const maxSteps = ticketIds.length;
-
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-
-  const handleStepChange = (step) => {
-    setActiveStep(step);
-  };
-
+  // Fetch initial ticket data
   React.useEffect(() => {
-    getEventData(params.event_id, setEvent)
-
-    // Fetch Ticket ids
-    getTicketIds(params.event_id, setTicketIds)
+    getTicketDetails(params.ticket_id, setTicketDetails)
   }, [])
 
+  React.useEffect(() => {
+    if (ticketDetails !== null) {
+      getEventData(ticketDetails.event_id, setEvent)
+    }
+  }, [ticketDetails])
 
   return (
     <BackdropNoBG>
@@ -70,9 +45,17 @@ export default function ViewTicket({}) {
       >
         <Grid container spacing={2}>
           <Grid item xs={1}>
-            <Box sx={{p: 3, pl: 10}}>
-              <Tooltip title="Back to event">
-                <IconButton onClick={()=>{navigate(`/view_event/${params.event_id}`)}}>
+            <Box sx={{p: 3, pl:10}}>
+              <Tooltip title="To event page">
+                <IconButton 
+                  onClick={()=>{
+                    if (ticketDetails === null) {
+                      navigate('/')
+                    } else {
+                      navigate(`/view_event/${ticketDetails.event_id}`)
+                    }
+                  }}
+                >
                   <ArrowBackIcon/>
                 </IconButton>
               </Tooltip>
@@ -82,58 +65,96 @@ export default function ViewTicket({}) {
             <CentredBox sx={{display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center'}}>
               <br/>
               <Box sx={{display: 'flex', flexDirection: 'column', width: '60%'}}>
-                <SwipeableViews
-                  axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                  index={activeStep}
-                  onChangeIndex={handleStepChange}
-                  enableMouseEvents
-                >
-                  {ticketIds.map((ticketId, key) => (
-                    <div key={key}>
-                      {Math.abs(activeStep - key) <= 2 ? (
-                        <TicketCard event={event} ticket_id={ticketId}/>
-                      ) : null}
-                    </div>
-                  ))}
-                </SwipeableViews>
-                <MobileStepper
-                  sx={{color: 'red'}}
-                  steps={maxSteps}
-                  position="static"
-                  activeStep={activeStep}
-                  nextButton={
-                    <Button
-                      size="small"
-                      onClick={handleNext}
-                      disabled={activeStep === maxSteps - 1}
-                    >
-                      Next
-                      {theme.direction === 'rtl' ? (
-                        <KeyboardArrowLeft />
-                      ) : (
-                        <KeyboardArrowRight />
-                      )}
-                    </Button>
+                <Box sx={{boxShadow: 5, backgroundColor: '#FFFFFFF', m: 1, p: 3, borderRadius: 1}}>
+                  {(ticketDetails === null || event === null) 
+                    ? <>
+                        <CentredBox sx={{flexDirection: 'column', width: '100%'}}>
+                          <Skeleton variant="rounded" width={560} height={400}/>
+                          <Skeleton variant="text"  width={360} sx={{ fontSize: 50 }} />
+                          <Skeleton variant="text"  width={260} sx={{ fontSize: 20 }} />
+                        </CentredBox>
+                        <br/>
+                        <Box sx={{backgroundColor: '#EEEEEE', display: 'flex', borderRadius: 2, p: 2}}>
+                          <CentredBox sx={{width: '100%', flexDirection: 'column'}}>
+                            <Skeleton variant="text" width={360} sx={{ fontSize: 30 }} />
+                            <CentredBox sx={{gap: 1}}>
+                              <Skeleton variant="text" width={160} sx={{ fontSize: 20 }} />
+                              <Divider orientation="vertical" flexItem />
+                              <Skeleton variant="text" width={160} sx={{ fontSize: 20 }} />
+                            </CentredBox>
+                          </CentredBox>
+                        </Box>
+                      </>
+                    : <>
+                    <CentredBox sx={{flexDirection: 'column', width: '100%'}}>
+                      <UploadPhoto sx={{height: '100%', width: '100%'}} src={event.picture}/>
+                      <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>
+                        {event.event_name}
+                      </Typography>
+                      <Typography sx={{fontSize: 20, fontWeight: "regular", color: "#AE759F", texAlign: 'center'}}>
+                        {dayjs(event.start_date).format('lll')} - {dayjs(event.end_date).format('lll')}
+                      </Typography>
+                    </CentredBox>
+                    <br/>
+                    <Box sx={{backgroundColor: '#EEEEEE', display: 'flex', borderRadius: 2, p: 2}}>
+                      <Box sx={{width: '100%'}}>
+                        {(event.has_seats)
+                          ? <Typography
+                              sx={{
+                                fontSize: 30,
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                              }}
+                            >
+                              {ticketDetails.sectionName}{ticketDetails.seat_num}
+                            </Typography>
+                          : <Typography
+                              sx={{
+                                fontSize: 30,
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                              }}
+                            >
+                              {ticketDetails.sectionName} x 1
+                            </Typography>
+                        }
+                        <Grid container>
+                          <Grid item xs={1} sx={{height: '100%'}}></Grid>
+                          <Grid item xs={10}>
+                            <CentredBox sx={{gap: 1, height: '100%'}}>
+                              <Typography
+                                sx={{
+                                  fontSize: 20,
+                                  textAlign: 'center'
+                                }}
+                              >
+                                {ticketDetails.first_name} {ticketDetails.last_name}
+                              </Typography>
+                              <Divider orientation="vertical" flexItem />
+                              <Typography
+                                sx={{
+                                  fontSize: 20,
+                                  textAlign: 'center'
+                                }}
+                              >
+                                {ticketDetails.email}
+                              </Typography>
+                            </CentredBox>
+                          </Grid>
+                          <Grid item xs={1}>
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    </Box>
+                  </>
                   }
-                  backButton={
-                    <Button size="small" onClick={handleBack} disabled={activeStep === 0}>
-                      {theme.direction === 'rtl' ? (
-                        <KeyboardArrowRight />
-                      ) : (
-                        <KeyboardArrowLeft />
-                      )}
-                      Back
-                    </Button>
-                  }
-                />
+                </Box>
               </Box>
             </CentredBox>
           </Grid>
-          <Grid item xs={1}></Grid>
         </Grid>
         
       </Box>
-      
     </BackdropNoBG>
   )
 }

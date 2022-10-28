@@ -118,7 +118,7 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
                     return (
                       <Tooltip key={key} title={value}>
                         <Checkbox
-                          disabled={disableSeats && !section.seatsSelected.includes(value)}
+                          disabled={(disableSeats && !section.seatsSelected.includes(value)) || section.takenSeats.includes(value) }
                           icon={<PersonOutlineIcon/>}
                           checkedIcon={<PersonIcon/>}
                           onClick={(e) => handleSelectSeat(e.target.checked, value)}

@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser, sortSection } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -312,7 +312,11 @@ export default function EditEvent({}) {
 
   const addSection = (e) => {
     const sectionList = [...seatingList];
-    sectionList.push(newSection.stateCopy);
+    const newSection_t = newSection.stateCopy
+    newSection_t['total_seats'] = newSection_t.available_seats
+    newSection_t['availability'] = newSection_t.available_seats
+    sectionList.push(newSection_t);
+    sortSection(sectionList)
     setSeatingList(sectionList);
     setFieldInState('section', '', newSection, setNewSection)
     setFieldInState('available_seats', 0, newSection, setNewSection)

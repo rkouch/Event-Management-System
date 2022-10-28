@@ -17,6 +17,7 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -69,7 +70,7 @@ public class Server {
         post("/api/user/reset/request", TickrController::unloggedChangePassword, UserRequestChangePasswordRequest.class);
         put("/api/user/reset", TickrController::loggedChangePassword, UserChangePasswordRequest.class);
         put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
-        post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
+        
         delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
         post("/api/test/event/create", TickrController::createEventUnsafe, CreateEventRequest.class);
 
@@ -81,7 +82,7 @@ public class Server {
         delete("/api/user/delete", TickrController::userDeleteAccount, UserDeleteRequest.class);
         get("/api/user/search", TickrController::userSearch);
 
-
+        post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
         put("/api/event/edit", TickrController::editEvent, EditEventRequest.class); 
         put("/api/event/make_host", TickrController::makeHost, EditHostRequest.class);
         get("/api/event/view", TickrController::eventView);
@@ -91,6 +92,9 @@ public class Server {
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
         get("/api/ticket/view", TickrController::ticketView);
         get("/api/event/bookings", TickrController::ticketBookings);
+        
+        post("api/ticket/send", TickrController::TicketViewSendEmail, TicketViewEmailRequest.class);
+        get("/api/event/attendees", TickrController::GetEventAttendees);
 
         post("/api/event/review/create", TickrController::reviewCreate, ReviewCreate.Request.class);
         get("/api/event/reviews", TickrController::reviewsView);
