@@ -10,10 +10,7 @@ import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
-import tickr.application.serialised.combined.EventSearch;
-import tickr.application.serialised.combined.NotificationManagement;
-import tickr.application.serialised.combined.TicketPurchase;
-import tickr.application.serialised.combined.TicketReserve;
+import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
@@ -25,15 +22,7 @@ import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
-import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.application.serialised.responses.CreateEventResponse;
-import tickr.application.serialised.responses.EventViewResponse;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
-import tickr.application.serialised.responses.TestResponses;
-import tickr.application.serialised.responses.TicketBookingsResponse;
-import tickr.application.serialised.responses.TicketViewResponse;
-import tickr.application.serialised.responses.UserIdResponse;
-import tickr.application.serialised.responses.ViewProfileResponse;
+import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -58,6 +47,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -699,5 +689,62 @@ public class TickrController {
         //     throw new BadRequestException("User is not admin/host of the event!");
         // }
         return new TicketBookingsResponse(event.getUserTicketIds(user));
+    }
+
+    public ReviewCreate.Response reviewCreate (ModelSession session, ReviewCreate.Request request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null) {
+            throw new BadRequestException("Null event id!");
+        }
+
+        var event = session.getById(Event.class, UUID.fromString(request.eventId))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        var comment = event.addReview(session, user, request.title, request.text, request.rating);
+        //session.save(comment);
+
+        return new ReviewCreate.Response(comment.getId().toString());
+    }
+
+    public ReviewsViewResponse reviewsView (ModelSession session, Map<String, String> params) {
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        }
+
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        var event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging params!");
+        }
+
+        int pageStart;
+        int maxResults;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new ForbiddenException("Invalid paging values!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new ForbiddenException("Invalid paging values!");
+        }
+        var numItems = new AtomicInteger();
+        var reviews = session.getAllWithStream(Comment.class, "event", event)
+                .filter(Predicate.not(Comment::isReply))
+                .peek(c -> numItems.getAndIncrement())
+                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Comment::makeReview)
+                .collect(Collectors.toList());
+
+        return new ReviewsViewResponse(reviews, numItems.get());
     }
 }

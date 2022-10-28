@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Entity
@@ -250,6 +251,17 @@ public class Event {
         this.seatCapacity = seatCapacity;
     }
 
+    private boolean userHasTicket (User user) {
+        return getTickets().stream()
+                .anyMatch(t -> t.isOwnedBy(user));
+    }
+
+    private boolean userHasReview (User user) {
+        return getComments().stream()
+                .filter(Predicate.not(Comment::isReply))
+                .anyMatch(c -> c.isWrittenBy(user));
+    }
+
     public List<String> getUserTicketIds (User user) {
         List<String> set = new ArrayList<>();
         Set<Ticket> tmpTickets = this.tickets;
@@ -386,5 +398,21 @@ public class Event {
         }
 
         throw new ForbiddenException("Invalid section!");
+    }
+
+    public Comment addReview (ModelSession session, User author, String title, String text, float rating) {
+        if (!userHasTicket(author)) {
+            throw new ForbiddenException("You do not own a ticket for this event!");
+        }
+
+        if (userHasReview(author)) {
+            throw new ForbiddenException("You have already made a review for this event!");
+        }
+
+        var comment = Comment.makeReview(this, author, title, text, rating);
+        session.save(comment);
+        getComments().add(comment);
+
+        return comment;
     }
 }
