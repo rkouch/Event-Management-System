@@ -5,8 +5,10 @@ import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
+import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
+import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -142,7 +144,7 @@ public class Event {
         this.admins.add(admin);
     }
 
-    private Set<Ticket> getTickets () {
+    public Set<Ticket> getTickets () {
         return tickets;
     }
 
@@ -400,5 +402,32 @@ public class Event {
         }
 
         throw new ForbiddenException("Invalid section!");
+    }
+
+    public List<Attendee> getAttendees () {
+        List<Ticket> tickets = new ArrayList<>(this.tickets); 
+        Collections.sort(tickets, new Comparator<Ticket> () {
+            @Override
+            public int compare(Ticket t1, Ticket t2) {
+                return t1.getUser().getId().toString().compareTo(t2.getUser().getId().toString());
+            }
+        });
+        List<Attendee> attendees = new ArrayList<>();
+
+        String prevUserId = tickets.get(0).getUser().getId().toString();
+        Attendee attendee = new Attendee(prevUserId);
+        for (Ticket ticket : tickets) {
+            String currUserId = ticket.getUser().getId().toString();
+            if (!currUserId.equals(prevUserId)) {
+                prevUserId = currUserId;
+                attendees.add(attendee);
+                attendee = new Attendee(ticket.getUser().getId().toString());
+                attendee.addTicketId(ticket.getId().toString());
+            } else {
+                attendee.addTicketId(ticket.getId().toString());
+            }
+        }
+        attendees.add(attendee);
+        return attendees;
     }
 }
