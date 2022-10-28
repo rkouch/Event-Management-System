@@ -21,6 +21,7 @@ import ViewEvent from './Pages/ViewEvent';
 import EditEvent from './Pages/EditEvent';
 import PurchaseTicket from './Pages/PurchaseTickets';
 import Checkout from './Pages/Checkout';
+import ViewTickets from './Pages/ViewTickets';
 import ViewTicket from './Pages/ViewTicket';
 
 
@@ -82,7 +83,11 @@ function App() {
       element: <PurchaseTicket setTicketOrder={setTicketOrder} ticketOrder={ticketOrder}/>
     },
     {
-      path: "/view_ticket/:event_id",
+      path: "/view_tickets/:event_id",
+      element: <ViewTickets/>
+    },
+    {
+      path: "/view_ticket/:ticket_id",
       element: <ViewTicket/>
     }
   ])

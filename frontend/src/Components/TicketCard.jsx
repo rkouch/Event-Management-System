@@ -1,25 +1,28 @@
-import { Divider, Skeleton, Typography } from '@mui/material'
+import {Collapse, Divider, FormControl, FormHelperText, Grid, IconButton, InputAdornment, Skeleton, Tooltip, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import React from 'react'
 import { CentredBox, UploadPhoto } from '../Styles/HelperStyles'
 import dayjs from 'dayjs'
-import { apiFetch, getEventData, getToken, getUserData } from '../Helpers'
+import { apiFetch, checkValidEmail, getEventData, getToken, getUserData } from '../Helpers'
+import EmailIcon from '@mui/icons-material/Email'
+import { ContrastInputNoOutline, ContrastInputWrapper } from '../Styles/InputStyles'
+import SendIcon from '@mui/icons-material/Send';
 
-export default function TicketCard({event, ticket_id}) {
-  
+export default function TicketCard({event, ticket_id, ticketOwner}) {
   const [ticketDetails, setTicketDetails] = React.useState(null)
-
-  const testTicketData = {
-    event_id: '77ff1d93-e3c2-4d44-9ced-6375de70048b',
-    section: 'A',
-    seat_num: 10,
-    user_id: 'dfc689c3-e989-441a-9d1f-4ad629e929a9'
-  }
-
   const [sectionSeating, setSectionSeating] = React.useState(false)
-
   const [userData, setUserData] = React.useState(null)
   const [sectionName, setSectionName] = React.useState('')
+  const [sendEmail, setSendEmail] = React.useState('')
+  const [openInput, setOpenInput] = React.useState(false)
+  const [helperMsg, setHelperMsg] = React.useState('')
+
+  // Get Ticket Data
+  React.useEffect(()=> {
+    if (event !== null) {
+      getTicketData()  
+    }
+  },[event])
 
   const getTicketData = async () => {
     // Send API call to get ticket details
@@ -37,7 +40,6 @@ export default function TicketCard({event, ticket_id}) {
       } else {
         setSectionName(name)
       }
-      // getUserData(`user_id=${response.user_id}`, setUserData)
       event.seating_details.forEach(function(section) {
         if (section.section === response.section) {
           setSectionSeating(section.has_seats)
@@ -50,12 +52,37 @@ export default function TicketCard({event, ticket_id}) {
     
   }
 
-  React.useEffect(()=> {
-    if (event !== null) {
-      getTicketData()  
-    }
-  },[event])
+  // Handle toggle of send email
+  const handleToggle = () => {
+    setOpenInput(!openInput);
+  };
 
+  // Handle email change
+  const handleEmailChange = (e) => {
+    setSendEmail(e.target.value)
+    setHelperMsg("")
+  }
+
+  // Hanlde sending ticket to email
+  const handleSendEmail = async () => {
+    // Form Check
+    if (!checkValidEmail(sendEmail)) {
+      setHelperMsg("Invalid email")
+      return
+    }
+
+    try {
+      const body = {
+        auth_token: getToken(),
+        ticket_id: ticket_id,
+        email: sendEmail
+      }
+      const response = await apiFetch('POST', '/api/ticket/send', body)
+      setHelperMsg("Email sent")
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   return (
     <Box sx={{boxShadow: 5, backgroundColor: '#FFFFFFF', m: 1, p: 3, borderRadius: 1}}>
@@ -111,25 +138,61 @@ export default function TicketCard({event, ticket_id}) {
                       {sectionName} x 1
                     </Typography>
                 }
-                <CentredBox sx={{gap: 1}}>
-                  <Typography
-                    sx={{
-                      fontSize: 20,
-                      textAlign: 'center'
-                    }}
-                  >
-                    {ticketDetails.first_name} {ticketDetails.last_name}
-                  </Typography>
-                  <Divider orientation="vertical" flexItem />
-                  <Typography
-                    sx={{
-                      fontSize: 20,
-                      textAlign: 'center'
-                    }}
-                  >
-                    {ticketDetails.email}
-                  </Typography>
-                </CentredBox>
+                <Grid container>
+                  <Grid item xs={1} sx={{height: '100%'}}></Grid>
+                  <Grid item xs={10}>
+                    <CentredBox sx={{gap: 1, height: '100%'}}>
+                      <Typography
+                        sx={{
+                          fontSize: 20,
+                          textAlign: 'center'
+                        }}
+                      >
+                        {ticketDetails.first_name} {ticketDetails.last_name}
+                      </Typography>
+                      <Divider orientation="vertical" flexItem />
+                      <Typography
+                        sx={{
+                          fontSize: 20,
+                          textAlign: 'center'
+                        }}
+                      >
+                        {ticketDetails.email}
+                      </Typography>
+                    </CentredBox>
+                  </Grid>
+                  <Grid item xs={1}>
+                    {ticketOwner
+                      ? <Tooltip title="Send to Email">
+                          <IconButton onClick={handleToggle}>
+                            <EmailIcon fontSize='small'/>
+                          </IconButton>
+                        </Tooltip>
+                      : <></>
+                    }
+                  </Grid>
+                </Grid>
+                <Collapse in={openInput}>
+                  <CentredBox sx={{pt: 1, width: '100%', }}>
+                    <FormControl>
+                      <ContrastInputWrapper sx={{width: '100%'}}>
+                        <ContrastInputNoOutline
+                          fullWidth
+                          endAdornment={
+                            <Tooltip title="Send">
+                              <IconButton onClick={handleSendEmail}>
+                                <SendIcon/>
+                              </IconButton>
+                            </Tooltip>
+                          }
+                          placeholder="Email"
+                          onChange={handleEmailChange}
+                        />
+                      </ContrastInputWrapper>
+                      <FormHelperText>{helperMsg}</FormHelperText>
+                    </FormControl>
+                  </CentredBox>
+                </Collapse>
               </Box>
             </Box>
           </>

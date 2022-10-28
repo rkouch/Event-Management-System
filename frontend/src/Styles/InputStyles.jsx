@@ -69,6 +69,22 @@ export const ContrastInput = styled(OutlinedInput)(({ theme }) => ({
   borderRadius: '5px'
 }))
 
+export const ContrastInputNoOutline = styled(OutlinedInput)(({ theme }) => ({
+  '.MuiOutlinedInput-notchedOutline': {
+    borderColor: "rgba(0,0,0,0)"
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "rgba(0,0,0,0)"
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: 'rgba(0,0,0,0)',
+  },
+  "&.Mui-focused": {
+    backgroundColor: alpha('#6A7B8A', 0.5),
+  },
+  borderRadius: '5px'
+}))
+
 export const ContrastInputWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: '5px',

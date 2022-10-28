@@ -232,3 +232,20 @@ export const getTicketIds = async (event_id, setTicketIds) => {
 export const sortSection = (section) => {
   section.sort((a,b) => (a.hasSeats && !b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section.localeCompare(b.section)) ? 1 : -1) : -1)
 }
+
+// Given ticket id get ticket details and set appropriate state
+export const getTicketDetails = async(ticket_id, setTicketDetails) => {
+  const paramsObj = {
+    ticket_id: ticket_id,
+  }
+  const searchParams = new URLSearchParams(paramsObj)
+  const response = await apiFetch('GET', `/api/ticket/view?${searchParams}`)
+  const name = response.section
+  if (name.split(' ').length > 1) {
+    const names = name.split(' ')
+    response['sectionName'] = names[0][0]+names[1][0]
+  } else {
+    response['sectionName'] = name
+  }
+  setTicketDetails(response)
+}

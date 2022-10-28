@@ -1,7 +1,7 @@
 import React from "react";
 
 import Header from "../Components/Header";
-import { BackdropNoBG, CentredBox, UploadPhoto } from "../Styles/HelperStyles";
+import { BackdropNoBG, CentredBox, ScrollableBox, UploadPhoto } from "../Styles/HelperStyles";
 import dayjs from "dayjs";
 import Grid from "@mui/material/Unstable_Grid2";
 import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
@@ -317,7 +317,7 @@ export default function ViewEvent({}) {
                     {isAttendee
                       ? <Grid container>
                           <Grid item xs={6}>
-                            <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_ticket/${params.event_id}`)}>
+                            <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_tickets/${params.event_id}`)}>
                               View Tickets
                             </TkrButton2>
                           </Grid>

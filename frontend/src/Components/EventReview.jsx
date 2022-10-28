@@ -28,7 +28,6 @@ export default function EventReview({isAttendee, event_id}) {
     // After posting a review, scroll to the bottom and refresh reviews
     if (postReview) {
       console.log('Posted a review')
-      setReviews([])
       fetchReviews(0, 10)
       bottomRef.current?.scrollIntoView({behavior: 'smooth'});
       setPostReview(false)
@@ -61,7 +60,11 @@ export default function EventReview({isAttendee, event_id}) {
       const searchParams = new URLSearchParams(params)
       const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
       console.log(response)
-      setReviews(current => [response.reviews, ...reviews])
+      if (pageStart === 0) {
+        setReviews(response.reviews)
+      } else {
+        setReviews(current => [response.reviews, ...reviews])
+      }
     } catch (e) {
       console.log(error)
       const testReviews = [TestReview1, TestReview2, TestReview3, TestReview4, TestReview5]
@@ -150,7 +153,11 @@ export default function EventReview({isAttendee, event_id}) {
                           required
                           placeholder="Review Title"
                           sx={{fontWeight: 'bold'}}
-                          onChange={(e) => {setReviewTitle(e.target.value)}}
+                          onChange={(e) => {
+                            setReviewTitle(e.target.value)
+                            setError(false)
+                            setErrorMsg('')
+                          }}
                         />
                       </ContrastInputWrapper>
                     </Grid>
@@ -174,7 +181,11 @@ export default function EventReview({isAttendee, event_id}) {
                       rows={4}
                       fullWidth
                       placeholder="Review..."
-                      onChange={(e) => {setReviewText(e.target.value)}}
+                      onChange={(e) => {
+                        setReviewText(e.target.value)
+                        setError(false)
+                        setErrorMsg('')
+                      }}
                     />
                   </ContrastInputWrapper>
                 </Grid>
