@@ -170,8 +170,10 @@ create table event_comments (
     event_id varchar(36) not null,
     parent_id varchar(36),
     author_id varchar(36) not null,
+    comment_title varchar(255),
     comment_text text not null,
     comment_time timestamp not null,
+    rating float,
 
     primary key (id),
     foreign key (event_id) references `events`(id),

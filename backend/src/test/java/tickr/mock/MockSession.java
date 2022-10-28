@@ -41,6 +41,11 @@ public class MockSession implements ModelSession {
     }
 
     @Override
+    public <T, I> Stream<T> getAllWithStream (Class<T> entityClass, String col, I data) {
+        return null;
+    }
+
+    @Override
     public <T, I> Optional<T> getByUnique (Class<T> entityClass, String col, I data) {
         return Optional.empty();
     }

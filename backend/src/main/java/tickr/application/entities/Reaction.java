@@ -66,7 +66,7 @@ public class Reaction {
         this.reactTime = reactTime;
     }
 
-    private String getReactType () {
+    public String getReactType () {
         return reactType;
     }
 

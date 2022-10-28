@@ -119,4 +119,8 @@ public class Ticket {
         return new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
                                         this.firstName, this.lastName, this.email);
     }
+
+    public boolean isOwnedBy (User user) {
+        return user != null && this.user.getId().equals(user.getId());
+    }
 }

@@ -10,6 +10,7 @@ import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.NotificationManagement;
+import tickr.application.serialised.combined.ReviewCreate;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
@@ -70,6 +71,7 @@ public class Server {
         put("/api/user/reset/complete", TickrController::unloggedComplete, UserCompleteChangePasswordRequest.class);
         post("/api/event/create", TickrController::createEvent, CreateEventRequest.class);
         delete("/api/user/logout", TickrController::userLogout, UserLogoutRequest.class);
+        post("/api/test/event/create", TickrController::createEventUnsafe, CreateEventRequest.class);
 
         get("/api/user/settings", TickrController::userGetSettings);
         put("/api/user/settings/update", TickrController::userUpdateSettings, NotificationManagement.UpdateRequest.class);
@@ -90,6 +92,8 @@ public class Server {
         get("/api/ticket/view", TickrController::ticketView);
         get("/api/event/bookings", TickrController::ticketBookings);
 
+        post("/api/event/review/create", TickrController::reviewCreate, ReviewCreate.Request.class);
+        get("/api/event/reviews", TickrController::reviewsView);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
