@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Entity
 @Table(name = "event_comments")
 public class Comment {
     @Id
@@ -124,7 +125,7 @@ public class Comment {
         this.commentTime = commentTime;
     }
 
-    private Comment () {}
+    public Comment () {}
 
     public Comment (Event event, User author, Comment parent, String title, String commentText, Float rating) {
         this.event = event;
