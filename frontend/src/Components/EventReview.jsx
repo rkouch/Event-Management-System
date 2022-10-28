@@ -104,8 +104,9 @@ export default function EventReview({isAttendee, event_id}) {
       setPostReview(true)
       window.location.reload();
     } catch (e) {
-      setPostReview(true)
-      console.log(e)
+      setPostReview(false)
+      setError(true)
+      setErrorMsg(e.reason)
     }
   }
 

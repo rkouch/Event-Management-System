@@ -49,6 +49,11 @@ public class HibernateSession implements ModelSession {
 
     @Override
     public <T, I> List<T> getAllWith (Class<T> entityClass, String col, I data) {
+        return getAllWithStream(entityClass, col, data).collect(Collectors.toList());
+    }
+
+    @Override
+    public <T, I> Stream<T> getAllWithStream (Class<T> entityClass, String col, I data) {
         // Create query for entity class
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
@@ -59,8 +64,7 @@ public class HibernateSession implements ModelSession {
 
         // Build query
         Query<T> query = session.createQuery(criteriaQuery);
-
-        return query.getResultList();
+        return query.getResultStream();
     }
 
     @Override

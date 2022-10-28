@@ -105,7 +105,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
       sectionDetails_t.push(section_det)
     }
-    sortSection(sectionDetails_t)
+    // sortSection(sectionDetails_t)
+    console.log(sectionDetails_t)
     
     // Check available seats
     try {
@@ -134,7 +135,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       console.log(e)
     }
 
-    
     setSectionDetails(sectionDetails_t)
   } 
 

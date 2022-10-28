@@ -118,6 +118,7 @@ export const getEventData = async (eventId, setEventData=null) => {
   try {
     const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
     sortSection(response.seating_details)
+    console.log(response)
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -230,7 +231,7 @@ export const getTicketIds = async (event_id, setTicketIds) => {
 
 // Sort a section based upon if it has seats and then by alphabetically by section name
 export const sortSection = (section) => {
-  section.sort((a,b) => (a.hasSeats && !b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section.localeCompare(b.section)) ? 1 : -1) : -1)
+  section.sort((a,b) => (!a.hasSeats && b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section.localeCompare(b.section)) ? -1 : 1) : 1)
 }
 
 // Given ticket id get ticket details and set appropriate state

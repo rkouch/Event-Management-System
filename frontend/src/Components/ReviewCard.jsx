@@ -10,7 +10,7 @@ export default function ReviewCard({review, innerRef, id}) {
     <Box ref={innerRef} id={id} sx={{borderRadius: '50px',  backgroundColor: '#EEEEEE', p: 2, maxWidth: 700, width: '100%'}}>
       <Grid container sx={{height: '100%'}}>
         <Grid item xs={1} >
-          <UserAvatar userId={review.author} size={50}/>
+          <UserAvatar userId={review.authorId} size={50}/>
         </Grid>
         <Grid xs item sx={{pl: 3}}>
           <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
