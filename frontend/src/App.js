@@ -87,7 +87,7 @@ function App() {
       element: <ViewTickets/>
     },
     {
-      path: "/view_ticket/:ticket_id",
+      path: "/ticket/:ticket_id",
       element: <ViewTicket/>
     }
   ])

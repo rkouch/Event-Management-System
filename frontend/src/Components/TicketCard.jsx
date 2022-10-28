@@ -189,7 +189,7 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
                           onChange={handleEmailChange}
                         />
                       </ContrastInputWrapper>
-                      <FormHelperText>{helperMsg}</FormHelperText>
+                      <FormHelperText sx={{textAlign: 'center'}}>{helperMsg}</FormHelperText>
                     </FormControl>
                   </CentredBox>
                 </Collapse>
