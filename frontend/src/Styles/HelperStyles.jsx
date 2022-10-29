@@ -1,5 +1,5 @@
 import React from 'react'
-import { styled } from '@mui/system';
+import { styled, alpha } from '@mui/system';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 
@@ -73,4 +73,21 @@ export const UploadPhoto = styled(`img`)({
   width: '100%',
   objectFit: 'cover',
   borderRadius: 5,
+})
+
+export const ScrollableBox = styled(Box)({
+  overflowY: 'scroll',
+  '&::-webkit-scrollbar': {
+    width: 10
+  },
+  '&::-webkit-scrollbar-track': {
+    boxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
+    webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
+    backgroundColor: alpha('#6A7B8A', 0.3),
+    borderRadius: 5
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#6A7B8A',
+    borderRadius: 5
+  }
 })

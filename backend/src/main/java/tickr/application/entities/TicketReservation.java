@@ -10,11 +10,16 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Entity
 @Table(name = "ticket_reservation")
 public class TicketReservation {
+
+    private static final Duration EXPIRY_DURATION = Duration.ofMinutes(5);
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
@@ -33,6 +38,9 @@ public class TicketReservation {
     @Column(name = "seat_num")
     private int seatNum;
 
+    @Column(name = "expiry_time")
+    private LocalDateTime expiryTime;
+
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "ticketReservation", cascade = CascadeType.REMOVE)
     private PurchaseItem purchaseItem;
 
@@ -45,6 +53,8 @@ public class TicketReservation {
         this.section = section;
         this.seatNum = seatNum;
         this.price = price;
+        this.expiryTime = LocalDateTime.now(ZoneId.of("UTC"))
+                .plus(EXPIRY_DURATION);
     }
 
     public int getSeatNum () {
@@ -55,6 +65,15 @@ public class TicketReservation {
         return price;
     }
 
+    public void setExpiry (LocalDateTime expiryTime) {
+        this.expiryTime = expiryTime;
+    }
+
+    public boolean hasExpired () {
+        return LocalDateTime.now(ZoneId.of("UTC"))
+                .isAfter(expiryTime);
+    }
+
     public TicketReserve.ReserveDetails getDetails () {
         return new TicketReserve.ReserveDetails(id.toString(), seatNum, section.getSection(), price);
     }
@@ -63,6 +82,10 @@ public class TicketReservation {
                                                String firstName, String lastName, String email) {
         if (!this.user.getId().equals(user.getId())) {
             throw new ForbiddenException("User is forbidden from purchasing this reservation!");
+        }
+
+        if (hasExpired()) {
+            throw new ForbiddenException("Ticket reservation has expired!");
         }
 
         var purchaseItem = new PurchaseItem(purchaseId, this, firstName, lastName, email);

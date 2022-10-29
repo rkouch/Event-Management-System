@@ -69,8 +69,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2011-12-03T10:15:30", 
-                                            "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30",
+                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.eventView(finalSession, Map.of("event_i", event_id)));
@@ -106,8 +106,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2011-12-03T10:15:30", 
-                                            "2011-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30",
+                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
 
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
@@ -123,8 +123,8 @@ public class TestViewEvent {
         assertEquals(location.country, response.location.country);
         assertEquals(location.longitude, response.location.longitude);
         assertEquals(location.latitude, response.location.latitude);
-        assertEquals("2011-12-03T10:15:30", response.startDate);
-        assertEquals("2011-12-04T10:15:30", response.endDate);
+        assertEquals("2031-12-03T10:15:30", response.startDate);
+        assertEquals("2031-12-04T10:15:30", response.endDate);
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
         assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availableSeats);

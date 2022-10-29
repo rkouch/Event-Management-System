@@ -34,7 +34,7 @@ export const apiFetch = (method, route, body) => {
             });
             break;
           default:
-            console.log("Defaulted fetch response")
+            reject("Defaulted fetch response")
         }
       })
       .catch((response) => {
@@ -117,6 +117,8 @@ export const getUserData = async (body, setUserData=null) => {
 export const getEventData = async (eventId, setEventData=null) => {
   try {
     const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
+    sortSection(response.seating_details)
+    console.log(response)
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -199,8 +201,6 @@ export const checkIfUser= async (userId, setState) => {
   try {
     const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
     const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
-    console.log(response_2)
-    console.log(userId)
     if (userId === response_2.user_id) {
       setState(true)
       // navigate(`/my_profile`)
@@ -221,8 +221,32 @@ export const getTicketIds = async (event_id, setTicketIds) => {
   const searchParams = new URLSearchParams(paramsObj)
   try {
     const response = await apiFetch('GET', `/api/event/bookings?${searchParams}`, null)
-    setTicketIds(response.tickets)
+    await setTicketIds([])
+    await setTicketIds(response.tickets)
+    return response.tickets
   } catch (e) {
     console.log(e)
   }
+}
+
+// Sort a section based upon if it has seats and then by alphabetically by section name
+export const sortSection = (section) => {
+  section.sort((a,b) => (!a.hasSeats && b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section.localeCompare(b.section)) ? -1 : 1) : 1)
+}
+
+// Given ticket id get ticket details and set appropriate state
+export const getTicketDetails = async(ticket_id, setTicketDetails) => {
+  const paramsObj = {
+    ticket_id: ticket_id,
+  }
+  const searchParams = new URLSearchParams(paramsObj)
+  const response = await apiFetch('GET', `/api/ticket/view?${searchParams}`)
+  const name = response.section
+  if (name.split(' ').length > 1) {
+    const names = name.split(' ')
+    response['sectionName'] = names[0][0]+names[1][0]
+  } else {
+    response['sectionName'] = name
+  }
+  setTicketDetails(response)
 }

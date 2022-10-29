@@ -4,10 +4,19 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.application.serialised.SerialisedReaction;
+import tickr.application.serialised.SerialisedReview;
+import tickr.server.exceptions.BadRequestException;
+import tickr.server.exceptions.ForbiddenException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "event_comments")
@@ -33,7 +42,7 @@ public class Comment {
     private Set<Comment> children;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "comment", cascade = CascadeType.REMOVE)
-    private Set<Reaction> reactions;
+    private Set<Reaction> reactions = new HashSet<>();
 
     //@Column(name = "author_id")
     //private int authorId;
@@ -44,10 +53,15 @@ public class Comment {
     @Column(name = "comment_text")
     private String commentText;
 
+    @Column(name = "comment_title")
+    private String title;
+
     @Column(name = "comment_time")
     private LocalDateTime commentTime;
 
-    private UUID getId () {
+    private Float rating;
+
+    public UUID getId () {
         return id;
     }
 
@@ -103,11 +117,69 @@ public class Comment {
         this.commentText = commentText;
     }
 
-    private LocalDateTime getCommentTime () {
+    public LocalDateTime getCommentTime () {
         return commentTime;
     }
 
     private void setCommentTime (LocalDateTime commentTime) {
         this.commentTime = commentTime;
+    }
+
+    public Comment () {}
+
+    public Comment (Event event, User author, Comment parent, String title, String commentText, Float rating) {
+        this.event = event;
+        this.parent = parent;
+        this.author = author;
+        this.title = title;
+        this.commentText = commentText;
+        this.rating = rating;
+        commentTime = LocalDateTime.now(ZoneId.of("UTC"));
+    }
+
+    public boolean isWrittenBy (User user) {
+        return author.getId().equals(user.getId());
+    }
+
+    public boolean isReply () {
+        return parent != null;
+    }
+
+    public SerialisedReview makeReview () {
+        if (isReply()) {
+            throw new RuntimeException("Tried to make review out of reply!");
+        }
+
+        return new SerialisedReview(id.toString(), author.getId().toString(), title, commentText, rating, makeReactions());
+    }
+
+    private List<SerialisedReaction> makeReactions () {
+        return getReactions().stream()
+                .collect(Collectors.groupingBy(Reaction::getReactType, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .map(e -> new SerialisedReaction(e.getKey(), Math.toIntExact(e.getValue())))
+                .collect(Collectors.toList());
+
+    }
+
+    public static Comment makeReview (Event event, User author, String title, String text, float rating) {
+        if (title == null || title.equals("") || text == null) {
+            throw new BadRequestException("Invalid review title or text!");
+        }
+
+        if (rating < 0.0f || rating > 10.0f) {
+            throw new ForbiddenException("Invalid review rating!");
+        }
+
+        return new Comment(event, author, null, title, text, rating);
+    }
+
+    public static Comment makeReply (Event event, User author, Comment parent, String text) {
+        if (text == null || text.equals("")) {
+            throw new ForbiddenException("Invalid reply text!");
+        }
+
+        return new Comment(event, author, parent, null, text, null);
     }
 }

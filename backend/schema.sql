@@ -96,6 +96,7 @@ create table ticket_reservation (
     seat_num int not null,
     #reservation_id varchar(36) not null,
     price float not null,
+    expiry_time datetime not null,
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (seating_id) references `seating_plan`(id)
@@ -170,8 +171,10 @@ create table event_comments (
     event_id varchar(36) not null,
     parent_id varchar(36),
     author_id varchar(36) not null,
+    comment_title varchar(255),
     comment_text text not null,
     comment_time timestamp not null,
+    rating float,
 
     primary key (id),
     foreign key (event_id) references `events`(id),

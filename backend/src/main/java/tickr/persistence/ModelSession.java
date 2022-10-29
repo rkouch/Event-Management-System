@@ -33,6 +33,7 @@ public interface ModelSession {
      * @param <I>
      */
     <T, I> List<T> getAllWith (Class<T> entityClass, String col, I data);
+    <T, I> Stream<T> getAllWithStream (Class<T> entityClass, String col, I data);
 
     <T, I> Optional<T> getByUnique (Class<T> entityClass, String col, I data);
 

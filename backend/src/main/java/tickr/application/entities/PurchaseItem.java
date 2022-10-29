@@ -11,11 +11,15 @@ import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.util.Utils;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Entity
 @Table(name = "purchase_item")
 public class PurchaseItem {
+    private static final Duration EXPIRY_DURATION = Duration.ofHours(24);
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
@@ -51,6 +55,7 @@ public class PurchaseItem {
 
         this.purchaseId = purchaseId;
         this.ticketReservation = reservation;
+        reservation.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(EXPIRY_DURATION));
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email != null ? email.toLowerCase().trim() : null;

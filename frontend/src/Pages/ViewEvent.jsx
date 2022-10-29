@@ -1,7 +1,7 @@
 import React from "react";
 
 import Header from "../Components/Header";
-import { BackdropNoBG, CentredBox, UploadPhoto } from "../Styles/HelperStyles";
+import { BackdropNoBG, CentredBox, ScrollableBox, UploadPhoto } from "../Styles/HelperStyles";
 import dayjs from "dayjs";
 import Grid from "@mui/material/Unstable_Grid2";
 import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
@@ -93,7 +93,6 @@ export default function ViewEvent({}) {
         event.seating_details.forEach(function (section) {
           if (section.available_seats > 0 ) {
             isSoldOut = false
-            console.log('Event not sold out')
             return
           }
         })
@@ -105,7 +104,6 @@ export default function ViewEvent({}) {
 
   // Set if user has tickets for this event
   React.useEffect(() => {
-    console.log(ticketIds.length > 0)
     setIsAttendee(ticketIds.length > 0)
   },[ticketIds])
 
@@ -287,35 +285,39 @@ export default function ViewEvent({}) {
                     >
                       Tickets
                     </Typography>
-                    <TableContainer>
-                      <Table stickyHeader sx={{maxHeight: 300}}>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}}>Section</TableCell>
-                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Availability</TableCell>
-                            <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Cost</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {event.seating_details.map((section, key) => {
-                            if (section.available_seats > 0) {
-                              return (
-                                <TableRow key={key}>
-                                  <TableCell>{section.section}</TableCell>
-                                  <TableCell align="center">{section.available_seats}</TableCell>
-                                  <TableCell align="center">${section.ticket_price}</TableCell>
-                                </TableRow>
-                              )
-                            }
-                          })}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                    {!soldOut
+                      ? <TableContainer>
+                          <Table stickyHeader sx={{maxHeight: 300}}>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell sx={{fontWeight: 'bold', fontSize: 20}}>Section</TableCell>
+                                <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Availability</TableCell>
+                                <TableCell sx={{fontWeight: 'bold', fontSize: 20}} align="center">Cost</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {event.seating_details.map((section, key) => {
+                                if (section.available_seats > 0) {
+                                  return (
+                                    <TableRow key={key}>
+                                      <TableCell>{section.section}</TableCell>
+                                      <TableCell align="center">{section.available_seats}</TableCell>
+                                      <TableCell align="center">${section.ticket_price}</TableCell>
+                                    </TableRow>
+                                  )
+                                }
+                              })}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      : <>
+                        </>
+                    }
                     <br/>
                     {isAttendee
                       ? <Grid container>
                           <Grid item xs={6}>
-                            <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_ticket/${params.event_id}`)}>
+                            <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_tickets/${params.event_id}`)}>
                               View Tickets
                             </TkrButton2>
                           </Grid>
@@ -349,7 +351,7 @@ export default function ViewEvent({}) {
               </Grid>
             </EventForm>
             {eventOver
-              ? <EventReview isAttendee={isAttendee}/>
+              ? <EventReview isAttendee={isAttendee} event_id={params.event_id} />
               : <>
                 </>
             }
