@@ -284,7 +284,7 @@ public class Event {
             }
         });
         for (Ticket ticket : tickets) {
-            if (ticket.getUser() == user) {
+            if (ticket.getUser().equals(user)) {
                 set.add(ticket.getId().toString());
             }
         }
@@ -418,6 +418,9 @@ public class Event {
 
     public List<Attendee> getAttendees () {
         List<Ticket> tickets = new ArrayList<>(this.tickets); 
+        if (tickets.size() == 0) {
+            return new ArrayList<>();
+        }
         Collections.sort(tickets, new Comparator<Ticket> () {
             @Override
             public int compare(Ticket t1, Ticket t2) {

@@ -71,10 +71,14 @@ public class TestGetAttendees {
         authToken = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
+
+        session = TestHelper.commitMakeSession(model, session);
         
         authToken2 = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
+
+        session = TestHelper.commitMakeSession(model, session);
 
         startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
@@ -110,8 +114,10 @@ public class TestGetAttendees {
         requestIds = response2.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
         requestPrice = response2.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
 
+        session = TestHelper.commitMakeSession(model, session);
+
         var reqIds2 = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
-        purchaseAPI.addCustomer("test_customer2", 100);
+        purchaseAPI.addCustomer("test_customer2", 150);
         var redirectUrl2 = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
                 "https://example.com/success", "https://example.com/cancel", reqIds2)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
@@ -121,8 +127,32 @@ public class TestGetAttendees {
     @Test
     public void testGetAttendees () {
         var attendees = controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", eventId)).getAttendees();
-        // assertEquals(2, attendees.size());
+        var user1Id = controller.userSearch(session, Map.of("email", "test1@example.com")).userId;
+        var user2Id = controller.userSearch(session, Map.of("email", "test2@example.com")).userId;
+        assertEquals(2, attendees.size());
         assertTrue(attendees.get(0).getTickets().size() == 2 || attendees.get(0).getTickets().size() == 3);
-        // assertTrue(attendees.get(1).getTickets().size() == 2 || attendees.get(1).getTickets().size() == 3);
+        assertTrue(attendees.get(1).getTickets().size() == 2 || attendees.get(1).getTickets().size() == 3);
+        assertTrue(attendees.get(0).getUserId().equals(user1Id) || attendees.get(0).getUserId().equals(user2Id));
+        assertTrue(attendees.get(1).getUserId().equals(user1Id) || attendees.get(1).getUserId().equals(user2Id));
+    }
+
+    @Test 
+    public void testNoTickets() {
+        var noTickevent = controller.createEvent(session, new CreateEventReqBuilder()
+            .withEventName("Test Event")
+            .withStartDate(startTime.minusMinutes(2))
+            .withEndDate(endTime)
+            .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        var attendees = controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", noTickevent)).getAttendees();
+        assertEquals(0, attendees.size());
+    }
+
+    @Test 
+    public void testExceptions() {
+        assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("event_id", eventId)).getAttendees());
+        assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken)).getAttendees());
+        assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
+        assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken2, "event_id", eventId)));
     }
 }

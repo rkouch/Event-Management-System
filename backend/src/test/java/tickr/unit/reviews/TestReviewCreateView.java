@@ -64,7 +64,7 @@ public class TestReviewCreateView {
         session = TestHelper.commitMakeSession(model, session);
 
         eventId = controller.createEventUnsafe(session, new CreateEventReqBuilder()
-                .withStartDate(startTime)
+                .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;

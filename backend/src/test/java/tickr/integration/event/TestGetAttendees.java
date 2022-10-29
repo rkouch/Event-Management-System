@@ -1,5 +1,4 @@
-package tickr.integration.ticket;
-
+package tickr.integration.event;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,9 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.application.serialised.responses.TicketBookingsResponse;
+import tickr.application.serialised.responses.UserIdResponse;
 import tickr.mock.MockHttpPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -31,8 +32,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class TestTicketView {
+public class TestGetAttendees {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
 
@@ -116,24 +116,24 @@ public class TestTicketView {
     }
 
     @Test 
-    public void testTicketBookings () {
-        var response = httpHelper.get("/api/event/bookings", Map.of("auth_token", authToken, "event_id", eventId));
+    public void testGetAttendees () {
+        var response = httpHelper.get("/api/event/attendees", Map.of("auth_token", authToken, "event_id", eventId));
         assertEquals(200, response.getStatus());
-        var bookingsResponse = response.getBody(TicketBookingsResponse.class);
-        List<String> ticketIds = bookingsResponse.tickets;
-        assertEquals(2, ticketIds.size());
-        
+        var attendees = response.getBody(EventAttendeesResponse.class).attendees;
+        response = httpHelper.get("/api/user/search", Map.of("email", "test@example.com"));
+        assertEquals(200, response.getStatus());
+        var userId = response.getBody(UserIdResponse.class).userId; 
+        assertEquals(2, attendees.get(0).tickets.size());
+        assertEquals(userId, attendees.get(0).getUserId());
     }
 
     @Test 
-    public void testBookingsExceptions() {
-        var response = httpHelper.get("/api/event/bookings", Map.of("event_id", eventId));
+    public void testExceptions() {
+        var response = httpHelper.get("/api/event/attendees", Map.of("auth_token", authToken));
         assertEquals(400, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("event_id", eventId));
+        response = httpHelper.get("/api/event/attendees", Map.of("event_id", eventId));
         assertEquals(400, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString()));
+        response = httpHelper.get("/api/event/attendees", Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString()));
         assertEquals(403, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("auth_token", "auth_token", "event_id", eventId));
-        assertEquals(401, response.getStatus());
     }
 }
