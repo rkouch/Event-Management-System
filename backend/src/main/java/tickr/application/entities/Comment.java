@@ -5,18 +5,20 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.SerialisedReaction;
+import tickr.application.serialised.SerialisedReply;
 import tickr.application.serialised.SerialisedReview;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "event_comments")
@@ -39,7 +41,7 @@ public class Comment {
     private Comment parent;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parent")
-    private Set<Comment> children;
+    private Set<Comment> children = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "comment", cascade = CascadeType.REMOVE)
     private Set<Reaction> reactions = new HashSet<>();
@@ -145,12 +147,32 @@ public class Comment {
         return parent != null;
     }
 
-    public SerialisedReview makeReview () {
+    public SerialisedReview makeSerialisedReview () {
         if (isReply()) {
             throw new RuntimeException("Tried to make review out of reply!");
         }
 
         return new SerialisedReview(id.toString(), author.getId().toString(), title, commentText, rating, makeReactions());
+    }
+
+    public SerialisedReply makeSerialisedReply () {
+        if (!isReply()) {
+            throw new RuntimeException("Tried to make reply out of review!");
+        }
+
+        return new SerialisedReply(id.toString(), author.getId().toString(), commentText, commentTime.format(DateTimeFormatter.ISO_DATE_TIME), makeReactions());
+    }
+
+    public Comment addReply (User replyAuthor, String replyText) {
+        if (!event.canReply(replyAuthor)) {
+            throw new ForbiddenException("You are not an admin or have a ticket!");
+        }
+
+        return Comment.makeReply(event, replyAuthor, this, replyText);
+    }
+
+    public Stream<Comment> getReplies () {
+        return getChildren().stream();
     }
 
     private List<SerialisedReaction> makeReactions () {
@@ -177,7 +199,7 @@ public class Comment {
 
     public static Comment makeReply (Event event, User author, Comment parent, String text) {
         if (text == null || text.equals("")) {
-            throw new ForbiddenException("Invalid reply text!");
+            throw new BadRequestException("Invalid reply text!");
         }
 
         return new Comment(event, author, parent, null, text, null);

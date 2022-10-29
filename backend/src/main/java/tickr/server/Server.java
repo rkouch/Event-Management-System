@@ -9,10 +9,7 @@ import spark.Spark;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
-import tickr.application.serialised.combined.NotificationManagement;
-import tickr.application.serialised.combined.ReviewCreate;
-import tickr.application.serialised.combined.TicketPurchase;
-import tickr.application.serialised.combined.TicketReserve;
+import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
@@ -98,6 +95,8 @@ public class Server {
 
         post("/api/event/review/create", TickrController::reviewCreate, ReviewCreate.Request.class);
         get("/api/event/reviews", TickrController::reviewsView);
+        post("/api/event/review/reply", TickrController::replyCreate, ReplyCreate.Request.class);
+        get("/api/event/reviews/replies", TickrController::repliesView);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
