@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TetstReplyCreateView {
+public class TestReplyCreateView {
     private DataModel model;
     private TickrController controller;
 
@@ -90,6 +90,7 @@ public class TetstReplyCreateView {
         assertEquals("http://example.com/success", purchaseAPI.fulfillOrder(redirectUrl, "test_customer"));
 
         reviewId = controller.reviewCreate(session, new ReviewCreate.Request(authToken, eventId, "title", "text", 1.0f)).reviewId;
+        session = TestHelper.commitMakeSession(model, session);
     }
 
     @AfterEach
@@ -101,42 +102,61 @@ public class TetstReplyCreateView {
     @Test
     public void testBadRequestsCreate () {
         assertThrows(UnauthorizedException.class, () -> controller.replyCreate(session, new ReplyCreate.Request(null, reviewId, "abc")));
+        session = TestHelper.rollbackMakeSession(model, session);
         assertThrows(UnauthorizedException.class, () -> controller.replyCreate(session,
                 new ReplyCreate.Request(TestHelper.makeFakeJWT(), reviewId, "abc")));
+        session = TestHelper.rollbackMakeSession(model, session);
         assertThrows(BadRequestException.class, () -> controller.replyCreate(session,
                 new ReplyCreate.Request(hostToken, null, "abc")));
+        session = TestHelper.rollbackMakeSession(model, session);
 
         assertThrows(BadRequestException.class, () -> controller.replyCreate(session,
                 new ReplyCreate.Request(hostToken, reviewId, null)));
+        session = TestHelper.rollbackMakeSession(model, session);
         assertThrows(BadRequestException.class, () -> controller.replyCreate(session,
                 new ReplyCreate.Request(hostToken, reviewId, "")));
-
+        session = TestHelper.rollbackMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.replyCreate(session,
                 new ReplyCreate.Request(hostToken, UUID.randomUUID().toString(), "abc")));
+        session = TestHelper.rollbackMakeSession(model, session);
+
+        var newAuth = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.replyCreate(session,
+                new ReplyCreate.Request(newAuth, reviewId, "abc")));
     }
 
     @Test
     public void testBadRequestsView () {
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of()));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId)));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId, "page_start", "0")));
-
-        assertThrows(UnauthorizedException.class, () -> controller.reviewsView(session, Map.of("auth_token", TestHelper.makeFakeJWT(), "review_id", reviewId,
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of()));
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId)));
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId, "page_start", "0")));
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(UnauthorizedException.class, () -> controller.repliesView(session, Map.of("auth_token", TestHelper.makeFakeJWT(), "review_id", reviewId,
                 "page_start", "0", "max_results", "10")));
+        session = TestHelper.rollbackMakeSession(model, session);
 
-        assertThrows(ForbiddenException.class, () -> controller.reviewsView(session, Map.of("review_id", UUID.randomUUID().toString(),
+        assertThrows(ForbiddenException.class, () -> controller.repliesView(session, Map.of("review_id", UUID.randomUUID().toString(),
                 "page_start", "0", "max_results", "10")));
+        session = TestHelper.rollbackMakeSession(model, session);
 
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId,
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId,
                 "page_start", "abc", "max_results", "10")));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId,
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId,
                 "page_start", "0", "max_results", "def")));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId,
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId,
                 "page_start", "-1", "max_results", "10")));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId,
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId,
                 "page_start", "0", "max_results", "0")));
-        assertThrows(BadRequestException.class, () -> controller.reviewsView(session, Map.of("review_id", reviewId,
+        session = TestHelper.rollbackMakeSession(model, session);
+        assertThrows(BadRequestException.class, () -> controller.repliesView(session, Map.of("review_id", reviewId,
                 "page_start", "0", "max_results", "-1")));
+        session = TestHelper.rollbackMakeSession(model, session);
     }
 
     @Test
@@ -165,22 +185,25 @@ public class TetstReplyCreateView {
         var replyIds1 = new ArrayList<String>();
         for (int i = 0; i < numReplies; i++) {
             var replyId = controller.replyCreate(session, new ReplyCreate.Request(authToken, reviewId, "reply text")).replyId;
+            session = TestHelper.commitMakeSession(model, session);
             replyIds1.add(replyId);
         }
 
         var replyIds2 = new ArrayList<String>();
         for (int i = 0; i < numReplies / pageNum; i++) {
             var response = controller.repliesView(session, Map.of("review_id", reviewId, "page_start", Integer.toString(curr), "max_results", Integer.toString(pageNum)));
-            assertEquals(pageNum, response.numResults);
+            session = TestHelper.commitMakeSession(model, session);
+            assertEquals(numReplies, response.numResults);
             assertEquals(pageNum, response.replies.size());
             replyIds2.addAll(response.replies.stream().map(r -> r.replyId).collect(Collectors.toList()));
             curr += pageNum;
         }
 
         var response = controller.repliesView(session, Map.of("review_id", reviewId, "page_start", Integer.toString(curr),
-                "max_results", Integer.toString(numReplies - pageNum)));
-        assertEquals(numReplies - pageNum, response.numResults);
-        assertEquals(numReplies - pageNum, response.replies.size());
+                "max_results", Integer.toString(pageNum)));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(numReplies, response.numResults);
+        assertEquals(numReplies - curr, response.replies.size());
         replyIds2.addAll(response.replies.stream().map(r -> r.replyId).collect(Collectors.toList()));
 
         assertEquals(replyIds1.size(), replyIds2.size());
