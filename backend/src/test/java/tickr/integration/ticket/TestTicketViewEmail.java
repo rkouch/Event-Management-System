@@ -1,5 +1,4 @@
 package tickr.integration.ticket;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestTicketView {
+public class TestTicketViewEmail {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
 
@@ -115,25 +114,5 @@ public class TestTicketView {
         ApiLocator.clearLocator(IPurchaseAPI.class);
     }
 
-    @Test 
-    public void testTicketBookings () {
-        var response = httpHelper.get("/api/event/bookings", Map.of("auth_token", authToken, "event_id", eventId));
-        assertEquals(200, response.getStatus());
-        var bookingsResponse = response.getBody(TicketBookingsResponse.class);
-        List<String> ticketIds = bookingsResponse.tickets;
-        assertEquals(2, ticketIds.size());
-        
-    }
-
-    @Test 
-    public void testBookingsExceptions() {
-        var response = httpHelper.get("/api/event/bookings", Map.of("event_id", eventId));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("event_id", eventId));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString()));
-        assertEquals(403, response.getStatus());
-        response = httpHelper.get("/api/event/bookings", Map.of("auth_token", "auth_token", "event_id", eventId));
-        assertEquals(401, response.getStatus());
-    }
+    
 }

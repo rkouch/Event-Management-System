@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.entities.Event;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
@@ -264,7 +265,6 @@ public class TestEventEdit {
         admins.add(idTest);
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30","2031-12-05T10:15:30",
         "updated description", updatedSeats, admins, updateCategories, updateTags, true));
-
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
         var newSession = TestHelper.commitMakeSession(model, session); 
         assertEquals(id, response.host_id);

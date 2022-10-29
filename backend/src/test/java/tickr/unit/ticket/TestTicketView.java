@@ -102,6 +102,7 @@ public class TestTicketView {
                 "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        
 
     }
 
@@ -115,27 +116,26 @@ public class TestTicketView {
         // Event event = session.getById(Event.class, eventId).orElse(null);
         List<String> ticketIds = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken)).tickets;
         assertTrue(ticketIds.size() == 2);
-
         var authToken2 = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken2, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("SectionA", 1, List.of(3)),
-                new TicketReserve.TicketDetails("SectionB", 1, List.of(4))
+                new TicketReserve.TicketDetails("SectionB", 2, List.of(4, 5))
         )));
         requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
         requestPrice = response.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
 
         var reqIds = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
-        purchaseAPI.addCustomer("test_customer2", 100);
+        purchaseAPI.addCustomer("test_customer2", 150);
         var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
                 "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer2");
 
         List<String> ticketIds2 = controller.ticketBookings(session, Map.of("event_id", eventId, "auth_token", authToken2)).tickets;
-        assertTrue(ticketIds2.size() == 2);
+        assertTrue(ticketIds2.size() == 3);
         assertTrue(ticketIds.size() == 2);
 
     }
@@ -158,9 +158,6 @@ public class TestTicketView {
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(eventId, response1.eventId);
         assertEquals(user.getId().toString(), response1.userId);
-        // assertEquals("first", response1.firstName);
-        // assertEquals("last", response1.lastName);
-        // assertEquals("test1@example.com", response1.email);
         assertTrue(response1.section.equals("SectionA") || response1.section.equals("SectionB"));
         assertTrue(response1.seatNum == 1 || response1.seatNum == 2);
         assertTrue(response2.section.equals("SectionA") || response2.section.equals("SectionB"));
