@@ -49,5 +49,13 @@ public class EventAttendeesResponse {
     public EventAttendeesResponse(List<Attendee> attendees) {
         this.attendees = attendees;
     }
-    
+
+    public List<Attendee> getAttendees() {
+        return attendees;
+    }
+
+    public void setAttendees(List<Attendee> attendees) {
+        this.attendees = attendees;
+    }
+
 }

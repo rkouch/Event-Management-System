@@ -3,6 +3,9 @@ package tickr.unit.event;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.stripe.model.Event;
+
 import static org.junit.jupiter.api.Assertions.*;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
@@ -17,6 +20,7 @@ import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
@@ -31,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +47,7 @@ public class TestGetAttendees {
 
     private String eventId;
     private String authToken; 
+    private String authToken2;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -66,8 +72,8 @@ public class TestGetAttendees {
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
         
-        var authToken2 = controller.userRegister(session,
-        new UserRegisterRequest("test", "first", "last", "test1@example.com",
+        authToken2 = controller.userRegister(session,
+        new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
 
         startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
@@ -79,9 +85,9 @@ public class TestGetAttendees {
             .withStartDate(startTime.minusMinutes(2))
             .withEndDate(endTime)
             .build(authToken)).event_id;
-            
         
         session = TestHelper.commitMakeSession(model, session);
+
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("SectionA", 1, List.of(1)),
@@ -106,10 +112,17 @@ public class TestGetAttendees {
 
         var reqIds2 = requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer2", 100);
-        var redirectUrl2 = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+        var redirectUrl2 = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
                 "https://example.com/success", "https://example.com/cancel", reqIds2)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
-        purchaseAPI.fulfillOrder(redirectUrl2, "test_customer");
+        purchaseAPI.fulfillOrder(redirectUrl2, "test_customer2");
+    }
 
+    @Test
+    public void testGetAttendees () {
+        var attendees = controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", eventId)).getAttendees();
+        // assertEquals(2, attendees.size());
+        assertTrue(attendees.get(0).getTickets().size() == 2 || attendees.get(0).getTickets().size() == 3);
+        // assertTrue(attendees.get(1).getTickets().size() == 2 || attendees.get(1).getTickets().size() == 3);
     }
 }

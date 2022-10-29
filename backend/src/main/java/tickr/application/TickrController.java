@@ -719,7 +719,7 @@ public class TickrController {
 
         var ticketUrl = String.format("http://localhost:3000/ticket/%s", request.ticketId);
 
-        var message = String.format("Please click the below to view your tickets <a href=\"%s\">here</a>.\n", ticketUrl);
+        var message = String.format("Please click below to view your ticket <a href=\"%s\">here</a>.\n", ticketUrl);
 
         ApiLocator.locateApi(IEmailAPI.class).sendEmail(recipient.getEmail(), "View user ticket details", message);
 
@@ -736,6 +736,10 @@ public class TickrController {
 
         Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
                             .orElseThrow(() -> new ForbiddenException("Invalid Event ID!")); 
+        User user = authenticateToken(session, params.get("auth_token"));
+        if (!event.getHost().equals(user)) {
+            throw new ForbiddenException("User is not the host of this event!");
+        }
        
         return new EventAttendeesResponse(event.getAttendees()); 
     }

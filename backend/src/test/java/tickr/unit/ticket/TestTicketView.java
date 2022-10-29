@@ -161,9 +161,9 @@ public class TestTicketView {
         // assertEquals("first", response1.firstName);
         // assertEquals("last", response1.lastName);
         // assertEquals("test1@example.com", response1.email);
-        assertTrue(response1.section == "SectionA" || response1.section == "SectionB");
+        assertTrue(response1.section.equals("SectionA") || response1.section.equals("SectionB"));
         assertTrue(response1.seatNum == 1 || response1.seatNum == 2);
-        assertTrue(response2.section == "SectionA" || response2.section == "SectionB");
+        assertTrue(response2.section.equals("SectionA") || response2.section.equals("SectionB"));
         assertTrue(response2.seatNum == 1 || response2.seatNum == 2);
         
     }
