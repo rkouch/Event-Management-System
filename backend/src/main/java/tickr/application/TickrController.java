@@ -807,4 +807,12 @@ public class TickrController {
 
         return new ReviewsViewResponse(reviews, numItems.get());
     }
+
+    public ReplyCreate.Response replyCreate (ModelSession session, ReplyCreate.Request request) {
+        return new ReplyCreate.Response();
+    }
+
+    public RepliesViewResponse repliesView (ModelSession session, Map<String, String> params) {
+        return new RepliesViewResponse();
+    }
 }
