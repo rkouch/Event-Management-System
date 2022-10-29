@@ -4,6 +4,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.opentest4j.AssertionFailedError;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
@@ -29,6 +31,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -210,5 +213,19 @@ public class TestTicketPurchase {
         assertEquals("Test", ticket2.getFirstName());
         assertEquals("User", ticket2.getLastName());
         assertEquals("test@gmail.com", ticket2.getEmail());
+    }
+
+    @Test
+    public void testReservationExpiry () {
+        var id1 = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))).reserveTickets.get(0).reserveId;
+        session = TestHelper.commitMakeSession(model, session);
+        var reserve1 = session.getById(TicketReservation.class, UUID.fromString(id1))
+                .orElseThrow(AssertionFailedError::new);
+
+        reserve1.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
+        session = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", List.of(new TicketPurchase.TicketDetails(id1)))));
     }
 }

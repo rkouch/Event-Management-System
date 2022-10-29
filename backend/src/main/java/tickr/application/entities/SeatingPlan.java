@@ -3,7 +3,6 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Entity
@@ -134,8 +134,13 @@ public class SeatingPlan {
     }
 
     private Set<Integer> getAllocatedNumbers () {
-        var ticketSet = tickets.stream().map(Ticket::getSeatNumber).collect(Collectors.toSet());
-        var reservedSet = reservations.stream().map(TicketReservation::getSeatNum).collect(Collectors.toSet());
+        var ticketSet = tickets.stream()
+                .map(Ticket::getSeatNumber)
+                .collect(Collectors.toSet());
+        var reservedSet = reservations.stream()
+                .filter(Predicate.not(TicketReservation::hasExpired))
+                .map(TicketReservation::getSeatNum)
+                .collect(Collectors.toSet());
 
         ticketSet.addAll(reservedSet);
 
