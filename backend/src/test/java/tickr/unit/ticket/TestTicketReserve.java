@@ -4,11 +4,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.opentest4j.AssertionFailedError;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
+import tickr.application.entities.TicketReservation;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -22,6 +25,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class TestTicketReserve {
@@ -316,5 +320,24 @@ public class TestTicketReserve {
         assertEquals(10, seatNums.size());
         assertEquals(1, seatNums.stream().min(Integer::compareTo).orElse(0));
         assertEquals(10, seatNums.stream().max(Integer::compareTo).orElse(0));
+    }
+
+    @Test
+    public void testReservationExpiry () {
+        var id1 = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))).reserveTickets.get(0).reserveId;
+        session = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))));
+        session.rollback();
+        session.close();
+        session = model.makeSession();
+        var reservation = session.getById(TicketReservation.class, UUID.fromString(id1))
+                        .orElseThrow(AssertionFailedError::new);
+        reservation.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertDoesNotThrow(() -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))));
     }
 }

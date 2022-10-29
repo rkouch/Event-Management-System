@@ -10,6 +10,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -53,6 +54,10 @@ public class TicketReservation {
 
     public float getPrice () {
         return price;
+    }
+
+    public void setExpiry (LocalDateTime expiryTime) {
+
     }
 
     public TicketReserve.ReserveDetails getDetails () {
