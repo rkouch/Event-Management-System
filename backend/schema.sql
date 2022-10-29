@@ -96,6 +96,7 @@ create table ticket_reservation (
     seat_num int not null,
     #reservation_id varchar(36) not null,
     price float not null,
+    expiry_time datetime not null,
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (seating_id) references `seating_plan`(id)
