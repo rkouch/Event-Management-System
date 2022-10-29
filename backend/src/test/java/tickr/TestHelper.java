@@ -31,6 +31,12 @@ public class TestHelper {
         return model.makeSession();
     }
 
+    public static ModelSession rollbackMakeSession (DataModel model, ModelSession session) {
+        session.rollback();
+        session.close();
+        return model.makeSession();
+    }
+
     public static void sleep (long millis) {
         try {
             Thread.sleep(millis);

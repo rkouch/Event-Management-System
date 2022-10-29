@@ -802,9 +802,62 @@ public class TickrController {
                 .sorted(Comparator.comparing(Comment::getCommentTime))
                 .skip(pageStart)
                 .limit(maxResults)
-                .map(Comment::makeReview)
+                .map(Comment::makeSerialisedReview)
                 .collect(Collectors.toList());
 
         return new ReviewsViewResponse(reviews, numItems.get());
+    }
+
+    public ReplyCreate.Response replyCreate (ModelSession session, ReplyCreate.Request request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.reviewId == null) {
+            throw new BadRequestException("Null review id!");
+        }
+
+        var comment = session.getById(Comment.class, UUID.fromString(request.reviewId))
+                .orElseThrow(() -> new ForbiddenException("Unknown review id!"));
+
+        var reply = comment.addReply(user, request.reply);
+        session.save(reply);
+
+        return new ReplyCreate.Response(reply.getId().toString());
+    }
+
+    public RepliesViewResponse repliesView (ModelSession session, Map<String, String> params) {
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        }
+        if (!params.containsKey("review_id") || !params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid request params!");
+        }
+
+        var review = session.getById(Comment.class, UUID.fromString(params.get("review_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid review id!"));
+
+        int pageStart;
+        int maxResults;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging values!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+
+        var numResults = new AtomicInteger();
+        var replies = review.getReplies()
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Comment::makeSerialisedReply)
+                .collect(Collectors.toList());
+
+        return new RepliesViewResponse(replies, numResults.get());
     }
 }

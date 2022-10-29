@@ -2,12 +2,7 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.SerializedLocation;
-import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.EditEventRequest;
-import tickr.application.serialised.requests.CreateEventRequest.SeatingDetails;
-import tickr.application.serialised.responses.EventAttendeesResponse;
-import tickr.application.serialised.responses.EventViewResponse;
-import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -24,9 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "events")
@@ -457,5 +450,11 @@ public class Event {
         getComments().add(comment);
 
         return comment;
+    }
+
+    public boolean canReply (User user) {
+        return getHost().getId().equals(user.getId())
+                || getAdmins().stream().map(User::getId).anyMatch(id -> user.getId().equals(id))
+                || getTickets().stream().map(Ticket::getUser).map(User::getId).anyMatch(id -> user.getId().equals(id));
     }
 }
