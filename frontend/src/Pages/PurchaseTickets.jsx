@@ -362,7 +362,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         auth_token: getToken(),
         ticket_details: newState,
         success_url: `http://localhost:3000/view_tickets/${params.event_id}`,
-        cancel_url: `http://localhost:3000/view_event/${params.event_id}`
+        cancel_url: `http://localhost:3000/cancel_reservation`
       }
 
       try {
@@ -412,7 +412,14 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                     <Grid item xs={1}>
                       <CentredBox sx={{height: '100%'}}>
                         <Tooltip title="Back to event">
-                          <IconButton onClick={()=>{navigate(`/view_event/${params.event_id}`)}}>
+                          <IconButton onClick={()=>{
+                            if (areTicketsReserved) {
+                              window.location.replace('http://localhost:3000/cancel_reservation')
+                            } else {
+                              navigate(`/view_event/${params.event_id}`)
+                            }
+                            
+                          }}>
                             <ArrowBackIcon/>
                           </IconButton>
                         </Tooltip>
