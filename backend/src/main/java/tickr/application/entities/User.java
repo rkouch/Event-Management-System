@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
+import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
@@ -15,7 +16,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -220,7 +224,7 @@ public class User {
         isHost = host;
     }
 
-    private Set<Event> getHostingEvents () {
+    public Set<Event> getHostingEvents () {
         return hostingEvents;
     }
 
@@ -376,5 +380,22 @@ public class User {
             tickets.add(ticket.getId().toString());
         }
         return tickets; 
+    }
+
+    public List<String> getHostingEventIds () {
+        List<Event> hostingEvents = new ArrayList<>(this.hostingEvents);
+        List<String> eventIds = new ArrayList<>();
+        for (Event event : hostingEvents) {
+            eventIds.add(event.getId().toString());
+        }
+        Collections.sort(eventIds);
+        return eventIds;
+    }
+
+    public List<String> getPaginatedHostedEvents (int pageStart, int maxResults) {
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+        return getHostingEventIds().subList(pageStart, Math.min(maxResults + pageStart, getHostingEventIds().size()));
     }
 }

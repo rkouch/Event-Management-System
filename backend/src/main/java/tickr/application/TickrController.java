@@ -879,4 +879,16 @@ public class TickrController {
 
         return new RepliesViewResponse(replies, numResults.get());
     }
+
+    public EventHostingsResponse eventHostings (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+        var eventHostingIds = user.getPaginatedHostedEvents(Integer.parseInt(params.get("page_start")), Integer.parseInt(params.get("max_results")));
+        return new EventHostingsResponse(eventHostingIds, user.getHostingEvents().size());
+    }
 }
