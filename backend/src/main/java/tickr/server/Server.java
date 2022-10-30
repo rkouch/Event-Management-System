@@ -10,19 +10,7 @@ import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.*;
-import tickr.application.serialised.requests.EditEventRequest;
-import tickr.application.serialised.requests.EditHostRequest;
-import tickr.application.serialised.requests.CreateEventRequest;
-import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.EventDeleteRequest;
-import tickr.application.serialised.requests.TicketViewEmailRequest;
-import tickr.application.serialised.requests.UserLoginRequest;
-import tickr.application.serialised.requests.UserLogoutRequest;
-import tickr.application.serialised.requests.UserRegisterRequest;
-import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
-import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-import tickr.application.serialised.requests.UserDeleteRequest;
+import tickr.application.serialised.requests.*;
 import tickr.application.serialised.responses.TestResponses;
 import tickr.persistence.DataModel;
 import tickr.persistence.ModelSession;
@@ -99,6 +87,7 @@ public class Server {
         get("/api/event/reviews", TickrController::reviewsView);
         post("/api/event/review/reply", TickrController::replyCreate, ReplyCreate.Request.class);
         get("/api/event/reviews/replies", TickrController::repliesView);
+        post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
