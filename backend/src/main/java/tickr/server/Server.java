@@ -14,6 +14,7 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserLoginRequest;
 import tickr.application.serialised.requests.UserLogoutRequest;
@@ -84,6 +85,7 @@ public class Server {
         put("/api/event/make_host", TickrController::makeHost, EditHostRequest.class);
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
+        delete("/api/event/cancel", TickrController::eventDelete, EventDeleteRequest.class);
 
         post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);

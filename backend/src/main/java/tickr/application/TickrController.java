@@ -15,6 +15,7 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EditProfileRequest;
+import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserDeleteRequest;
 import tickr.application.serialised.requests.UserChangePasswordRequest;
@@ -604,6 +605,20 @@ public class TickrController {
                 .collect(Collectors.toList());
 
         return new EventSearch.Response(eventList, numItems.get());
+    }
+
+    public void eventDelete(ModelSession session, EventDeleteRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request details!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(request.eventId))
+                        .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        User user = authenticateToken(session, request.authToken);
+        if (!event.getHost().equals(user)) {
+            throw new ForbiddenException("User is not the host of this event!"); 
+        }
+        event.onDelete(session);
+        session.remove(event);
     }
 
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
