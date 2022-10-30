@@ -114,7 +114,7 @@ public class TestReactions {
         assertThrows(UnauthorizedException.class, () -> controller.commentReact(session, new ReactRequest(TestHelper.makeFakeJWT(), replyId, "heart")));
 
         assertThrows(BadRequestException.class, () -> controller.commentReact(session, new ReactRequest(authToken, null, "heart")));
-        assertThrows(BadRequestException.class, () -> controller.commentReact(session, new ReactRequest(authToken, eventId, null)));
+        assertThrows(BadRequestException.class, () -> controller.commentReact(session, new ReactRequest(authToken, replyId, null)));
 
         assertThrows(ForbiddenException.class, () -> controller.commentReact(session, new ReactRequest(authToken, UUID.randomUUID().toString(), "heart")));
         assertThrows(ForbiddenException.class, () -> controller.commentReact(session, new ReactRequest(authToken, replyId, "meme")));
