@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = {"email"}))
@@ -392,10 +393,14 @@ public class User {
         return eventIds;
     }
 
-    public List<String> getPaginatedHostedEvents (int pageStart, int maxResults) {
-        if (pageStart < 0 || maxResults <= 0) {
-            throw new BadRequestException("Invalid paging values!");
-        }
-        return getHostingEventIds().subList(pageStart, Math.min(maxResults + pageStart, getHostingEventIds().size()));
+    // public List<String> getPaginatedHostedEvents (int pageStart, int maxResults) {
+    //     if (pageStart < 0 || maxResults <= 0) {
+    //         throw new BadRequestException("Invalid paging values!");
+    //     }
+    //     return getHostingEventIds().subList(pageStart, Math.min(maxResults + pageStart, getHostingEventIds().size()));
+    // }
+
+    public Stream<Event> getStreamHostingEvents() {
+        return getHostingEvents().stream();
     }
 }

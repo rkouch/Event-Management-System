@@ -875,9 +875,25 @@ public class TickrController {
         if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
             throw new BadRequestException("Invalid paging details!");
         }
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
         User user = authenticateToken(session, params.get("auth_token"));
-        var eventHostingIds = user.getPaginatedHostedEvents(Integer.parseInt(params.get("page_start")), Integer.parseInt(params.get("max_results")));
-        return new EventHostingsResponse(eventHostingIds, user.getHostingEvents().size());
+        // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
+
+        var numResults = new AtomicInteger();
+        var ids = user.getStreamHostingEvents()
+            .peek(i -> numResults.incrementAndGet())
+            .sorted(Comparator.comparing(Event::getEventStart))
+            .skip(pageStart)
+            .limit(maxResults)
+            .map(Event::getStringId)
+            .collect(Collectors.toList());
+
+        return new EventHostingsResponse(ids, numResults.get());
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {
