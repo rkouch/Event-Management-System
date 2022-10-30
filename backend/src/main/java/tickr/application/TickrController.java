@@ -995,7 +995,14 @@ public class TickrController {
         if (pageStart < 0 || maxResults <= 0) {
             throw new BadRequestException("Invalid paging values!");
         }
-        return new CustomerEventsResponse(user.getBookings(pageStart, maxResults));
+        var bookings = user.getBookings();
+        var numResults = new AtomicInteger();
+        var paginatedBookings = bookings.stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .collect(Collectors.toList());
+        return new CustomerEventsResponse(paginatedBookings, numResults.get());
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {

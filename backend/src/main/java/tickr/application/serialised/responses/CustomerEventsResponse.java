@@ -9,7 +9,7 @@ import tickr.application.entities.Event;
 
 public class CustomerEventsResponse {
     public List<Bookings> bookings; 
-
+    public int num_results;
     static public class Bookings {
         @SerializedName("event_id")
         public String eventId; 
@@ -31,7 +31,8 @@ public class CustomerEventsResponse {
         }
     }
 
-    public CustomerEventsResponse(List<Bookings> bookings) {
+    public CustomerEventsResponse(List<Bookings> bookings, int num_results) {
         this.bookings = bookings;
+        this.num_results = num_results;
     }
 }
