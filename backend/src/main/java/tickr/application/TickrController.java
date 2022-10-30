@@ -868,6 +868,47 @@ public class TickrController {
         return new RepliesViewResponse(replies, numResults.get());
     }
 
+    public UserEventsResponse userEvents (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        LocalDateTime beforeDate;
+
+        try {
+            beforeDate = LocalDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Invalid date time string!");
+        }
+
+        if (beforeDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+            throw new ForbiddenException("Cannot find events in the past!");
+        }
+
+        List<Event> events = session.getAll(Event.class);
+
+        var numResults = new AtomicInteger();
+
+        var eventIds = events.stream()
+            .filter(e -> e.getEventStart().isBefore(beforeDate))
+            .peek(i -> numResults.incrementAndGet())
+            .sorted(Comparator.comparing(Event::getEventStart))
+            .skip(pageStart)
+            .limit(maxResults)
+            .map(Event::getId)
+            .map(UUID::toString)
+            .collect(Collectors.toList());
+        
+        return new UserEventsResponse(eventIds, numResults.get());
+    }
+
     public EventHostingsResponse eventHostings (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("auth_token")) {
             throw new BadRequestException("Missing auth_token!");
@@ -885,15 +926,16 @@ public class TickrController {
         // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
 
         var numResults = new AtomicInteger();
-        var ids = user.getStreamHostingEvents()
+        var eventIds = user.getStreamHostingEvents()
             .peek(i -> numResults.incrementAndGet())
             .sorted(Comparator.comparing(Event::getEventStart))
             .skip(pageStart)
             .limit(maxResults)
-            .map(Event::getStringId)
+            .map(Event::getId)
+            .map(UUID::toString)
             .collect(Collectors.toList());
 
-        return new EventHostingsResponse(ids, numResults.get());
+        return new EventHostingsResponse(eventIds, numResults.get());
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {
@@ -907,4 +949,5 @@ public class TickrController {
 
         comment.react(session, user, request.reactType);
     }
+
 }

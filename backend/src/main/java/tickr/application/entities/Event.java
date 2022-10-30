@@ -110,10 +110,6 @@ public class Event {
         return id;
     }
 
-    public String getStringId() {
-        return id.toString();
-    }
-
     private void setId (UUID id) {
         this.id = id;
     }
