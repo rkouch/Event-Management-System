@@ -130,7 +130,7 @@ public class TestUserEvents {
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", LocalDateTime.now().plusMinutes(10).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
         assertEquals(0, events.size());
     }
