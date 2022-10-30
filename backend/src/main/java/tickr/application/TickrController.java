@@ -582,6 +582,7 @@ public class TickrController {
 
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
+                .filter(x -> !x.getEventEnd().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
         if (options != null) {
