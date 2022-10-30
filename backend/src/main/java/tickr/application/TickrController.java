@@ -818,7 +818,7 @@ public class TickrController {
         var reviews = session.getAllWithStream(Comment.class, "event", event)
                 .filter(Predicate.not(Comment::isReply))
                 .peek(c -> numItems.getAndIncrement())
-                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .sorted(Comparator.comparing(Comment::getCommentTime).reversed())
                 .skip(pageStart)
                 .limit(maxResults)
                 .map(Comment::makeSerialisedReview)
@@ -871,7 +871,7 @@ public class TickrController {
         var numResults = new AtomicInteger();
         var replies = review.getReplies()
                 .peek(i -> numResults.incrementAndGet())
-                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .sorted(Comparator.comparing(Comment::getCommentTime).reversed())
                 .skip(pageStart)
                 .limit(maxResults)
                 .map(Comment::makeSerialisedReply)
