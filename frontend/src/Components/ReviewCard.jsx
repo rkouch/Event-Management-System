@@ -18,7 +18,7 @@ import ReactBar from './ReactBar';
 import ReactionsList from './ReactionsList';
 import { useParams } from 'react-router-dom';
 
-export default function ReviewCard({review_details, review_num, isAttendee}) {
+export default function ReviewCard({review_details, review_num, isAttendee, isHost}) {
   const params = useParams()
   const [review, setReview] = React.useState(review_details)
   const [reactBar, setReactBar] = React.useState(false)
@@ -194,7 +194,7 @@ export default function ReviewCard({review_details, review_num, isAttendee}) {
             </Grid>
           </Grid>
           <br/>
-          {(loggedIn() && isAttendee)
+          {(loggedIn() && (isAttendee || isHost))
             ? <Grid container>
                 <Grid item xs={1}>
                   {!isReviewer
@@ -234,7 +234,7 @@ export default function ReviewCard({review_details, review_num, isAttendee}) {
           }
         </Box>
         <>
-          {(loggedIn() && isAttendee)
+          {(loggedIn() && (isAttendee || isHost))
             ? <Collapse in={reactBar} sx={{width: '40%', ml: 4}} onMouseLeave={closeReactBar}>
                 <Box>
                   <ReactBar comment_id={review.reviewId} onReact={onReact}/>
@@ -255,7 +255,7 @@ export default function ReviewCard({review_details, review_num, isAttendee}) {
         }
         {repliesLoading
           ? <CentredBox> <CircularProgress sx={{color: '#AE759F'}}/> </CentredBox>
-          : <ReviewReplies replies={replies} review_id={review.reviewId} isAttendee={isAttendee}/>
+          : <ReviewReplies replies={replies} review_id={review.reviewId} isAttendee={(isAttendee || isHost)}/>
         }
         <Collapse in={showReply}>
           <Box sx={{display: 'flex', justifyContent: 'flex-end'}} ref={replyRef}>

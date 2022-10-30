@@ -448,7 +448,7 @@ export default function ViewEvent({}) {
               </Grid>
             </EventForm>
             {eventOver
-              ? <EventReview isAttendee={isAttendee} event_id={params.event_id} />
+              ? <EventReview isAttendee={isAttendee} event_id={params.event_id} isHost={editable}/>
               : <>
                 </>
             }
