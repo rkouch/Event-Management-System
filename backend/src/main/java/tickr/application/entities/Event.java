@@ -8,6 +8,7 @@ import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
+import tickr.util.EmailHelper;
 import tickr.util.FileHelper;
 
 import org.apache.logging.log4j.LogManager;
@@ -264,6 +265,11 @@ public class Event {
                 .anyMatch(c -> c.isWrittenBy(user));
     }
 
+    private boolean userIsPrivileged (User user) {
+        return getHost().getId().equals(user.getId())
+                || getAdmins().stream().map(User::getId).anyMatch(id -> user.getId().equals(id));
+    }
+
     public List<String> getUserTicketIds (User user) {
         List<String> set = new ArrayList<>();
         Set<Ticket> tmpTickets = this.tickets;
@@ -469,9 +475,7 @@ public class Event {
     }
 
     public boolean canReply (User user) {
-        return getHost().getId().equals(user.getId())
-                || getAdmins().stream().map(User::getId).anyMatch(id -> user.getId().equals(id))
-                || getTickets().stream().map(Ticket::getUser).map(User::getId).anyMatch(id -> user.getId().equals(id));
+        return userIsPrivileged(user) || userHasTicket(user);
     }
 
     public void onDelete (ModelSession session) {
@@ -514,5 +518,24 @@ public class Event {
     public boolean canView (User user) {
         return published || (user != null && (getHost().getId().equals(user.getId()) ||
                 getAdmins().stream().map(User::getId).anyMatch(Predicate.isEqual(user.getId()))));
+    }
+
+    public void makeAnnouncement (User user, String announcement) {
+        if (announcement == null || announcement.equals("")) {
+            throw new BadRequestException("Cannot make empty announcement!");
+        }
+
+        if (!userIsPrivileged(user)) {
+            throw new ForbiddenException("You are not allowed to make an announcement!");
+        }
+
+        var seen = new HashSet<UUID>();
+
+        for (var i : tickets) {
+            if (!seen.contains(i.getUser().getId())) {
+                EmailHelper.sendAnnouncement(user, i.getUser(), this, announcement);
+                seen.add(i.getUser().getId());
+            }
+        }
     }
 }

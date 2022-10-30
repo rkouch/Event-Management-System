@@ -925,7 +925,7 @@ public class TickrController {
             .map(Event::getId)
             .map(UUID::toString)
             .collect(Collectors.toList());
-        
+
         return new UserEventsResponse(eventIds, numResults.get());
     }
 
@@ -968,6 +968,18 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
 
         comment.react(session, user, request.reactType);
+    }
+
+    public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        var event = session.getById(Event.class, parseUUID(request.eventId))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        event.makeAnnouncement(user, request.announcement);
     }
 
 }

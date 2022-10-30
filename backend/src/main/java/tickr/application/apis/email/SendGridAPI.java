@@ -17,6 +17,11 @@ public class SendGridAPI implements IEmailAPI {
     static final Logger logger = LogManager.getLogger();
     @Override
     public void sendEmail (String toEmail, String subject, String body) {
+        if (toEmail.trim().toLowerCase().endsWith("@example.com")) {
+            logger.info("Intercepted email to example.com domain: \nto: {}, subject: \"{}\", body:\n{}", toEmail, subject, body);
+            return;
+        }
+
         var request = new SendEmailRequest("tickr3900@gmail.com", toEmail, subject, body);
 
         var httpHelper = new HTTPHelper("https://api.sendgrid.com");
