@@ -19,6 +19,7 @@ import tickr.application.entities.TicketReservation;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.mock.AbstractMockPurchaseAPI;
@@ -92,11 +93,16 @@ public class TestGetAttendees {
         
         session = TestHelper.commitMakeSession(model, session);
 
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("SectionA", 1, List.of(1)),
                 new TicketReserve.TicketDetails("SectionB", 1, List.of(2))
         )));
+        session = TestHelper.commitMakeSession(model, session);
         requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
         requestPrice = response.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
 
@@ -145,14 +151,19 @@ public class TestGetAttendees {
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         var attendees = controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", noTickevent)).getAttendees();
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals(0, attendees.size());
     }
 
-    // @Test 
-    // public void testExceptions() {
-    //     assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("event_id", eventId)).getAttendees());
-    //     assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken)).getAttendees());
-    //     assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
-    //     assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken2, "event_id", eventId)));
-    // }
+     @Test
+     public void testExceptions() {
+         assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("event_id", eventId)));
+         assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken)));
+         assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
+
+         var event = controller.createEvent(session, new CreateEventReqBuilder().build(authToken)).event_id;
+         session = TestHelper.commitMakeSession(model, session);
+
+         assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken2, "event_id", event)));
+    }
 }

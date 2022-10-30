@@ -11,6 +11,7 @@ import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
@@ -79,6 +80,10 @@ public class TestTicketView {
                 .build(authToken));
         assertEquals(200, response.getStatus());
         eventId = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),

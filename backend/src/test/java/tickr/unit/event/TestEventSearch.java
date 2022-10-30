@@ -12,6 +12,7 @@ import tickr.application.TickrController;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -79,6 +80,9 @@ public class TestEventSearch {
 
         var eventId = controller.createEvent(session, new CreateEventReqBuilder().build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
 
         response = makeSearch(0, 100, null);
         assertEquals(1, response.eventIds.size());
@@ -98,6 +102,9 @@ public class TestEventSearch {
                     .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
                     .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
                     .build(authToken)).event_id);
+            session = TestHelper.commitMakeSession(model, session);
+            controller.editEvent(session, new EditEventRequest(eventIds.get(eventIds.size() - 1), authToken, null, null, null, null,
+                    null, null, null, null, null, null, true));
             session = TestHelper.commitMakeSession(model, session);
         }
 
@@ -159,6 +166,10 @@ public class TestEventSearch {
                 .withDescription("Testing karaoke burgers hospital")
                 .build(authToken)).event_id);
 
+        controller.editEvent(session, new EditEventRequest(entityIds.get(0), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestB")
                 .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
@@ -167,6 +178,10 @@ public class TestEventSearch {
                 .withTags(Set.of("test4", "test2", "test5"))
                 .withDescription("money capitalism free sewing")
                 .build(authToken)).event_id);
+
+        controller.editEvent(session, new EditEventRequest(entityIds.get(1), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestC")
@@ -177,6 +192,9 @@ public class TestEventSearch {
                 .withDescription("money burgers school")
                 .build(authToken)).event_id);
 
+        controller.editEvent(session, new EditEventRequest(entityIds.get(2), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
 
         return entityIds;
     }

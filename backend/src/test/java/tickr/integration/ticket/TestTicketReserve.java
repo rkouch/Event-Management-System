@@ -10,6 +10,7 @@ import tickr.application.apis.ApiLocator;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
@@ -68,6 +69,10 @@ public class TestTicketReserve {
                 .build(authToken));
         assertEquals(200, response.getStatus());
         eventId = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
     }
 
     @AfterEach

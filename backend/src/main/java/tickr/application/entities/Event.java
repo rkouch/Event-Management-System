@@ -18,6 +18,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.util.Utils;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -398,6 +399,9 @@ public class Event {
 
     public List<TicketReservation> makeReservations (ModelSession session, User user, LocalDateTime requestedTime, String section,
                                                      int quantity, List<Integer> seatNums) {
+        if (!published) {
+            throw new ForbiddenException("Unable to reserve tickets from unpublished event!");
+        }
         if (section == null) {
             throw new BadRequestException("Null section!");
         } else if (quantity <= 0 || (seatNums.size() != 0 && seatNums.size() != quantity)) {
@@ -415,7 +419,10 @@ public class Event {
         throw new ForbiddenException("Invalid section!");
     }
 
-    public List<Attendee> getAttendees () {
+    public List<Attendee> getAttendees (User user) {
+        if (!canView(user)) {
+            throw new ForbiddenException("Unable to view event!");
+        }
         List<Ticket> tickets = new ArrayList<>(this.tickets); 
         if (tickets.size() == 0) {
             return new ArrayList<>();
@@ -452,6 +459,10 @@ public class Event {
 
         if (userHasReview(author)) {
             throw new ForbiddenException("You have already made a review for this event!");
+        }
+
+        if (getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC")))) {
+            throw new ForbiddenException("Cannot create review of event that hasn't happened!");
         }
 
         var comment = Comment.makeReview(this, author, title, text, rating);
@@ -502,5 +513,10 @@ public class Event {
         wordList.addAll(Utils.toWords(getEventDescription()));
 
         return !Collections.disjoint(words, wordList);
+    }
+
+    public boolean canView (User user) {
+        return published || (user != null && (getHost().getId().equals(user.getId()) ||
+                getAdmins().stream().map(User::getId).anyMatch(Predicate.isEqual(user.getId()))));
     }
 }

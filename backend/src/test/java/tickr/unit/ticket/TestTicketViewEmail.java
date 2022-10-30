@@ -35,6 +35,7 @@ import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.TicketViewEmailRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.AbstractMockPurchaseAPI;
@@ -94,6 +95,10 @@ public class TestTicketViewEmail {
             .build(authToken)).event_id;
             
         
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
