@@ -15,7 +15,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
 import EventCardsBar from '../Components/EventCardsBar';
-import { apiFetch, getToken } from '../Helpers';
+import { apiFetch, getToken, loggedIn } from '../Helpers';
 import dayjs from 'dayjs';
 import SwipeableViews from 'react-swipeable-views';
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
@@ -150,12 +150,12 @@ export default function UserHosting({}) {
   const getUpcomingEvents = async (before, pageStart, maxResults,  eventIds, setEvents, eventNum, setEventNum, setMoreEvents, setEventGroups) => {
     try {
       const body = {
+        auth_token: getToken(),
         max_results: maxResults,
-        page_start: pageStart,
-        before: before
+        page_start: pageStart
       }
       const searchParams = new URLSearchParams(body)
-      const response = await apiFetch('GET', `/api/home?${searchParams}`, null)
+      const response = await apiFetch('GET', `/api/event/hosting?${searchParams}`, null)
 
       if (pageStart === 0) {
         setEvents(response.eventIds)
@@ -209,23 +209,25 @@ export default function UserHosting({}) {
 
   // Initial load of events
   React.useEffect(() => {
-    // Fetch week events
-    getUpcomingEvents(endOfWeek, 0, 6, weekEvents, setWeekEvents, weekEventsNum, setWeekEventsNum, setMoreWeekEvents, setWeekGroups)
+    if (loggedIn()) {
+      // Fetch week events
+      getUpcomingEvents(endOfWeek, 0, 6, weekEvents, setWeekEvents, weekEventsNum, setWeekEventsNum, setMoreWeekEvents, setWeekGroups)
 
-    // Fetch month events
-    getUpcomingEvents(endOfMonth, 0, 6, monthEvents, setMonthEvents, monthEventsNum, setMonthEventsNum, setMoreMonthEvents, setMonthGroups)
+      // Fetch month events
+      // getUpcomingEvents(endOfMonth, 0, 6, monthEvents, setMonthEvents, monthEventsNum, setMonthEventsNum, setMoreMonthEvents)
 
-    // Fetch year events
-    getUpcomingEvents(endOfYear, 0, 6, yearEvents, setYearEvents, yearEventsNum, setYearEventsNum, setMoreYearEvents, setYearGroups)
+      // Fetch year events
+      // getUpcomingEvents(endOfYear, 0, 6, yearEvents, setYearEvents, yearEventsNum, setYearEventsNum, setMoreYearEvents)
+    }
   }, [])
 
   return (
     <>
-      {!(yearEvents === 0)
+      {(!(yearEvents === 0) && loggedIn())
         ? <Section sx={{pt: 13}}>
             <TabContext value={upcomingValue}>
               <SectionHeading>
-                Events
+                My Hosted Events
                 <Divider orientation="vertical" variant="middle" flexItem/>
                 <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
                   <Tabs
@@ -235,9 +237,10 @@ export default function UserHosting({}) {
                     scrollButtons
                     value={upcomingValue}
                     >
-                    <Tab label="This Week" value="1" />
+                    <Tab label="All" value="1" />
+                    {/* <Tab label="This Week" value="1" />
                     <Tab label="This Month" value="2" />
-                    <Tab label="This Year" value="3" />
+                    <Tab label="This Year" value="3" /> */}
                   </Tabs>
                 </Box>
                 <Box
@@ -250,12 +253,11 @@ export default function UserHosting({}) {
                     flexGrow: '4'
                   }}
                 >
-                  <Button color='secondary'>
+                  {/* <Button color='secondary'>
                     see all
-                  </Button>
+                  </Button> */}
                 </Box>
               </SectionHeading>
-              {/* Week Pannel */}
               <TabPanel value="1" sx={{padding: 0}}>
                 <Box sx={{display: 'flex', flexDirection: 'column'}}>
                   <Box>
@@ -305,108 +307,13 @@ export default function UserHosting({}) {
                     }
                   />
                 </Box>
+                {/* <EventCardsBar event_ids={weekEvents}/> */}
               </TabPanel>
-              {/* Month Pannel */}
               <TabPanel value="2" sx={{padding: 0}}>
-              <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                  <Box>
-                    <SwipeableViews
-                      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={activeStepMonth}
-                      onChangeIndex={(e) => {handleStepChange(e, 'month')}}
-                      enableMouseEvents
-                    >
-                      {monthGroups.map((events, key) => (
-                        <div key={key}>
-                          {Math.abs(activeStepMonth - key) <= 2 ? (
-                            <EventCardsBar event_ids={events}/>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SwipeableViews>
-                  </Box>
-                  <MobileStepper
-                    sx={{color: 'red'}}
-                    steps={maxStepsMonth}
-                    position="static"
-                    activeStep={activeStepMonth}
-                    nextButton={
-                      <Button
-                        size="small"
-                        onClick={(e) => {handleNext('month')}}
-                        disabled={activeStepMonth === maxStepsMonth - 1}
-                      >
-                        Next
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowLeft />
-                        ) : (
-                          <KeyboardArrowRight />
-                        )}
-                      </Button>
-                    }
-                    backButton={
-                      <Button size="small" onClick={(e) => {handleBack('month')}} disabled={activeStepMonth === 0}>
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowRight />
-                        ) : (
-                          <KeyboardArrowLeft />
-                        )}
-                        Back
-                      </Button>
-                    }
-                  />
-                </Box>
+                {/* <EventCardsBar event_ids={monthEvents}/> */}
               </TabPanel>
-              {/* Year Pannel */}
               <TabPanel value="3" sx={{padding: 0}}>
-              <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                  <Box>
-                    <SwipeableViews
-                      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={activeStepYear}
-                      onChangeIndex={(e) => {handleStepChange(e, 'year')}}
-                      enableMouseEvents
-                    >
-                      {yearGroups.map((events, key) => (
-                        <div key={key}>
-                          {Math.abs(activeStepYear - key) <= 2 ? (
-                            <EventCardsBar event_ids={events}/>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SwipeableViews>
-                  </Box>
-                  <MobileStepper
-                    sx={{color: 'red'}}
-                    steps={maxStepsYear}
-                    position="static"
-                    activeStep={activeStepYear}
-                    nextButton={
-                      <Button
-                        size="small"
-                        onClick={(e) => {handleNext('year')}}
-                        disabled={activeStepYear === maxStepsYear - 1}
-                      >
-                        Next
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowLeft />
-                        ) : (
-                          <KeyboardArrowRight />
-                        )}
-                      </Button>
-                    }
-                    backButton={
-                      <Button size="small" onClick={(e) => {handleBack('year')}} disabled={activeStepYear === 0}>
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowRight />
-                        ) : (
-                          <KeyboardArrowLeft />
-                        )}
-                        Back
-                      </Button>
-                    }
-                  />
-                </Box>
+                {/* <EventCardsBar event_ids={yearEvents}/> */}
               </TabPanel>
             </TabContext>
           </Section>

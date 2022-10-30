@@ -108,7 +108,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     // sortSection(sectionDetails_t)
     console.log(sectionDetails_t)
     
-    // Check available seats
+    // Check booked seats
     try {
       const body = {
         auth_token: getToken(),
@@ -117,7 +117,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const param = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/event/attendees?${param}`, null)
       const attendees = response.attendees
-
       // Sort through tickets bought and attach to respective section
       attendees.forEach(function(attendee) {
         const tickets = attendee.tickets
@@ -130,7 +129,28 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
           })
         })
       })
+    } catch (e) {
+      console.log(e)
+    }
 
+    // Check reserved seats
+    try {
+      const body2 = {
+        auth_token: getToken(),
+        event_id: params.event_id
+      }
+      const param2 = new URLSearchParams(body2)
+      const response2 = await apiFetch('GET', `/api/event/reserved?${param2}`, null)
+      const reserved = response2.reserved
+      console.log(reserved)
+      // Sort through tickets bought and attach to respective section
+      sectionDetails_t.forEach(function (section) {
+        reserved.forEach(function(reserve) {
+          if (section.section === reserve.section && section.selectable) {
+            section.takenSeats.push(section.section[0]+reserve.seat_number)
+          }
+        })
+      })
     } catch (e) {
       console.log(e)
     }
@@ -250,6 +270,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const response = await apiFetch('POST', '/api/ticket/reserve', body)
       
       const reservedTickets_t = []
+      setTicketOrder(response.reserve_tickets)
       response.reserve_tickets.forEach((function (reserve) {
         reserve['first_name'] = ''
         reserve['last_name'] = ''
@@ -258,7 +279,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         reservedTickets_t.push(reserve)
       }))
       setReservedTickets(reservedTickets_t)
-
 
       // Set section details with matching reserveid
       const orderDetails_t = []
@@ -312,15 +332,16 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         auth_token: getToken(),
         ticket_details: reservedTickets,
         success_url: `http://localhost:3000/view_tickets/${params.event_id}`,
-        cancel_url: `http://localhost:3000/view_event/${params.event_id}`
+        cancel_url: `http://localhost:3000/cancel_reservation`
       }
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
-        console.log(response)
-        const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
-        console.log(redirect_url)
+        window.location.replace(response.redirect_url)
+        // console.log(response)
+        // const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
+        // console.log(redirect_url)
 
-        navigate(redirect_url)
+        // navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }

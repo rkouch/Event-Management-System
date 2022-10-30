@@ -188,8 +188,8 @@ export default function EditEvent({}) {
 
 
 
-      setFieldInState('start', dayjs(event.start_date).local().format(), start, setStartValue)
-      setFieldInState('end', dayjs(event.end_date).utc().local().format(), end, setEndValue)
+      setFieldInState('start', dayjs(event.start_date).format(), start, setStartValue)
+      setFieldInState('end', dayjs(event.end_date).format(), end, setEndValue)
       setEventPicture(event.picture)
       setPublished(event.published)
 
@@ -460,12 +460,6 @@ export default function EditEvent({}) {
       longitude: '',
       latitude: ''
     };
-    
-    console.log('startDate before conversion')
-    console.log(start.start)
-    console.log('startDate after conversion')
-    const start_date_t = dayjs(start.start).utc().toISOString()
-    console.log(start_date_t)
 
     const body = {
       auth_token: getToken(),
@@ -473,8 +467,8 @@ export default function EditEvent({}) {
       event_name: eventName.value,
       picture: newPhoto ? eventPicture : null,
       location: locationBody,
-      start_date: start_date_t,
-      end_date: dayjs(end.end).utc(),
+      start_date:  dayjs(start.start),
+      end_date: dayjs(end.end),
       description: description.value,
       seating_details: seatingList,
       categories: [],

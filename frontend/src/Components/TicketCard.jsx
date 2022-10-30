@@ -33,7 +33,7 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
     try {
       const response = await apiFetch('GET', `/api/ticket/view?${searchParams}`)
       setTicketDetails(response)
-      const name = response.section
+      const name = response.section.trim()
       if (name.split(' ').length > 1) {
         const names = name.split(' ')
         setSectionName(names[0][0]+names[1][0])
