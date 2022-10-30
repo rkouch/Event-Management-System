@@ -29,27 +29,30 @@ const CardsBar = styled(Box)({
   flexWrap: 'nowrap'
 })
 
-export default function EventCardsBar({filterKeys=[], filterValues=[]}) {
-  const [eventIds, setEventIds] = React.useState([])
-
-  const paramsObj = {
-    page_start: 0,
-    max_results: 10,
-  }
-
-  const searchParams = new URLSearchParams(paramsObj)
-  const getEventIds = async () => {
-    try {
-      const response = await apiFetch('GET', `/api/event/search?${searchParams}`, null)
-      setEventIds(response.event_ids)
-    } catch (error) {
-      console.log(error)
-    }
-  }
+export default function EventCardsBar({event_ids = [], filterKeys=[], filterValues=[]}) {
+  const [eventIds, setEventIds] = React.useState(event_ids)
 
   React.useEffect(() => {
-    getEventIds()
-  }, [])
+    setEventIds(event_ids)
+  }, [event_ids])
+  // const paramsObj = {
+  //   page_start: 0,
+  //   max_results: 10,
+  // }
+
+  // const searchParams = new URLSearchParams(paramsObj)
+  // const getEventIds = async () => {
+  //   try {
+  //     const response = await apiFetch('GET', `/api/event/search?${searchParams}`, null)
+  //     setEventIds(response.event_ids)
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }
+
+  // React.useEffect(() => {
+  //   getEventIds()
+  // }, [])
 
   return (
     <CardsBar>

@@ -15,6 +15,8 @@ import TabPanel from '@mui/lab/TabPanel';
 import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
 import EventCardsBar from '../Components/EventCardsBar';
+import { apiFetch } from '../Helpers';
+import UpcomingEvents from '../Components/UpcomingEvents';
 
 
 const CardsBar = styled(Box)({
@@ -52,6 +54,7 @@ export default function Landing({}) {
     setUpcomingValue(newValue);
   };
 
+
   const [value, setValue] = React.useState('1');
   const handleChange = (event, newValue) => {
     setValue(newValue)
@@ -81,7 +84,6 @@ export default function Landing({}) {
               <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
                 <Tabs
                   onChange={handleChange}
-                  aria-label="lab API tabs example"
                   textColor="secondary"
                   indicatorColor="secondary"
                   scrollButtons
@@ -108,81 +110,24 @@ export default function Landing({}) {
               </Box>
             </SectionHeading>
             <TabPanel value="1" sx={{padding: 0}}>
-              <EventCardsBar/>
+              <EventCardsBar event_ids={['c782761a-3a5f-4788-91d3-d2bc5fabff6d']}/>
             </TabPanel>
             <TabPanel value="2" sx={{padding: 0}}>
-              <CardsBar>
-                Section 2
-              </CardsBar>
+              <EventCardsBar event_ids={['c782761a-3a5f-4788-91d3-d2bc5fabff6d']}/>
             </TabPanel>
             <TabPanel value="3" sx={{padding: 0}}>
-              <CardsBar>
-                <EventCard/>
-                <EventCard/>
-                <EventCard/>
-              </CardsBar>
-            </TabPanel>
-          </TabContext>
-        </Section>
-        {/* <br />
-        <br />
-        <br />
-        <Section>
-          <TabContext value={upcomingValue}>
-            <SectionHeading>
-              Upcoming Events
-              <Divider orientation="vertical" variant="middle" flexItem/>
-              <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
-                <Tabs
-                  onChange={upcomingChange}
-                  aria-label="lab API tabs example"
-                  textColor="secondary"
-                  indicatorColor="secondary"
-                  scrollButtons
-                  value={upcomingValue}
-                  >
-                  <Tab label="Category One" value="1" />
-                  <Tab label="Category Two" value="2" />
-                  <Tab label="Category Three" value="3" />
-                </Tabs>
-              </Box>
-              <Box
-                sx={{
-                  width: 'auto',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'flex-end',
-                  paddingBottom: '6px',
-                  flexGrow: '4'
-                }}
-              >
-                <Button color='secondary'>
-                  see all
-                </Button>
-              </Box>
-            </SectionHeading>
-            <TabPanel value="1" sx={{padding: 0}}>
-              <CardsBar>
-                <EventCard>  
-                </EventCard>
-              </CardsBar>
-            </TabPanel>
-            <TabPanel value="2" sx={{padding: 0}}>
-              <CardsBar>
-                Section 2
-              </CardsBar>
-            </TabPanel>
-            <TabPanel value="3" sx={{padding: 0}}>
-              <CardsBar>
-                Section 3
-              </CardsBar>
+              <EventCardsBar />
             </TabPanel>
           </TabContext>
         </Section>
         <br />
         <br />
         <br />
-        <br /> */}
+        <UpcomingEvents/>
+        <br />
+        <br />
+        <br />
+        <br />
       </BackdropNoBG>
     </div>
   )

@@ -33,7 +33,7 @@ export default function ConfirmPassword ({open, handleOpen, route, method, navig
         password: password.password
       }
       const response = await apiFetch(method, route, body)
-      setToken('')
+      setToken(null)
       navigate(navigateTo)
       window.location.reload(false);
     } catch (e) {

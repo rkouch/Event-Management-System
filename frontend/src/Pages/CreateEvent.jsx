@@ -372,8 +372,8 @@ export default function CreateEvent({}) {
       auth_token: getToken(),
       event_name: eventName.value,
       location: locationBody,
-      start_date: start.start.toISOString(),
-      end_date: end.end.toISOString(),
+      start_date: start.start.utc().toISOString(),
+      end_date: end.end.utc().toISOString(),
       description: description.value,
       seating_details: seatingList,
       categories: [],
@@ -389,7 +389,9 @@ export default function CreateEvent({}) {
       navigate(`/view_event/${response.event_id}`)
       setLoading(false)
     } catch (e) {
-
+      setErrorStatus(true)
+      setLoading(false)
+      setErrorMsg(e.reason)
     }
     console.log(body)
   };

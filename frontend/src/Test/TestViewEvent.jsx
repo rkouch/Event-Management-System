@@ -164,39 +164,24 @@ export default function TestViewEvent({}) {
                 <Grid item xs={6}>
                   <Grid container spacing={0}>
                     <Grid item xs={12}>
-                      {eventOver
-                        ? <Box sx={{display: 'flex', gap: 5}}>
-                            <Typography
-                              sx={{
-                                fontSize: 40,
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {event.event_name}
-                            </Typography>
-                            <CentredBox>
-                              <Chip sx={{color: alpha('#6A7B8A', 0.7)}} label="Event Passed"/>
-                            </CentredBox>
-                          </Box>
-                        : <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-                            <Typography
-                              sx={{
-                                fontSize: 40,
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {event.event_name}
-                            </Typography>
-                            {(editable)
-                              ? <Tooltip title="Edit Event">
-                                  <IconButton onClick={goEdit}>
-                                    <EditIcon/>
-                                  </IconButton>
-                                </Tooltip>
-                              : <></>
-                            }
-                          </Box>
-                      }
+                      <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                        <Typography
+                          sx={{
+                            fontSize: 40,
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {event.event_name}
+                        </Typography>
+                        {(editable)
+                          ? <Tooltip title="Edit Event">
+                              <IconButton onClick={goEdit}>
+                                <EditIcon/>
+                              </IconButton>
+                            </Tooltip>
+                          : <></>
+                        }
+                      </Box>
                     </Grid>
                     <Grid item xs={12}>
                       <Grid container>
