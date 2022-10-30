@@ -23,6 +23,7 @@ import tickr.application.serialised.responses.TicketViewEmailResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
+import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -685,6 +686,22 @@ public class TickrController {
         return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)));
     }
 
+    public void reservationCancel (ModelSession session, ReserveCancelRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.reservations.size() == 0) {
+            throw new BadRequestException("Empty reservations!");
+        }
+
+        for (var i : request.reservations) {
+            var entity = session.getById(TicketReservation.class, parseUUID(i))
+                    .orElseThrow(() -> new ForbiddenException("Invalid ticket reservation!"));
+            if (!entity.canCancel(user)) {
+                throw new ForbiddenException("Unable to cancel reservation!");
+            }
+            session.remove(entity);
+        }
+    }
+
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.info("Ticket purchase {} success!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
@@ -930,6 +947,26 @@ public class TickrController {
         return new UserEventsResponse(eventIds, numResults.get());
     }
 
+    public EventReservedSeatsResponse eventReservedSeats (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event ID!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        var seatingPlans = event.getSeatingPlans();
+        List<TicketReservation> reservations = new ArrayList<>(); 
+        seatingPlans.stream().forEach(s -> reservations.addAll(s.getReservations()));
+
+        List<Reserved> reserved = new ArrayList<>(); 
+        reservations.stream().forEach(r -> reserved.add(new Reserved(r.getSeatNum(), r.getSection().getSection())));
+
+        return new EventReservedSeatsResponse(reserved);
+    }
+
     public EventHostingsResponse eventHostings (ModelSession session, Map<String, String> params) {
         if (!params.containsKey("auth_token")) {
             throw new BadRequestException("Missing auth_token!");
@@ -974,7 +1011,74 @@ public class TickrController {
         if (pageStart < 0 || maxResults <= 0) {
             throw new BadRequestException("Invalid paging values!");
         }
-        return new CustomerEventsResponse(user.getBookings(pageStart, maxResults));
+        var bookings = user.getBookings();
+        var numResults = new AtomicInteger();
+        var paginatedBookings = bookings.stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .collect(Collectors.toList());
+        return new CustomerEventsResponse(paginatedBookings, numResults.get());
+    }
+
+    public EventHostingFutureResponse eventHostingFuture (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = session.getByUnique(User.class, "email", params.get("email"))
+                .orElseThrow(() -> new ForbiddenException("Invalid email!"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(e -> e.getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC"))))
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new EventHostingFutureResponse(eventIds, numResults.get());
+    }
+    
+    public EventHostingPastResponse eventHostingPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = session.getByUnique(User.class, "email", params.get("email"))
+                .orElseThrow(() -> new ForbiddenException("Invalid email!"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(e -> e.getEventStart().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new EventHostingPastResponse(eventIds, numResults.get());
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {
@@ -999,6 +1103,20 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
 
         event.makeAnnouncement(user, request.announcement);
+    }
+
+    public String onPaymentCancel (ModelSession session, Map<String, String> params) {
+        var orderId = params.get("order_id");
+        var url = params.get("url");
+
+        var list = new ArrayList<>(session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(orderId)));
+
+        for (var i : list) {
+            i.cancel(session);
+            //session.remove(i);
+        }
+
+        return url;
     }
 
 }

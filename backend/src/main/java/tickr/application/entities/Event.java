@@ -254,6 +254,15 @@ public class Event {
         this.seatCapacity = seatCapacity;
     }
 
+
+    public Set<SeatingPlan> getSeatingPlans() {
+        return seatingPlans;
+    }
+
+    public void setSeatingPlans(Set<SeatingPlan> seatingPlans) {
+        this.seatingPlans = seatingPlans;
+    }
+
     private boolean userHasTicket (User user) {
         return getTickets().stream()
                 .anyMatch(t -> t.isOwnedBy(user));

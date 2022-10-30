@@ -90,9 +90,32 @@ public class Server {
         get("/api/event/reviews/replies", TickrController::repliesView);
         get("/api/event/hosting", TickrController::eventHostings);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
+        get("/api/event/reserved", TickrController::eventReservedSeats);
+        delete("/api/ticket/reserve/cancel", TickrController::reservationCancel, ReserveCancelRequest.class);
 
-        get("/api/home", TickrController::userEvents); 
+        get("/api/home", TickrController::userEvents);
         get("/api/user/bookings", TickrController::customerBookings);
+
+        get("/api/user/hosting/future", TickrController::eventHostingFuture);
+        get("/api/user/hosting/past", TickrController::eventHostingPast);
+
+        Spark.get("/api/payment/cancel", (req, response) -> {
+            var wrapper = new RouteWrapper<>(dataModel, ctx -> {
+                var paramMap = ctx.request.queryParams()
+                        .stream()
+                        .collect(Collectors.toMap(Function.identity(), ctx.request::queryParams));
+
+                ctx.controller.onPaymentCancel(ctx.session, paramMap);
+
+                return new Object();
+            });
+
+            wrapper.handle(req, response);
+
+            response.redirect(req.queryParams("url"));
+
+            return "";
+        });
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);

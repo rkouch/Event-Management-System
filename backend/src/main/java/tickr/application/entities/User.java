@@ -410,7 +410,7 @@ public class User {
         return getHostingEvents().stream();
     }
 
-    public List<Bookings> getBookings (int pageStart, int maxResults) {
+    public List<Bookings> getBookings () {
         List<Ticket> tickets = new ArrayList<>(this.tickets); 
         Collections.sort(tickets, new Comparator<Ticket> () {
             @Override
@@ -437,13 +437,7 @@ public class User {
             }
         }
         bookings.add(booking);
-        var numResults = new AtomicInteger();
-        var returnBookings = bookings.stream()
-                .peek(i -> numResults.incrementAndGet())
-                .skip(pageStart)
-                .limit(maxResults)
-                .collect(Collectors.toList());
-        return returnBookings;
+        return bookings;
     }
     
     public void sendEmail (String subject, String message) {
