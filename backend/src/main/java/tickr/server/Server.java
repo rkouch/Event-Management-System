@@ -87,6 +87,7 @@ public class Server {
         get("/api/event/reviews", TickrController::reviewsView);
         post("/api/event/review/reply", TickrController::replyCreate, ReplyCreate.Request.class);
         get("/api/event/reviews/replies", TickrController::repliesView);
+        get("/api/event/hosting", TickrController::eventHostings);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
