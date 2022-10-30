@@ -346,10 +346,11 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
-        const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
-        console.log(redirect_url)
+        window.location.replace(response.redirect_url)
+        // const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
+        // console.log(redirect_url)
 
-        navigate(redirect_url)
+        // navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }

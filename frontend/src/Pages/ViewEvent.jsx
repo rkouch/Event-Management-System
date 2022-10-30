@@ -24,6 +24,7 @@ import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
 import { ContrastInputNoOutline, ContrastInputWrapper, TkrButton, TkrButton2 } from "../Styles/InputStyles";
 import EventReview from "../Components/EventReview";
+import SendIcon from '@mui/icons-material/Send';
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -77,6 +78,22 @@ export default function ViewEvent({}) {
     setAnnouncement(e.target.value)
   }
 
+  // Post announcement
+  const postAnnouncement = async (e) => {
+    try {
+      const body = {
+        event_id: params.event_id,
+        auth_token: getToken(),
+        announcement: announcement
+      }
+      const response = await apiFetch('POST', '/api/event/announce', body)
+      setAnnouncement('')
+    } catch (e) {
+      
+    }
+  }
+
+  // Initial load
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
     // getUserData(`auth_token=${getToken()}`,setUserData)
@@ -395,13 +412,24 @@ export default function ViewEvent({}) {
                         <Divider/>
                         <ContrastInputWrapper sx={{mt: 2}}>
                           <ContrastInputNoOutline
+                            value={announcement}
                             multiline
                             placeholder={'Enter an announcement'}
                             rows={4}
                             fullWidth
+                            onChange={handleAnnouncement}
                           >
                           </ContrastInputNoOutline>
                         </ContrastInputWrapper>
+                        <TkrButton2 sx={{mt: '3px', width: '100%'}}
+                          endIcon={
+                            <SendIcon/>
+                          }
+                          disabled={announcement.length === 0}
+                          onClick={postAnnouncement}
+                        >
+                          Post
+                        </TkrButton2>
                       </Box>
                     : <></>
 

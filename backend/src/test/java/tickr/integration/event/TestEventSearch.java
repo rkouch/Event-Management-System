@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.serialised.combined.EventSearch;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
@@ -56,6 +57,10 @@ public class TestEventSearch {
         assertEquals(200, response.getStatus());
         var eventId = response.getBody(CreateEventResponse.class).event_id;
 
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
+
         searchResponse = makeSearch(0, 100, null);
         assertEquals(1, searchResponse.numResults);
         assertEquals(eventId, searchResponse.eventIds.get(0));
@@ -68,10 +73,18 @@ public class TestEventSearch {
         assertEquals(200, response.getStatus());
         var e1 = response.getBody(CreateEventResponse.class).event_id;
 
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(e1, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
+
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withDescription("pizza apples").build(authToken));
         assertEquals(200, response.getStatus());
         var e2 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(e2, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
         var ids = makeSearch(0, 100,
                 new EventSearch.Options(null, null, null, List.of("test1"), null, null)).eventIds;

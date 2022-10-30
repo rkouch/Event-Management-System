@@ -74,6 +74,7 @@ public class Server {
         get("/api/event/view", TickrController::eventView);
         get("/api/event/search", TickrController::searchEvents);
         delete("/api/event/cancel", TickrController::eventDelete, EventDeleteRequest.class);
+        post("/api/event/announce", TickrController::makeAnnouncement, AnnouncementRequest.class);
 
         post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
@@ -91,6 +92,7 @@ public class Server {
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
 
         get("/api/home", TickrController::userEvents); 
+        get("/api/user/bookings", TickrController::customerBookings);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
