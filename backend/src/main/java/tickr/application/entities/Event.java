@@ -460,4 +460,10 @@ public class Event {
                 || getAdmins().stream().map(User::getId).anyMatch(id -> user.getId().equals(id))
                 || getTickets().stream().map(Ticket::getUser).map(User::getId).anyMatch(id -> user.getId().equals(id));
     }
+
+    public void onDelete (ModelSession session) {
+        if (eventPicture != null) {
+            FileHelper.deleteFileAtUrl(eventPicture);
+        }
+    }
 }
