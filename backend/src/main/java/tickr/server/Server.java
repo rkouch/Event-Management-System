@@ -92,6 +92,7 @@ public class Server {
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
 
         get("/api/home", TickrController::userEvents); 
+        get("/api/user/bookings", TickrController::customerBookings);
 
         Spark.post("/api/payment/webhook", new RouteWrapper<>(dataModel, ctx -> {
             var paymentAPI = ApiLocator.locateApi(IPurchaseAPI.class);
