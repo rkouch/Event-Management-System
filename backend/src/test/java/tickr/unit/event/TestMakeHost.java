@@ -93,7 +93,7 @@ public class TestMakeHost {
     public void testMakeHost() {
         controller.makeHost(session, new EditHostRequest(authToken, eventId, newHostEmail));
         session = TestHelper.commitMakeSession(model, session);
-        var response = controller.eventView(session, Map.of("event_id", eventId));
+        var response = controller.eventView(session, Map.of("event_id", eventId, "auth_token", authToken));
         String newHostId = controller.userSearch(session, Map.of("email", newHostEmail)).userId;
         assertEquals(newHostId, response.host_id);
         assertFalse(response.admins.contains(newHostId));

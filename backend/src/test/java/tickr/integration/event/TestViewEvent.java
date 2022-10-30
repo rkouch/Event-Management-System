@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
@@ -77,7 +78,13 @@ public class TestViewEvent {
         , "2031-12-03T10:15:30",
         "2031-12-04T10:15:30", "description", seats, admins, categories, tags));
         assertEquals(200, eventResponse.getStatus());
-        var response = httpHelper.get("/api/event/view", Map.of("event_id", eventResponse.getBody(CreateEventResponse.class).event_id)).getBody(EventViewResponse.class);
+        event_id = eventResponse.getBody(CreateEventResponse.class).event_id;
+
+        var response1 = httpHelper.put("/api/event/edit", new EditEventRequest(event_id, authTokenString, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response1.getStatus());
+
+        var response = httpHelper.get("/api/event/view", Map.of("event_id", event_id)).getBody(EventViewResponse.class);
         assertEquals("test event", response.eventName);
         assertEquals("", response.picture);
         assertEquals(location.streetName, response.location.streetName);

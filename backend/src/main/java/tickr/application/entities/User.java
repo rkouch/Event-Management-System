@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.application.serialised.responses.CustomerEventsResponse.Bookings;
@@ -442,5 +444,9 @@ public class User {
                 .limit(maxResults)
                 .collect(Collectors.toList());
         return returnBookings;
+    }
+    
+    public void sendEmail (String subject, String message) {
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(email, subject, message);
     }
 }

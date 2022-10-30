@@ -178,7 +178,7 @@ public class TestEventEdit {
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, null, null, null,null,
         null, null, null, null, null, false));
 
-        var response = controller.eventView(session, Map.of("event_id", event_id)); 
+        var response = controller.eventView(session, Map.of("event_id", event_id, "auth_token", authTokenString));
 
         assertEquals(id, response.host_id);
         assertEquals("test event", response.eventName);
@@ -347,7 +347,7 @@ public class TestEventEdit {
         session = TestHelper.commitMakeSession(model, session);
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, 
-        FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null,null, null, null, null, null, null, false));
+        FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null,null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
         var response = controller.eventView(session, Map.of("event_id", event_id));
         assertNotEquals("", response.picture);
@@ -405,7 +405,7 @@ public class TestEventEdit {
                                             "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, adminAuthTokenString, "update name", null, null, "2031-12-04T10:15:30","2031-12-05T10:15:30",
-        "updated description", null, null, null, null, false)));
+        "updated description", null, null, null, null, true)));
         session = TestHelper.commitMakeSession(model, newSession);
 
         var response = controller.eventView(session, Map.of("event_id", event_id));

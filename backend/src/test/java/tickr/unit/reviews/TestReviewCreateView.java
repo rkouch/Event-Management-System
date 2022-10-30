@@ -13,6 +13,7 @@ import tickr.application.serialised.combined.ReviewCreate;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
@@ -70,6 +71,10 @@ public class TestReviewCreateView {
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),
                 new TicketReserve.TicketDetails("test_section2", 1, List.of())
@@ -123,14 +128,19 @@ public class TestReviewCreateView {
         assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session,
                 new ReviewCreate.Request(authToken2, eventId, "title", "null", 1.0f)));
 
-        var eventId2 = controller.createEvent(session, new CreateEventReqBuilder()
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1).plusHours(1))
+        var eventId2 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).minusDays(1))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).minusDays(1).plusHours(1))
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
         var reqIds2 = controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId2, LocalDateTime.now(ZoneId.of("UTC")).plusDays(1), List.of(
+                new TicketReserve.Request(authToken, eventId2, LocalDateTime.now(ZoneId.of("UTC")).minusDays(1), List.of(
                         new TicketReserve.TicketDetails("test_section", 1, List.of())
                 ))).reserveTickets.stream().map(r -> r.reserveId).collect(Collectors.toList());
         session = TestHelper.commitMakeSession(model, session);
@@ -144,6 +154,26 @@ public class TestReviewCreateView {
 
         assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session,
                 new ReviewCreate.Request(authToken, eventId2, "test", "test", 1.0f)));
+        session = TestHelper.rollbackMakeSession(model, session);
+        var newEventId = controller.createEvent(session, new CreateEventReqBuilder()
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(2))
+                .withSeatingDetails(List.of(new CreateEventRequest.SeatingDetails("test_section", 10, 1.0f, true)))
+                .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(newEventId, authToken, null, null,
+                null, null, null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+        var newReqIds = controller.ticketReserve(session, new TicketReserve.Request(authToken2, newEventId,
+                LocalDateTime.now(ZoneId.of("UTC")).plusDays(1).plusMinutes(1),
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))).reserveTickets;
+        session = TestHelper.commitMakeSession(model, session);
+        var newUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2, "http://example.com", "http://example.com",
+                newReqIds.stream().map(e -> e.reserveId).map(TicketPurchase.TicketDetails::new).collect(Collectors.toList()))).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+        purchaseAPI.fulfillOrder(newUrl, "test_customer");
+
+        assertThrows(ForbiddenException.class, () -> controller.reviewCreate(session, new ReviewCreate.Request(authToken2, newEventId, "test", "test", 1.0f)));
     }
 
     @Test

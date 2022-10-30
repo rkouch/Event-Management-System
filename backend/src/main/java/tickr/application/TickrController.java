@@ -512,6 +512,16 @@ public class TickrController {
         }
         Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
                         .orElseThrow(() -> new ForbiddenException("Unknown event"));
+
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        }
+
+        if (!event.canView(user)) {
+            throw new ForbiddenException("Unable to view event!");
+        }
+
         List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
 
         List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
@@ -583,6 +593,7 @@ public class TickrController {
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
                 .filter(x -> !x.getEventEnd().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(Event::isPublished)
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
         if (options != null) {
@@ -764,7 +775,7 @@ public class TickrController {
         //     throw new ForbiddenException("User is not the host of this event!");
         // }
        
-        return new EventAttendeesResponse(event.getAttendees()); 
+        return new EventAttendeesResponse(event.getAttendees(user));
     }
     
     public ReviewCreate.Response reviewCreate (ModelSession session, ReviewCreate.Request request) {
@@ -976,6 +987,18 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
 
         comment.react(session, user, request.reactType);
+    }
+
+    public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        var event = session.getById(Event.class, parseUUID(request.eventId))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        event.makeAnnouncement(user, request.announcement);
     }
 
 }
