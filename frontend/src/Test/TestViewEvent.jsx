@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData, loggedIn } from "../Helpers";
+import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -38,7 +38,7 @@ export const EventForm = styled("div")({
   gap: "10px",
 });
 
-export default function ViewEvent({}) {
+export default function TestViewEvent({}) {
   var calendar = require('dayjs/plugin/calendar')
   dayjs.extend(calendar)
   const params = useParams()
@@ -72,9 +72,6 @@ export default function ViewEvent({}) {
     getEventData(params.event_id, setEvent)
     // getUserData(`auth_token=${getToken()}`,setUserData)
     if (event.host_id !== '') {
-      if (dayjs() > dayjs(event.end_date)) {
-        setEventOver(true)
-      }
       checkIfUser(event.host_id, setEditable)
       if (!editable) {
         for (const i in event.admins) {
@@ -82,9 +79,7 @@ export default function ViewEvent({}) {
         }
       }
     }
-    if (loggedIn()) {
-      getTicketIds(params.event_id, setTicketIds)
-    }
+    getTicketIds(params.event_id, setTicketIds)
   },[event.host_id])
 
   // Check if event is sold out

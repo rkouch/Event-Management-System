@@ -24,6 +24,9 @@ export default function EventReview({isAttendee, event_id}) {
   const [postReview, setPostReview] = React.useState(false)
   const [initFetch, setInitFectch] = React.useState(false)
 
+  const [reviewNum, setReviewNum] = React.useState(0)
+  const [moreReviews, setMoreReviews] = React.useState(false)
+
   React.useEffect(() => {
     // After posting a review, scroll to the bottom and refresh reviews
     if (postReview) {
@@ -39,6 +42,7 @@ export default function EventReview({isAttendee, event_id}) {
     fetchReviews(0, 10)
   }, [])
 
+
   // On initial review fetch, scroll to bottom
   React.useEffect(() => {
     if (initFetch) {
@@ -48,28 +52,34 @@ export default function EventReview({isAttendee, event_id}) {
     }
   }, [initFetch])
 
+  const scrollBottomReviews = () => {
+    const element = document.getElementById('reviews');
+    element.scrollTop = element.scrollHeight;
+    setInitFectch(false)
+  }
+
+  setTimeout(scrollBottomReviews, 1000)
+
   // Async function to request for reviews
   const fetchReviews = async (pageStart, maxResults) => {
     try {
       const params = {
-        auth_token: getToken(),
         event_id: event_id,
         page_start: pageStart,
         max_results: maxResults
       }
       const searchParams = new URLSearchParams(params)
       const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
-      console.log(response)
+      console.log(response.reviews)
+      setReviewNum(reviewNum + response.reviews.length)
+      setMoreReviews((maxResults < response.reviews.length || (reviewNum+response.reviews.length === response.num_results)))
+
       if (pageStart === 0) {
         setReviews(response.reviews)
       } else {
         setReviews(current => [response.reviews, ...reviews])
       }
     } catch (e) {
-      console.log(error)
-      const testReviews = [TestReview1, TestReview2, TestReview3, TestReview4, TestReview5]
-      console.log(testReviews)
-      setReviews(testReviews)
       setInitFectch(true)
     }
   }
@@ -123,10 +133,9 @@ export default function EventReview({isAttendee, event_id}) {
         </Typography>
       </Divider>
       <br/>
-      <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 5, maxHeight: 1000}} id='reviews'>
+      <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 3, maxHeight: 1000}} id='reviews'>
         {reviews.map((review, key) => {
           if (key === reviews.length-1) {
-            console.log(review)
             return (
               <ReviewCard key={key} review={review} innerRef={bottomReviewRef}/>
             )
@@ -135,7 +144,6 @@ export default function EventReview({isAttendee, event_id}) {
               <ReviewCard key={key} review={review}/>
             )
           }
-          
         })}
       </ScrollableBox>
       {isAttendee

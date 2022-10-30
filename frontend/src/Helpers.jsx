@@ -118,7 +118,6 @@ export const getEventData = async (eventId, setEventData=null) => {
   try {
     const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
     sortSection(response.seating_details)
-    console.log(response)
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -197,16 +196,22 @@ export function stringToColor(string) {
   return color;
 }
 
-export const checkIfUser= async (userId, setState) => {
-  try {
-    const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
-    const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
-    if (userId === response_2.user_id) {
-      setState(true)
-      // navigate(`/my_profile`)
-    } 
-  } catch (e) {
-    console.log(e)
+export const checkIfUser = async (userId, setState) => {
+  if (loggedIn()) {
+    try {
+      const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+      const response_2 = await apiFetch('GET',`/api/user/search?email=${response.email}`)
+      if (userId === response_2.user_id) {
+        setState(true)
+        // navigate(`/my_profile`)
+      } else {
+        setState(false)
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  } else {
+    setState(false)
   }
 }
 
@@ -231,7 +236,7 @@ export const getTicketIds = async (event_id, setTicketIds) => {
 
 // Sort a section based upon if it has seats and then by alphabetically by section name
 export const sortSection = (section) => {
-  section.sort((a,b) => (!a.hasSeats && b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section.localeCompare(b.section)) ? -1 : 1) : 1)
+  section.sort((a,b) => (!a.hasSeats && b.hasSeats) ? 1: (a.hasSeats === b.hasSeats) ? ((a.section < b.section) ? -1 : 1) : 1)
 }
 
 // Given ticket id get ticket details and set appropriate state

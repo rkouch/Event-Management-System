@@ -615,7 +615,16 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                 <Grid item xs={4}>
                   <Box sx={{height: "100%"}}>
                     <CentredBox sx={{flexDirection: 'column', widht: '100%'}}>
-                      <UploadPhoto src={event.picture}/>
+                      {(event.picture !== '')
+                        ? <UploadPhoto src={event.picture}/>
+                        : <Box sx={{width: '100%', height: 300, borderRadius: 5, backgroundColor: '#EEEEEE'}}>
+                            <CentredBox sx={{height: '100%', alignItems: 'center'}}>
+                              <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>
+                                {event.event_name}
+                              </Typography>
+                            </CentredBox>
+                          </Box>
+                      }
                     </CentredBox>
                     <br/>
                     <Divider/>

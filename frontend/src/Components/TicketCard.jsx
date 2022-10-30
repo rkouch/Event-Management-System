@@ -107,7 +107,16 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
           </>
         : <>
             <CentredBox sx={{flexDirection: 'column', width: '100%'}}>
-              <UploadPhoto sx={{height: '100%', width: '100%'}} src={event.picture}/>
+              {(event.picture !== '')
+                ? <UploadPhoto sx={{height: '100%', width: '100%'}} src={event.picture}/>
+                : <Box sx={{width: 560, height: 560, borderRadius: 5, backgroundColor: '#EEEEEE'}}>
+                    <CentredBox sx={{height: '100%', alignItems: 'center'}}>
+                      <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>
+                        {event.event_name}
+                      </Typography>
+                    </CentredBox>
+                  </Box>
+              }
               <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>
                 {event.event_name}
               </Typography>
