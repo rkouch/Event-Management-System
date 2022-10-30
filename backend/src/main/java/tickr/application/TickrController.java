@@ -11,18 +11,7 @@ import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
-import tickr.application.serialised.requests.CreateEventRequest;
-import tickr.application.serialised.requests.EditEventRequest;
-import tickr.application.serialised.requests.EditHostRequest;
-import tickr.application.serialised.requests.EditProfileRequest;
-import tickr.application.serialised.requests.TicketViewEmailRequest;
-import tickr.application.serialised.requests.UserDeleteRequest;
-import tickr.application.serialised.requests.UserChangePasswordRequest;
-import tickr.application.serialised.requests.UserCompleteChangePasswordRequest;
-import tickr.application.serialised.requests.UserLoginRequest;
-import tickr.application.serialised.requests.UserLogoutRequest;
-import tickr.application.serialised.requests.UserRegisterRequest;
-import tickr.application.serialised.requests.UserRequestChangePasswordRequest;
+import tickr.application.serialised.requests.*;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse;
@@ -606,6 +595,20 @@ public class TickrController {
         return new EventSearch.Response(eventList, numItems.get());
     }
 
+    public void eventDelete(ModelSession session, EventDeleteRequest request) {
+        if (!request.isValid()) {
+            throw new BadRequestException("Invalid request details!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(request.eventId))
+                        .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        User user = authenticateToken(session, request.authToken);
+        if (!event.getHost().equals(user)) {
+            throw new ForbiddenException("User is not the host of this event!"); 
+        }
+        event.onDelete(session);
+        session.remove(event);
+    }
+
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
         if (!request.isValid()) {
             throw new BadRequestException("Invalid request!");
@@ -803,7 +806,7 @@ public class TickrController {
         var reviews = session.getAllWithStream(Comment.class, "event", event)
                 .filter(Predicate.not(Comment::isReply))
                 .peek(c -> numItems.getAndIncrement())
-                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .sorted(Comparator.comparing(Comment::getCommentTime).reversed())
                 .skip(pageStart)
                 .limit(maxResults)
                 .map(Comment::makeSerialisedReview)
@@ -856,12 +859,24 @@ public class TickrController {
         var numResults = new AtomicInteger();
         var replies = review.getReplies()
                 .peek(i -> numResults.incrementAndGet())
-                .sorted(Comparator.comparing(Comment::getCommentTime))
+                .sorted(Comparator.comparing(Comment::getCommentTime).reversed())
                 .skip(pageStart)
                 .limit(maxResults)
                 .map(Comment::makeSerialisedReply)
                 .collect(Collectors.toList());
 
         return new RepliesViewResponse(replies, numResults.get());
+    }
+
+    public void commentReact (ModelSession session, ReactRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.commentId == null || request.reactType == null) {
+            throw new BadRequestException("Missing comment id or react type!");
+        }
+
+        var comment = session.getById(Comment.class, UUID.fromString(request.commentId))
+                .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
+
+        comment.react(session, user, request.reactType);
     }
 }
