@@ -35,9 +35,6 @@ public class TestEventHostings {
 
     private String eventId;
     private String authToken; 
-    private String newHostAuthToken;
-    private String newHostEmail = "newhost@example.com";
-    private String newHostId;
 
     @BeforeEach
     public void setup () {
