@@ -49,12 +49,12 @@ export default function ReplyCard({reply_details, reply_num, review_id}) {
             <Grid item xs={1}  sx={{display: 'flex', alignItems: 'center'}}>
               <UserAvatar userId={reply.authorId} size={30}/>
             </Grid>
-            <Grid xs={10} item sx={{pl: 3, display: 'flex', alignItems: 'center'}}>
+            <Grid xs={9} item sx={{pl: 3, display: 'flex', alignItems: 'center'}}>
               <Typography>
                 {reply.text}
               </Typography>
             </Grid>
-            <Grid xs={1} item sx={{height: '100%', alignItems: 'center', display: 'flex'}}>
+            <Grid xs={2} item sx={{height: '100%', pl: 3, alignItems: 'flex-end', display: 'flex'}}>
               {(!reply.isUser && loggedIn())
                ? <IconButton onClick={toggleReactBar}>
                     <AddReactionIcon sx={{color: '#AAAAAA'}}/>
@@ -69,7 +69,7 @@ export default function ReplyCard({reply_details, reply_num, review_id}) {
           </Grid>
         </Box>
         {(!reply.isUser && loggedIn())
-          ? <Collapse in={reactBar} sx={{width: '60%',}} onMouseLeave={closeReactBar}>
+          ? <Collapse in={reactBar} sx={{width: '60%',  ml: 4}} onMouseLeave={closeReactBar}>
               <ReactBar onReact={onReact} comment_id={reply.replyId}/>
             </Collapse>
           : <></>
