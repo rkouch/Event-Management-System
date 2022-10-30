@@ -23,6 +23,7 @@ import tickr.application.serialised.responses.TicketViewEmailResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
+import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -928,6 +929,26 @@ public class TickrController {
                 .collect(Collectors.toList());
         
         return new UserEventsResponse(eventIds, numResults.get());
+    }
+
+    public EventReservedSeatsResponse eventReservedSeats (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event ID!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        var seatingPlans = event.getSeatingPlans();
+        List<TicketReservation> reservations = new ArrayList<>(); 
+        seatingPlans.stream().forEach(s -> reservations.addAll(s.getReservations()));
+
+        List<Reserved> reserved = new ArrayList<>(); 
+        reservations.stream().forEach(r -> reserved.add(new Reserved(r.getSeatNum(), r.getSection().getSection())));
+
+        return new EventReservedSeatsResponse(reserved);
     }
 
     public EventHostingsResponse eventHostings (ModelSession session, Map<String, String> params) {
