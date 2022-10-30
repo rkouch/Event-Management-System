@@ -580,13 +580,21 @@ public class TickrController {
             options = EventSearch.fromParams(params.get("search_options"));
         }
 
-        var eventStream = session.getAllStream(Event.class);
-
         var numItems = new AtomicInteger();
-        var eventList = eventStream
+        var eventStream = session.getAllStream(Event.class)
                 .peek(x -> numItems.incrementAndGet())
-                .sorted(Comparator.comparing(Event::getEventStart))
-                .skip(pageStart)
+                .sorted(Comparator.comparing(Event::getEventStart));
+        if (options != null) {
+            var options1 = options;
+            eventStream = eventStream
+                    .filter(e -> e.startsAfter(options1.getStartTime()))
+                    .filter(e -> e.endsBefore(options1.getEndTime()))
+                    .filter(e -> e.matchesCategories(options1.categories))
+                    .filter(e -> e.matchesTags(options1.tags))
+                    .filter(e -> e.matchesDescription(Utils.toWords(options1.text)));
+        }
+
+        var eventList = eventStream.skip(pageStart)
                 .limit(maxResults)
                 .map(Event::getId)
                 .map(UUID::toString)
