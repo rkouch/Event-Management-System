@@ -91,7 +91,7 @@ public class TicketReservation {
         var purchaseItem = new PurchaseItem(purchaseId, this, firstName, lastName, email);
         session.save(purchaseItem);
 
-        return builder.withLineItem(new LineItem(this.section.getSection() + " " + this.seatNum, this.price));
+        return builder.withLineItem(new LineItem(String.format("%s (%s%d)", getSection().getEvent().getEventName(), getSection().getSection().substring(0, 1), getSeatNum()), this.price));
     }
 
     public Ticket convert (String firstName, String lastName, String email) {
