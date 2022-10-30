@@ -4,7 +4,7 @@ import Header from "../Components/Header";
 import { BackdropNoBG, CentredBox, ScrollableBox, UploadPhoto } from "../Styles/HelperStyles";
 import dayjs from "dayjs";
 import Grid from "@mui/material/Unstable_Grid2";
-import { Box, Chip, Divider, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Chip, Divider, FormGroup, FormHelperText, IconButton, Tooltip, Typography } from "@mui/material";
 import { styled, alpha } from '@mui/system';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -387,9 +387,19 @@ export default function ViewEvent({}) {
                             </Grid> 
                           : <CentredBox>
                               {!soldOut
-                                ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                                    Purchase tickets
-                                  </TkrButton>
+                                ? <>  
+                                    {loggedIn()
+                                      ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                          Purchase tickets
+                                        </TkrButton>
+                                      : <FormGroup sx={{width: '100%'}}>
+                                          <TkrButton disabled sx={{fontSize: '19px', width: '100%'}} >
+                                            Purchase tickets
+                                          </TkrButton>
+                                          <FormHelperText><Typography sx={{textAlign: 'center'}}>Log in to purchase</Typography></FormHelperText>
+                                        </FormGroup>
+                                    }
+                                  </>
                                 : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
                                     Sold Out
                                   </TkrButton>

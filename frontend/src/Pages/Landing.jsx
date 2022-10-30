@@ -77,8 +77,6 @@ export default function Landing({}) {
             Welcome to Tickr.
           </h1>
         </CentredBox>
-        <br/>
-        
         <UserHosting/>
         <UserBookings/>
         <UpcomingEvents/>

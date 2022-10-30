@@ -15,7 +15,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
 import EventCardsBar from '../Components/EventCardsBar';
-import { apiFetch, getToken } from '../Helpers';
+import { apiFetch, getToken, loggedIn } from '../Helpers';
 import dayjs from 'dayjs';
 import SwipeableViews from 'react-swipeable-views';
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
@@ -67,23 +67,23 @@ export default function UserBookings({}) {
   const [weekEvents, setWeekEvents] = React.useState([])
   const [weekEventsNum, setWeekEventsNum] = React.useState(0)
   const [moreWeekEvents, setMoreWeekEvents] = React.useState(false)
-  const [activeStepWeek, setActiveStepWeek] = React.useState(0);
-  const maxStepsWeek = (weekEvents.length % 5)+1;
+  const [activeStepWeek, setActiveStepWeek] = React.useState(0); 
   const [weekGroups, setWeekGroups] = React.useState([])
-
+  const maxStepsWeek = weekGroups.length;
+  
   const [monthEvents, setMonthEvents] = React.useState([])
   const [monthEventsNum, setMonthEventsNum] = React.useState(0)
   const [moreMonthEvents, setMoreMonthEvents] = React.useState(false)
   const [activeStepMonth, setActiveStepMonth] = React.useState(0);
-  const maxStepsMonth = (monthEvents.length % 5) + 1;
   const [monthGroups, setMonthGroups] = React.useState([])
+  const maxStepsMonth = monthGroups.length;
 
   const [yearEvents, setYearEvents] = React.useState([])
   const [yearEventsNum, setYearEventsNum] = React.useState(0)
   const [moreYearEvents, setMoreYearEvents] = React.useState(false)
   const [activeStepYear, setActiveStepYear] = React.useState(0);
-  const maxStepsYear = (yearEvents.length % 5) + 1;
   const [yearGroups, setYearGroups] = React.useState([])
+  const maxStepsYear = yearGroups.length;
 
   const handleNext = (timePeriod) => {
     switch (timePeriod) {
@@ -169,8 +169,8 @@ export default function UserBookings({}) {
         const groups_t = []
         var group_s = []
         var group_i = 0
-        for (const i in response.eventIds) {
-          const id = response.eventIds[i]
+        for (const i in response_eventIds) {
+          const id = response_eventIds[i]
           if (group_i !== 5) {
             group_s.push(id)
           } else {
@@ -181,6 +181,7 @@ export default function UserBookings({}) {
           group_i += 1
         }
         groups_t.push(group_s)
+        console.log('EventBookings groups')
         console.log(groups_t)
         setEventGroups(groups_t)
         setEventNum(response_eventIds)
@@ -211,28 +212,31 @@ export default function UserBookings({}) {
       // setMoreEvents(response.num_results === (eventNum + response.eventIds.length))
     } catch (e) {
       console.log(e)
+      setEventGroups([[]])
     }
   }
 
   // Initial load of events
   React.useEffect(() => {
-    // Fetch week events
-    getUpcomingEvents(endOfWeek, 0, 6, weekEvents, setWeekEvents, weekEventsNum, setWeekEventsNum, setMoreWeekEvents, setWeekGroups)
+    if (loggedIn()) {
+      // Fetch week events
+      getUpcomingEvents(endOfWeek, 0, 6, weekEvents, setWeekEvents, weekEventsNum, setWeekEventsNum, setMoreWeekEvents, setWeekGroups)
 
-    // Fetch month events
-    // getUpcomingEvents(endOfMonth, 0, 6, monthEvents, setMonthEvents, monthEventsNum, setMonthEventsNum, setMoreMonthEvents)
+      // Fetch month events
+      // getUpcomingEvents(endOfMonth, 0, 6, monthEvents, setMonthEvents, monthEventsNum, setMonthEventsNum, setMoreMonthEvents)
 
-    // Fetch year events
-    // getUpcomingEvents(endOfYear, 0, 6, yearEvents, setYearEvents, yearEventsNum, setYearEventsNum, setMoreYearEvents)
+      // Fetch year events
+      // getUpcomingEvents(endOfYear, 0, 6, yearEvents, setYearEvents, yearEventsNum, setYearEventsNum, setMoreYearEvents)
+    }
   }, [])
 
   return (
     <>
-      {!(yearEvents === 0)
+      {(!(yearEvents === 0) && loggedIn())
         ? <Section sx={{pt: 13}}>
             <TabContext value={upcomingValue}>
               <SectionHeading>
-                My Upcoming Events
+                My Bookings
                 <Divider orientation="vertical" variant="middle" flexItem/>
                 <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
                   <Tabs
@@ -242,9 +246,10 @@ export default function UserBookings({}) {
                     scrollButtons
                     value={upcomingValue}
                     >
-                    <Tab label="This Week" value="1" />
+                    <Tab label="All" value="1" />
+                    {/* <Tab label="This Week" value="1" />
                     <Tab label="This Month" value="2" />
-                    <Tab label="This Year" value="3" />
+                    <Tab label="This Year" value="3" /> */}
                   </Tabs>
                 </Box>
                 <Box
@@ -257,13 +262,13 @@ export default function UserBookings({}) {
                     flexGrow: '4'
                   }}
                 >
-                  <Button color='secondary'>
+                  {/* <Button color='secondary'>
                     see all
-                  </Button>
+                  </Button> */}
                 </Box>
               </SectionHeading>
               <TabPanel value="1" sx={{padding: 0}}>
-                <Box sx={{display: 'flex', flexDirection: 'column', width: 'fit-content'}}>
+                <Box sx={{display: 'flex', flexDirection: 'column', width: '100%'}}>
                   <Box>
                     <SwipeableViews
                       axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}

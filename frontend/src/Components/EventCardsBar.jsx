@@ -6,7 +6,7 @@ import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
 import Header2 from '../Components/Header2';
-import { Card, Container, Divider } from '@mui/material';
+import { Card, Container, Divider, Typography } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import TabContext from '@mui/lab/TabContext';
@@ -57,13 +57,21 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
 
   return (
     <Box sx={{display: 'flex', width: '100%', justifyContent: 'center', backgroundColor: '#F6F6F6',}}>
-      <CardsBar>
-        {eventIds.map((value, key) => {
-          return (
-            <EventCard key={key} event_id={value}/>
-          )
-        })}
-      </CardsBar>
+      {(event_ids.length > 0)
+        ? <CardsBar>
+            {eventIds.map((value, key) => {
+              return (
+                <EventCard key={key} event_id={value}/>
+              )
+            })}
+          </CardsBar>
+        : <CardsBar sx={{alignItems: 'center'}}>
+            <Typography sx={{fontSize: 45, color: '#CCCCCC'}}>
+              No Events
+            </Typography>
+          </CardsBar>
+      }
+      
     </Box>
   )
 }
