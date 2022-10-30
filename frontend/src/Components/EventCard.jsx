@@ -11,6 +11,8 @@ import Stack from '@mui/material/Stack';
 
 export default function EventCard({event_id}) {
   const navigate = useNavigate()
+  var utc = require('dayjs/plugin/utc')
+  dayjs.extend(utc)
   const [event, setEvent] = React.useState({
     event_name: "",
     location: {
