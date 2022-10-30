@@ -100,11 +100,14 @@ public class SeatingPlan {
     }
 
     public int getAvailableSeats () {
-        if (tickets != null || reservations != null) {
-            return totalSeats - tickets.size() - reservations.size();
-        } 
-        return totalSeats;
-        
+        int availableSeats = totalSeats;
+        if (tickets != null) {
+            availableSeats -= tickets.size();
+        }
+        if (reservations != null) {
+            availableSeats -= reservations.size();
+        }
+        return availableSeats;
     }
 
     public int getTotalSeats () {
