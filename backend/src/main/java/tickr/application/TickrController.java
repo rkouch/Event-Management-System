@@ -916,4 +916,8 @@ public class TickrController {
 
         comment.react(session, user, request.reactType);
     }
+
+    public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
+
+    }
 }
