@@ -98,7 +98,7 @@ public class TestReactions {
         reviewId = controller.reviewCreate(session, new ReviewCreate.Request(authToken, eventId, "title", "text", 1.0f)).reviewId;
         session = TestHelper.commitMakeSession(model, session);
 
-        replyId = controller.replyCreate(session, new ReplyCreate.Request(hostToken, eventId, "text")).replyId;
+        replyId = controller.replyCreate(session, new ReplyCreate.Request(hostToken, reviewId, "text")).replyId;
         session = TestHelper.commitMakeSession(model, session);
     }
 
@@ -140,7 +140,7 @@ public class TestReactions {
     public void testReplyReact () {
         controller.commentReact(session, new ReactRequest(authToken, replyId, "heart"));
         session = TestHelper.commitMakeSession(model, session);
-        var review = controller.repliesView(session, Map.of("reply_id", replyId, "page_start", "0", "max_results", "10")).replies.get(0);
+        var review = controller.repliesView(session, Map.of("review_id", reviewId, "page_start", "0", "max_results", "10")).replies.get(0);
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(1, review.reactions.size());
         var react = review.reactions.get(0);

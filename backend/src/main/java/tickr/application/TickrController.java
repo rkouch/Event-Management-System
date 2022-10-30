@@ -869,6 +869,14 @@ public class TickrController {
     }
 
     public void commentReact (ModelSession session, ReactRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.commentId == null || request.reactType == null) {
+            throw new BadRequestException("Missing comment id or react type!");
+        }
 
+        var comment = session.getById(Comment.class, UUID.fromString(request.commentId))
+                .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
+
+        comment.react(session, user, request.reactType);
     }
 }

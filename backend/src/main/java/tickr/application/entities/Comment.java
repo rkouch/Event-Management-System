@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.SerialisedReaction;
 import tickr.application.serialised.SerialisedReply;
 import tickr.application.serialised.SerialisedReview;
+import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 
@@ -173,6 +174,26 @@ public class Comment {
 
     public Stream<Comment> getReplies () {
         return getChildren().stream();
+    }
+
+    public void react (ModelSession session, User user, String reactType) {
+        if (isWrittenBy(user)) {
+            throw new ForbiddenException("Cannot react own comment!");
+        }
+
+        var react = getReactions().stream()
+                .filter(r -> r.isAuthor(user))
+                .filter(r -> r.getReactType().equals(reactType))
+                .findFirst()
+                .orElse(null);
+
+        if (react != null) {
+            session.remove(react);
+        } else {
+            var newReact = new Reaction(this, user, reactType);
+            session.save(newReact);
+            reactions.add(newReact);
+        }
     }
 
     private List<SerialisedReaction> makeReactions () {
