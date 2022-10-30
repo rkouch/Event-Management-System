@@ -1022,4 +1022,18 @@ public class TickrController {
         event.makeAnnouncement(user, request.announcement);
     }
 
+    public String onPaymentCancel (ModelSession session, Map<String, String> params) {
+        var orderId = params.get("order_id");
+        var url = params.get("url");
+
+        var list = new ArrayList<>(session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(orderId)));
+
+        for (var i : list) {
+            i.cancel(session);
+            //session.remove(i);
+        }
+
+        return url;
+    }
+
 }
