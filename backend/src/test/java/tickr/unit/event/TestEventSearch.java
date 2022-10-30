@@ -114,6 +114,73 @@ public class TestEventSearch {
         assertEquals(0, tooHighResponse.eventIds.size());
     }
 
+    @Test
+    public void testOptions () {
+        var ids = createEventOptions();
+
+        var respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(0), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder().addStartTime(LocalDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(0), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder().addEndTime(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(2), respIds.get(0));
+        assertEquals(ids.get(0), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder().addTags(List.of("test4", "test6")).build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(2), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder().addText("karaoke tEsTb").build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(0), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build()).eventIds;
+        assertEquals(0, respIds.size());
+    }
+
+    private List<String> createEventOptions () {
+        var entityIds = new ArrayList<String>();
+
+        entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
+                        .withEventName("TestA")
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3)))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4)))
+                .withCategories(Set.of("food", "music", "health"))
+                .withTags(Set.of("test1", "test2", "test3"))
+                .withDescription("Testing karaoke burgers hospital")
+                .build(authToken)).event_id);
+
+        entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
+                        .withEventName("TestB")
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6)))
+                .withCategories(Set.of("hobbies", "business", "free"))
+                .withTags(Set.of("test4", "test2", "test5"))
+                .withDescription("money capitalism free sewing")
+                .build(authToken)).event_id);
+
+        entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
+                        .withEventName("TestC")
+                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)))
+                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)))
+                .withCategories(Set.of("food", "education"))
+                .withTags(Set.of("test2", "test5", "test6"))
+                .withDescription("money burgers school")
+                .build(authToken)).event_id);
+
+
+        return entityIds;
+    }
+
     private EventSearch.Response makeSearch (int pageStart, int maxResults, EventSearch.Options options) {
         var paramsMap = new HashMap<String, String>();
 
