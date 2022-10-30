@@ -73,7 +73,7 @@ public class TestAnnouncement {
         hostToken = controller.userRegister(session, new UserRegisterRequest("TestUsername1", "Test", "User", "test1@example.com",
                 "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        hostToken = controller.userRegister(session, new UserRegisterRequest("TestUsername1", "Test", "User", "test2@example.com",
+        adminToken = controller.userRegister(session, new UserRegisterRequest("TestUsername1", "Test", "User", "test2@example.com",
                 "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
 
@@ -106,6 +106,7 @@ public class TestAnnouncement {
     public void cleanup () {
         model.cleanup();
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(IEmailAPI.class);
     }
 
     @Test
@@ -134,7 +135,7 @@ public class TestAnnouncement {
         assertEquals(1, emailAPI.getSentMessages().size());
 
         var msg = emailAPI.getSentMessages().get(0);
-        assertEquals("test2@example.com", msg.getToEmail());
+        assertEquals("test@example.com", msg.getToEmail());
         assertEquals("Test Event Name announcement", msg.getSubject());
         assertTrue(msg.getBody().contains("Test announcement lorem ipsum yay :)"));
     }
@@ -146,7 +147,7 @@ public class TestAnnouncement {
         assertEquals(1, emailAPI.getSentMessages().size());
 
         var msg = emailAPI.getSentMessages().get(0);
-        assertEquals("test2@example.com", msg.getToEmail());
+        assertEquals("test@example.com", msg.getToEmail());
         assertEquals("Test Event Name announcement", msg.getSubject());
         assertTrue(msg.getBody().contains("Test announcement lorem ipsum yay :)"));
     }

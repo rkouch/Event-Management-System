@@ -918,6 +918,14 @@ public class TickrController {
     }
 
     public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.eventId == null) {
+            throw new BadRequestException("Missing event id!");
+        }
 
+        var event = session.getById(Event.class, parseUUID(request.eventId))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        event.makeAnnouncement(user, request.announcement);
     }
 }

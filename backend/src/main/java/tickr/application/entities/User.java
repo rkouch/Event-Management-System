@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.persistence.ModelSession;
@@ -402,5 +404,9 @@ public class User {
 
     public Stream<Event> getStreamHostingEvents() {
         return getHostingEvents().stream();
+    }
+
+    public void sendEmail (String subject, String message) {
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(email, subject, message);
     }
 }
