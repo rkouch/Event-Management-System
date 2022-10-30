@@ -27,16 +27,6 @@ export default function EventReview({isAttendee, event_id}) {
   const [reviewNum, setReviewNum] = React.useState(0)
   const [moreReviews, setMoreReviews] = React.useState(false)
 
-  React.useEffect(() => {
-    // After posting a review, scroll to the bottom and refresh reviews
-    if (postReview) {
-      console.log('Posted a review')
-      fetchReviews(0, 10)
-      bottomRef.current?.scrollIntoView({behavior: 'smooth'});
-      setPostReview(false)
-    }
-  }, [postReview]);
-
   // Fetch Reviews
   React.useEffect(() => {
     fetchReviews(0, 10)
@@ -73,11 +63,11 @@ export default function EventReview({isAttendee, event_id}) {
       console.log(response.reviews)
       setReviewNum(reviewNum + response.reviews.length)
       setMoreReviews((maxResults < response.reviews.length || (reviewNum+response.reviews.length === response.num_results)))
-
       if (pageStart === 0) {
-        setReviews(response.reviews)
+        setReviews(response.reviews.reverse())
+        bottomRef.current?.scrollIntoView({behavior: 'smooth'})
       } else {
-        setReviews(current => [response.reviews, ...reviews])
+        setReviews(current => [response.reviews.reverse(), ...reviews])
       }
     } catch (e) {
       setInitFectch(true)
@@ -112,7 +102,7 @@ export default function EventReview({isAttendee, event_id}) {
       console.log(body)
       const response = await apiFetch('POST', '/api/event/review/create', body)
       setPostReview(true)
-      window.location.reload();
+      fetchReviews(0, 10)
     } catch (e) {
       setPostReview(false)
       setError(true)
@@ -135,15 +125,9 @@ export default function EventReview({isAttendee, event_id}) {
       <br/>
       <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 3, maxHeight: 1000}} id='reviews'>
         {reviews.map((review, key) => {
-          if (key === reviews.length-1) {
-            return (
-              <ReviewCard key={key} review={review} innerRef={bottomReviewRef}/>
-            )
-          } else {
-            return (
-              <ReviewCard key={key} review={review}/>
-            )
-          }
+          return (
+            <ReviewCard key={key} review_details={review} review_num={reviews.length-key-1}/>
+          )
         })}
       </ScrollableBox>
       {isAttendee

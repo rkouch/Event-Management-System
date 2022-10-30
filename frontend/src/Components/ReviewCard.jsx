@@ -16,14 +16,29 @@ import ReviewReplies from './ReviewReplies';
 import CircularProgress from '@mui/material/CircularProgress';
 import ReactBar from './ReactBar';
 import ReactionsList from './ReactionsList';
+import { useParams } from 'react-router-dom';
 
-export default function ReviewCard({review, innerRef, id}) {
+export default function ReviewCard({review_details, review_num}) {
+  const params = useParams()
+  const [review, setReview] = React.useState(review_details)
   const [reactBar, setReactBar] = React.useState(false)
   const [reply, setReply] = React.useState('')
   const [showReply, setShowReply] = React.useState(false)
   const [replies, setReplies] = React.useState([])
   const [replyCount, setReplyCount] = React.useState(0)
   const [repliesLoading, setRepliesLoading] = React.useState(false)
+  const [isReviewer, setIsReviewer] = React.useState(false)
+
+  const checkIfUser = async () => {
+    const profile_response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+    const user_response = await apiFetch('GET',`/api/user/search?email=${profile_response.email}`)
+    console.log(review.authorId === user_response.user_id)
+    setIsReviewer(review.authorId === user_response.user_id)
+  }
+  
+  React.useEffect(() => {
+    checkIfUser()
+  }, [])
 
   const replyRef = React.useRef(null)
 
@@ -62,6 +77,22 @@ export default function ReviewCard({review, innerRef, id}) {
     setReply(e.target.value)
   }
 
+  // On React update review details
+  const onReact = async () => {
+    try {
+      const body = {
+        event_id: params.event_id,
+        page_start: review_num,
+        max_results: 1,
+      }
+      const searchParams = new URLSearchParams(body)
+      const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
+      setReview(response.reviews[0])
+      console.log(response)
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   // post reply to review, fetch replies on send
   const handleSendReply = async (e) => {
@@ -91,8 +122,6 @@ export default function ReviewCard({review, innerRef, id}) {
       loggedInId = user_response.user_id
     } 
     
-
-
     const body = {
       review_id: review.reviewId,
       page_start: pageStart,
@@ -110,11 +139,11 @@ export default function ReviewCard({review, innerRef, id}) {
       }  
       if (pageStart === 0) {
         setRepliesLoading(false)
-        setReplies(response.replies)
+        setReplies(response.replies.reverse())
         setReplyCount(response.num_results)
       } else {
         setRepliesLoading(false)
-        setReplies(current => [response.replies, ...replies])
+        setReplies(current => [response.replies.reverser(), ...replies])
         setReplyCount(replyCount + response.num_results)
       }
     } catch (e) {
@@ -133,7 +162,7 @@ export default function ReviewCard({review, innerRef, id}) {
   return (
     <Box>
       <Box sx={{maxWidth: 700, width: '100%', display: 'flex', justifyContent: 'center', flexDirection: 'column', gap: 1}} onMouseLeave={closeReactBar}>
-        <Box ref={innerRef} id={id} sx={{borderRadius: '50px',  backgroundColor: '#EEEEEE', p: 2}} >
+        <Box sx={{borderRadius: '50px',  backgroundColor: '#EEEEEE', p: 2}} >
           <Grid container sx={{height: '100%'}}>
             <Grid item xs={1} >
               <UserAvatar userId={review.authorId} size={50}/>
@@ -154,19 +183,22 @@ export default function ReviewCard({review, innerRef, id}) {
           {loggedIn()
             ? <Grid container>
                 <Grid item xs={1}>
-                  <Box 
-                    sx={{display: 'flex', pl:1}}
-                  >
-                    <IconButton
-                      onClick={() => {
-                        handleReactToggle();
-                      }}
-                    >
-                      <AddReaction />
-                    </IconButton>
-                  </Box>
+                  {!isReviewer
+                    ? <Box 
+                        sx={{display: 'flex', pl:1}}
+                      >
+                        <IconButton
+                          onClick={() => {
+                            handleReactToggle();
+                          }}
+                        >
+                          <AddReaction />
+                        </IconButton>
+                      </Box>
+                    : <></>
+                  }
                 </Grid>
-                <Grid item xs={5}>
+                <Grid item xs={5} sx={{pl: 2}}>
                   <ReactionsList reactions={review.reactions}/>
                 </Grid>
                 <Grid item xs={6}>
@@ -179,14 +211,19 @@ export default function ReviewCard({review, innerRef, id}) {
                   </Box>
                 </Grid>
               </Grid>
-            : <></>
+            : <Grid container>
+                <Grid item xs={1}></Grid>
+                <Grid item xs sx={{pl: 2}}>
+                  <ReactionsList reactions={review.reactions}/>
+                </Grid>
+              </Grid>
           }
         </Box>
         <>
-          {loggedIn()
+          {(loggedIn())
             ? <Collapse in={reactBar} sx={{width: '40%', ml: 4}} onMouseLeave={closeReactBar}>
                 <Box>
-                  <ReactBar comment_id={review.reviewId}/>
+                  <ReactBar comment_id={review.reviewId} onReact={onReact}/>
                 </Box>
               </Collapse>
             : <></>
@@ -196,7 +233,7 @@ export default function ReviewCard({review, innerRef, id}) {
       <Box sx={{mr: 10, ml: 10, pt: 2, display: 'flex', gap: 2, flexDirection: 'column'}}>
         {repliesLoading
           ? <CentredBox> <CircularProgress sx={{color: '#AE759F'}}/> </CentredBox>
-          : <ReviewReplies replies={replies}/>
+          : <ReviewReplies replies={replies} review_id={review.reviewId}/>
         }
         <Collapse in={showReply}>
           <Box sx={{display: 'flex', justifyContent: 'flex-end'}} ref={replyRef}>

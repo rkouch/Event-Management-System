@@ -5,7 +5,7 @@ import { apiFetch, getToken } from "../Helpers"
 import { CentredBox } from "../Styles/HelperStyles"
 import Emoji from "./Emoji"
 
-export default function ReactBar({comment_id}) {
+export default function ReactBar({comment_id, onReact}) {
 
   const handleReact = async (react_type) => {
     const body = {
@@ -15,6 +15,7 @@ export default function ReactBar({comment_id}) {
     }
     try {
       const response = await apiFetch('POST', '/api/event/review/react', body)
+      onReact()
     } catch (e) {
       console.log(e)
     }
