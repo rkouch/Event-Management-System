@@ -1,4 +1,4 @@
-import { Alert, Collapse, Divider, Grid, Rating, Typography } from '@mui/material'
+import { Alert, Button, Collapse, Divider, Grid, Rating, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import React from 'react'
 import { apiFetch, getToken } from '../Helpers'
@@ -60,14 +60,14 @@ export default function EventReview({isAttendee, event_id}) {
       }
       const searchParams = new URLSearchParams(params)
       const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
-      console.log(response.reviews)
       setReviewNum(reviewNum + response.reviews.length)
-      setMoreReviews((maxResults < response.reviews.length || (reviewNum+response.reviews.length === response.num_results)))
+      setMoreReviews(!(reviewNum+response.reviews.length === response.num_results))
       if (pageStart === 0) {
         setReviews(response.reviews.reverse())
         bottomRef.current?.scrollIntoView({behavior: 'smooth'})
       } else {
-        setReviews(current => [response.reviews.reverse(), ...reviews])
+        const reviews_t = response.review.reverse().concat(reviews)
+        setReviews(reviews_t)
       }
     } catch (e) {
       setInitFectch(true)
@@ -124,9 +124,17 @@ export default function EventReview({isAttendee, event_id}) {
       </Divider>
       <br/>
       <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 3, maxHeight: 1000}} id='reviews'>
+        {moreReviews
+          ? <Divider>
+              <Button sx={{textTransform: 'none', color: '#CCCCCC'}} variant='text'>
+                More Reviews
+              </Button>
+            </Divider>
+          : <></>
+        }
         {reviews.map((review, key) => {
           return (
-            <ReviewCard key={key} review_details={review} review_num={reviews.length-key-1}/>
+            <ReviewCard key={key} review_details={review} review_num={reviews.length-key-1} isAttendee={isAttendee}/>
           )
         })}
       </ScrollableBox>

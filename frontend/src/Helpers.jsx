@@ -116,7 +116,17 @@ export const getUserData = async (body, setUserData=null) => {
 
 export const getEventData = async (eventId, setEventData=null) => {
   try {
-    const response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
+    var response
+    if (loggedIn()) {
+      const body = {
+        auth_token: getToken(),
+        event_id: eventId
+      }
+      const searchParams = new URLSearchParams(body)
+      response = await apiFetch('GET', `/api/event/view?${searchParams}`, null)
+    } else {
+      response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
+    }
     sortSection(response.seating_details)
     setEventData(response)
   } catch (error) {

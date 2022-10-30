@@ -97,4 +97,14 @@ public class TicketReservation {
     public Ticket convert (String firstName, String lastName, String email) {
         return new Ticket(user, section, seatNum, firstName, lastName, email);
     }
+
+    public SeatingPlan getSection() {
+        return section;
+    }
+
+    public void setSection(SeatingPlan section) {
+        this.section = section;
+    }
+
+    
 }

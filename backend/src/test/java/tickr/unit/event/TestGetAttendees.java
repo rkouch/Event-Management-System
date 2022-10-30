@@ -130,6 +130,11 @@ public class TestGetAttendees {
         purchaseAPI.fulfillOrder(redirectUrl2, "test_customer2");
     }
 
+    @AfterEach
+    public void cleanup () {
+        model.cleanup();
+    }
+
     @Test
     public void testGetAttendees () {
         var attendees = controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", eventId)).getAttendees();

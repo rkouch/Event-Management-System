@@ -7,7 +7,7 @@ import ReactBar from "./ReactBar"
 import AddReactionIcon from '@mui/icons-material/AddReaction';
 import ReactionsList from "./ReactionsList"
 
-export default function ReplyCard({reply_details, reply_num, review_id}) {
+export default function ReplyCard({reply_details, reply_num, review_id, isAttendee}) {
   const [reply, setReply] = React.useState(reply_details)
   const [reactBar, setReactBar] = React.useState(false)
 
@@ -40,6 +40,9 @@ export default function ReplyCard({reply_details, reply_num, review_id}) {
     }
   }
 
+  React.useEffect(() => {
+    setReply(reply_details)
+  }, [reply_details])
 
   return (
     <Box sx={{display: 'flex', justifyContent: reply.isUser ? 'flex-end' : 'flex-start'}} onMouseLeave={closeReactBar}>
@@ -55,7 +58,7 @@ export default function ReplyCard({reply_details, reply_num, review_id}) {
               </Typography>
             </Grid>
             <Grid xs={2} item sx={{height: '100%', pl: 3, alignItems: 'flex-end', display: 'flex'}}>
-              {(!reply.isUser && loggedIn())
+              {(!reply.isUser && loggedIn() && isAttendee)
                ? <IconButton onClick={toggleReactBar}>
                     <AddReactionIcon sx={{color: '#AAAAAA'}}/>
                   </IconButton>
@@ -68,7 +71,7 @@ export default function ReplyCard({reply_details, reply_num, review_id}) {
             </Grid>
           </Grid>
         </Box>
-        {(!reply.isUser && loggedIn())
+        {(!reply.isUser && loggedIn() && isAttendee)
           ? <Collapse in={reactBar} sx={{width: '60%',  ml: 4}} onMouseLeave={closeReactBar}>
               <ReactBar onReact={onReact} comment_id={reply.replyId}/>
             </Collapse>

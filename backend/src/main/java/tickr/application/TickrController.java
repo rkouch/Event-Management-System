@@ -23,6 +23,7 @@ import tickr.application.serialised.responses.TicketViewEmailResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
 import tickr.application.serialised.responses.ViewProfileResponse;
+import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -917,16 +918,37 @@ public class TickrController {
         var numResults = new AtomicInteger();
 
         var eventIds = events.stream()
-            .filter(e -> e.getEventStart().isBefore(beforeDate))
-            .peek(i -> numResults.incrementAndGet())
-            .sorted(Comparator.comparing(Event::getEventStart))
-            .skip(pageStart)
-            .limit(maxResults)
-            .map(Event::getId)
-            .map(UUID::toString)
-            .collect(Collectors.toList());
-
+                .filter(e -> e.getEventStart().isBefore(beforeDate))
+                .filter(e -> e.isPublished())
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        
         return new UserEventsResponse(eventIds, numResults.get());
+    }
+
+    public EventReservedSeatsResponse eventReservedSeats (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event ID!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event ID!"));
+        var seatingPlans = event.getSeatingPlans();
+        List<TicketReservation> reservations = new ArrayList<>(); 
+        seatingPlans.stream().forEach(s -> reservations.addAll(s.getReservations()));
+
+        List<Reserved> reserved = new ArrayList<>(); 
+        reservations.stream().forEach(r -> reserved.add(new Reserved(r.getSeatNum(), r.getSection().getSection())));
+
+        return new EventReservedSeatsResponse(reserved);
     }
 
     public EventHostingsResponse eventHostings (ModelSession session, Map<String, String> params) {
@@ -947,15 +969,33 @@ public class TickrController {
 
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
-            .peek(i -> numResults.incrementAndGet())
-            .sorted(Comparator.comparing(Event::getEventStart))
-            .skip(pageStart)
-            .limit(maxResults)
-            .map(Event::getId)
-            .map(UUID::toString)
-            .collect(Collectors.toList());
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
 
         return new EventHostingsResponse(eventIds, numResults.get());
+    }
+
+    public CustomerEventsResponse customerBookings (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = authenticateToken(session, params.get("auth_token"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+        return new CustomerEventsResponse(user.getBookings(pageStart, maxResults));
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {

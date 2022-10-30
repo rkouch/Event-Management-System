@@ -90,8 +90,11 @@ public class Server {
         get("/api/event/reviews/replies", TickrController::repliesView);
         get("/api/event/hosting", TickrController::eventHostings);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
+        get("/api/event/reserved", TickrController::eventReservedSeats);
 
         get("/api/home", TickrController::userEvents);
+        get("/api/user/bookings", TickrController::customerBookings);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
