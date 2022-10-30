@@ -208,7 +208,7 @@ public class TestReplyCreateView {
 
         assertEquals(replyIds1.size(), replyIds2.size());
         for (int i = 0; i < replyIds1.size(); i++) {
-            assertEquals(replyIds1.get(i), replyIds2.get(i));
+            assertEquals(replyIds1.get(i), replyIds2.get(replyIds2.size() - 1 - i));
         }
     }
 }

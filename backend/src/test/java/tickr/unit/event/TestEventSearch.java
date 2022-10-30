@@ -95,8 +95,8 @@ public class TestEventSearch {
 
         for (int i = 0; i < numPages * numPage; i++) {
             eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
-                    .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + i)))
-                    .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + i)))
+                    .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
+                    .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
                     .build(authToken)).event_id);
             session = TestHelper.commitMakeSession(model, session);
         }
@@ -106,7 +106,7 @@ public class TestEventSearch {
             assertEquals(numPage, response.eventIds.size());
             assertEquals(numPages * numPage, response.numResults);
             for (int j = 0; j < numPage; j++) {
-                assertEquals(eventIds.get(i * numPage + j), response.eventIds.get(j));
+                assertEquals(eventIds.get(300 - (i * numPage + j) - 1), response.eventIds.get(j));
             }
         }
 
