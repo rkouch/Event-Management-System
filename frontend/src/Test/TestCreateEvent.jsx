@@ -47,7 +47,7 @@ export const EventForm = styled("div")({
   gap: "10px",
 });
 
-export default function CreateEvent({}) {
+export default function TestCreatEvent({}) {
   const navigate = useNavigate()
 
   // States
@@ -333,14 +333,12 @@ export default function CreateEvent({}) {
       setFieldInState('error', true, address, setAddress)
       setErrorStatus(true)
       setErrorMsg('Please enter a valid street address. "{Street No} {Street Name}"')
-      setLoading(false)
       return
     }
     if (isNaN(parseInt(streetAddress[0]))) {
       setFieldInState('error', true, address, setAddress)
       setErrorStatus(true)
       setErrorMsg('Please enter a valid street number. "{Street No} {Street Name}"')
-      setLoading(false)
       return
     }
 
@@ -383,7 +381,7 @@ export default function CreateEvent({}) {
     };
 
     try {
-      const response = await apiFetch('POST', '/api/event/create', body)
+      const response = await apiFetch('POST', '/api/test/event/create', body)
       console.log(response)
       // Navigate to event
       navigate(`/view_event/${response.event_id}`)
@@ -581,7 +579,6 @@ export default function CreateEvent({}) {
                             onChange={handleStartChange}
                             inputFormat="DD/MM/YYYY HH:mm"
                             renderInput={(params) => <TextField {...params} />}
-                            disablePast = {true}
                             sx={{
                               '.MuiOutlinedInput-notchedOutline': {
                                 borderColor: country.error ? "red" : "rgba(0,0,0,0)"
@@ -600,7 +597,6 @@ export default function CreateEvent({}) {
                             onChange={handleEndChange}
                             inputFormat="DD/MM/YYYY HH:mm"
                             renderInput={(params) => <TextField {...params} />}
-                            disablePast = {true}
                           />
                         </ContrastInputWrapper>
                         <FormHelperText>{end.errorMsg}</FormHelperText>

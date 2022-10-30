@@ -23,6 +23,8 @@ import PurchaseTicket from './Pages/PurchaseTickets';
 import Checkout from './Pages/Checkout';
 import ViewTickets from './Pages/ViewTickets';
 import ViewTicket from './Pages/ViewTicket';
+import TestCreatEvent from './Test/TestCreateEvent';
+import TestViewEvent from './Test/TestViewEvent';
 
 
 function App() {  
@@ -89,6 +91,14 @@ function App() {
     {
       path: "/ticket/:ticket_id",
       element: <ViewTicket/>
+    },
+    {
+      path: "/test/create_event",
+      element: <TestCreatEvent/>
+    },
+    {
+      path: "/test/view_event/:event_id",
+      element: <TestViewEvent/>
     }
   ])
 

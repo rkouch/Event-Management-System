@@ -9,6 +9,7 @@ import StarIcon from '@mui/icons-material/Star';
 import { apiFetch, getToken, getUserData, loggedIn} from '../Helpers';
 import { UploadPhoto } from '../Styles/HelperStyles';
 import Person4Icon from '@mui/icons-material/Person4';
+import { Typography } from '@mui/material';
 
 
 export default function UserAvatar({userId, size=35, host=false}) {
@@ -24,9 +25,10 @@ export default function UserAvatar({userId, size=35, host=false}) {
   })
 
   React.useEffect(()=> {
-    if (userId.length !== 0) {
+    if (userId !== undefined) {
       getUserData(`user_id=${userId}`,setUserData)
     }
+    
   },[userId])
 
 
@@ -56,32 +58,32 @@ export default function UserAvatar({userId, size=35, host=false}) {
 
   return (
     <IconButton disableRipple={true} onClick={handleClick}>
-      <Tooltip title={`${userData.firstName} ${userData.lastName}`}>
-        {(userData.userName !== '')
-          ? <>
-              {host
-                ? <Tooltip title="Event Host">
-                    <Badge 
-                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                      badgeContent={<Person4Icon/>}
-                    >
-                      {(userData.profilePicture !== "")
-                        ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
-                        : <Avatar sx={{ width: size, height: size}}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Avatar>
-                      } 
-                    </Badge>
-                  </Tooltip>
-                : <Tooltip title={`@${userData.userName}`}>
+      {(userData.userName !== '')
+        ? <>
+            {host
+              ? <Tooltip title="Event Host">
+                  <Badge 
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={<Person4Icon/>}
+                  >
                     {(userData.profilePicture !== "")
                       ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
-                      : <Avatar sx={{ width: size, height: size }}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Avatar>
+                      : <Avatar sx={{ width: size, height: size}}><Typography sx={{fontSize: {size}}}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Typography></Avatar>
                     } 
-                  </Tooltip>
-              }
-            </>
-          : <Skeleton variant="circular" width={size} height={size} />
-        }
-      </Tooltip>
+                  </Badge>
+                </Tooltip>
+              : <Tooltip title={`@${userData.userName}`}>
+                  {(userData.profilePicture !== "")
+                    ? <UploadPhoto sx={{width: size, height: size, borderRadius: size}} src={userData.profilePicture}/>
+                    : <Avatar sx={{ width: size, height: size}}><Typography sx={{fontSize: {size}}}>{userData.firstName[0].toUpperCase()}{userData.lastName[0].toUpperCase()}</Typography></Avatar>
+                  } 
+                </Tooltip>
+            }
+          </>
+        : <Tooltip title="Unknown User">
+            <Skeleton variant="circular" width={size} height={size} />
+          </Tooltip>  
+      }
     </IconButton>
     
   )
