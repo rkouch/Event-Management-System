@@ -75,6 +75,7 @@ public class TestDeleteEvent {
     @Test 
     public void testDeleteEvent () {
         assertDoesNotThrow(() -> controller.eventDelete(session, new EventDeleteRequest(authToken, eventId)));
+        session = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.eventView(session, Map.of("event_id", eventId)));
         assertThrows(ForbiddenException.class, () -> controller.eventDelete(session, new EventDeleteRequest(authToken, eventId)));
     }
@@ -88,6 +89,7 @@ public class TestDeleteEvent {
         var authToken2 = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.eventDelete(session, new EventDeleteRequest(authToken2, eventId)));
     }
 }
