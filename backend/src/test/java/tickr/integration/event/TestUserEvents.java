@@ -17,6 +17,7 @@ import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.TickrController;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -61,6 +62,10 @@ public class TestUserEvents {
                 .withEndDate(LocalDateTime.now().plusDays(2))
                 .build(authToken));
         assertEquals(200, response.getStatus());
+        var event1 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
@@ -68,6 +73,10 @@ public class TestUserEvents {
                 .withStartDate(LocalDateTime.now().plusDays(3))
                 .withEndDate(LocalDateTime.now().plusDays(4))
                 .build(authToken));
+        assertEquals(200, response.getStatus());
+        var event2 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
@@ -77,6 +86,10 @@ public class TestUserEvents {
                 .withEndDate(LocalDateTime.now().plusDays(6))
                 .build(authToken));
         assertEquals(200, response.getStatus());
+        var event3 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
@@ -85,6 +98,10 @@ public class TestUserEvents {
                 .withEndDate(LocalDateTime.now().plusDays(16))
                 .build(authToken));
         assertEquals(200, response.getStatus());
+        var event4 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
@@ -92,6 +109,10 @@ public class TestUserEvents {
                 .withStartDate(LocalDateTime.now().plusDays(20))
                 .withEndDate(LocalDateTime.now().plusDays(21))
                 .build(authToken));
+        assertEquals(200, response.getStatus());
+        var event5 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true));
         assertEquals(200, response.getStatus());
     }
 

@@ -6,6 +6,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.responses.ViewProfileResponse;
+import tickr.application.serialised.responses.CustomerEventsResponse.Bookings;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -18,10 +19,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
@@ -402,5 +406,41 @@ public class User {
 
     public Stream<Event> getStreamHostingEvents() {
         return getHostingEvents().stream();
+    }
+
+    public List<Bookings> getBookings (int pageStart, int maxResults) {
+        List<Ticket> tickets = new ArrayList<>(this.tickets); 
+        Collections.sort(tickets, new Comparator<Ticket> () {
+            @Override
+            public int compare(Ticket t1, Ticket t2) {
+                if (t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart()) == 0) {
+                    return t1.getEvent().getId().toString().compareTo(t2.getEvent().getId().toString());
+                }
+                return t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart());
+            }
+        });
+        List<Bookings> bookings = new ArrayList<>();
+
+        String prevEventId = tickets.get(0).getEvent().getId().toString();
+        Bookings booking = new Bookings(prevEventId);
+        for (Ticket ticket : tickets) {
+            String currEventId = ticket.getEvent().getId().toString();
+            if (!currEventId.equals(prevEventId)) {
+                prevEventId = currEventId;
+                bookings.add(booking);
+                booking = new Bookings(ticket.getEvent().getId().toString());
+                booking.addTicketId(ticket.getId().toString());
+            } else {
+                booking.addTicketId(ticket.getId().toString());
+            }
+        }
+        bookings.add(booking);
+        var numResults = new AtomicInteger();
+        var returnBookings = bookings.stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .collect(Collectors.toList());
+        return returnBookings;
     }
 }

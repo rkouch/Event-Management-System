@@ -23,6 +23,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -57,45 +58,57 @@ public class TestUserEvents {
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
         
-        controller.createEvent(session, new CreateEventReqBuilder()
+        var event1 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
             .withStartDate(LocalDateTime.now().plusDays(1))
             .withEndDate(LocalDateTime.now().plusDays(2))
-            .build(authToken));
+            .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.createEvent(session, new CreateEventReqBuilder()
+        controller.editEvent(session, new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+
+
+        var event2 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
             .withStartDate(LocalDateTime.now().plusDays(3))
             .withEndDate(LocalDateTime.now().plusDays(4))
-            .build(authToken));
+            .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.createEvent(session, new CreateEventReqBuilder()
+        controller.editEvent(session, new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+
+
+        var event3 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
             .withStartDate(LocalDateTime.now().plusDays(5))
             .withEndDate(LocalDateTime.now().plusDays(6))
-            .build(authToken));
+            .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true));
 
-        controller.createEvent(session, new CreateEventReqBuilder()
+
+        var event4 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
             .withStartDate(LocalDateTime.now().plusDays(15))
             .withEndDate(LocalDateTime.now().plusDays(16))
-            .build(authToken));
+            .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true));
 
-        controller.createEvent(session, new CreateEventReqBuilder()
+
+        var event5 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
             .withStartDate(LocalDateTime.now().plusDays(20))
             .withEndDate(LocalDateTime.now().plusDays(21))
-            .build(authToken));
+            .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true));
+
         
     }
 
