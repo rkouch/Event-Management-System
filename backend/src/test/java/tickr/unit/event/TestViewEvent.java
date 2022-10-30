@@ -14,6 +14,7 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -108,9 +109,13 @@ public class TestViewEvent {
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30",
                                             "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+
+        /*controller.editEvent(session, new EditEventRequest(authTokenString, event_id, null, null, null, null,
+                null, null, null, null, null, null, true));*/
+
         session = TestHelper.commitMakeSession(model, session); 
 
-        var response = controller.eventView(session, Map.of("event_id", event_id)); 
+        var response = controller.eventView(session, Map.of("event_id", event_id, "auth_token", authTokenString));
         
         assertEquals(id, response.host_id);
         assertEquals("test event", response.eventName);
@@ -148,5 +153,47 @@ public class TestViewEvent {
         assertEquals(testTags, response.tags);
 
         
+    }
+
+    @Test
+    public void testPublished () {
+        var session = model.makeSession();
+        var authTokenString = controller.userRegister(session,
+                new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        var authToken = CryptoHelper.makeJWTParserBuilder()
+                .build()
+                .parseClaimsJws(authTokenString);
+        session = TestHelper.commitMakeSession(model, session);
+        var id = authToken.getBody().getSubject();
+        assertNotNull(id);
+        CreateEventRequest.SeatingDetails seats1 = new CreateEventRequest.SeatingDetails("sectionA", 100, 50, true);
+        CreateEventRequest.SeatingDetails seats2 = new CreateEventRequest.SeatingDetails("sectionB", 50, (float)50.5, true);
+
+        List<CreateEventRequest.SeatingDetails> seats = new ArrayList<CreateEventRequest.SeatingDetails>();
+        seats.add(seats1);
+        seats.add(seats2);
+
+        SerializedLocation location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
+
+        Set<String> admins = new HashSet<>();
+        admins.add(id);
+
+        Set<String> categories = new HashSet<>();
+        categories.add("testcategory");
+
+        Set<String> tags = new HashSet<>();
+        tags.add("testtags");
+
+        var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
+                , "2031-12-03T10:15:30",
+                "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+        var session1 = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.eventView(session1, Map.of("event_id", event_id)));
+        var session2 = TestHelper.rollbackMakeSession(model, session1);
+        controller.editEvent(session2, new EditEventRequest(event_id, authTokenString, null, null, null, null,
+                null, null, null, null, null, null, true));
+        var session3 = TestHelper.commitMakeSession(model, session2);
+        assertDoesNotThrow(() -> controller.eventView(session3, Map.of("event_id", event_id)));
     }
 }

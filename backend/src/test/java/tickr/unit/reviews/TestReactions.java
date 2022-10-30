@@ -13,6 +13,7 @@ import tickr.application.serialised.combined.ReviewCreate;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.ReactRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.MockUnitPurchaseAPI;
@@ -78,6 +79,10 @@ public class TestReactions {
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(hostToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null, null,
+                null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(

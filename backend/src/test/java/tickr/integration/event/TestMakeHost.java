@@ -17,6 +17,7 @@ import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.TickrController;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
@@ -72,6 +73,10 @@ public class TestMakeHost {
                 .build(authToken));
         assertEquals(200, response.getStatus());
         eventId = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
     }
 
     @AfterEach

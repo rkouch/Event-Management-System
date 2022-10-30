@@ -14,6 +14,7 @@ import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.TicketReservation;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -64,6 +65,10 @@ public class TestTicketReserve {
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
     }
 
@@ -157,6 +162,14 @@ public class TestTicketReserve {
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
                         List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(1000000))))));
+
+        session = TestHelper.rollbackMakeSession(model, session);
+        var newEventId = controller.createEvent(session, new CreateEventReqBuilder()
+                        .withSeatingDetails(List.of(new CreateEventRequest.SeatingDetails("test_section", 10, 1.0f, true)))
+                .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session, new TicketReserve.Request(authToken, newEventId, startTime,
+                List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))));
     }
 
     @Test
