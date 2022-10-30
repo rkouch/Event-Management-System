@@ -15,8 +15,10 @@ import TabPanel from '@mui/lab/TabPanel';
 import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
 import EventCardsBar from '../Components/EventCardsBar';
-import { apiFetch } from '../Helpers';
+import { apiFetch, loggedIn } from '../Helpers';
 import UpcomingEvents from '../Components/UpcomingEvents';
+import UserBookings from '../Components/UserBookings';
+import UserHosting from '../Components/UserHosting';
 
 
 const CardsBar = styled(Box)({
@@ -76,53 +78,9 @@ export default function Landing({}) {
           </h1>
         </CentredBox>
         <br/>
-        <Section>
-          <TabContext value={value}>
-            <SectionHeading>
-              Hosting Events
-              <Divider orientation="vertical" variant="middle" flexItem/>
-              <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
-                <Tabs
-                  onChange={handleChange}
-                  textColor="secondary"
-                  indicatorColor="secondary"
-                  scrollButtons
-                  value={value}
-                  >
-                  <Tab label="Category One" value="1" />
-                  <Tab label="Category Two" value="2" />
-                  <Tab label="Category Three" value="3" />
-                </Tabs>
-              </Box>
-              <Box
-                sx={{
-                  width: 'auto',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'flex-end',
-                  paddingBottom: '6px',
-                  flexGrow: '4',
-                }}
-              >
-                <Button color='secondary'>
-                  see all
-                </Button>
-              </Box>
-            </SectionHeading>
-            <TabPanel value="1" sx={{padding: 0}}>
-              <EventCardsBar event_ids={['c782761a-3a5f-4788-91d3-d2bc5fabff6d']}/>
-            </TabPanel>
-            <TabPanel value="2" sx={{padding: 0}}>
-              <EventCardsBar event_ids={['c782761a-3a5f-4788-91d3-d2bc5fabff6d']}/>
-            </TabPanel>
-            <TabPanel value="3" sx={{padding: 0}}>
-              <EventCardsBar />
-            </TabPanel>
-          </TabContext>
-        </Section>
-        <br />
-        <br />
-        <br />
+        
+        <UserHosting/>
+        <UserBookings/>
         <UpcomingEvents/>
         <br />
         <br />

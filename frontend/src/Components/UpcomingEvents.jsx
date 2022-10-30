@@ -74,7 +74,7 @@ export default function UpcomingEvents({}) {
       }
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/home?${searchParams}`, null)
-      console.log(response)
+      // console.log(response)
       if (pageStart === 0) {
         setEvents(response.eventIds)
         setEventNum(response.eventIds.length)
@@ -102,49 +102,54 @@ export default function UpcomingEvents({}) {
   }, [])
 
   return (
-    <Section>
-      <TabContext value={upcomingValue}>
-        <SectionHeading>
-          Upcoming Events
-          <Divider orientation="vertical" variant="middle" flexItem/>
-          <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
-            <Tabs
-              onChange={upcomingChange}
-              textColor="secondary"
-              indicatorColor="secondary"
-              scrollButtons
-              value={upcomingValue}
-              >
-              <Tab label="This Week" value="1" />
-              <Tab label="This Month" value="2" />
-              <Tab label="This Year" value="3" />
-            </Tabs>
-          </Box>
-          <Box
-            sx={{
-              width: 'auto',
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'flex-end',
-              paddingBottom: '6px',
-              flexGrow: '4'
-            }}
-          >
-            <Button color='secondary'>
-              see all
-            </Button>
-          </Box>
-        </SectionHeading>
-        <TabPanel value="1" sx={{padding: 0}}>
-          <EventCardsBar event_ids={weekEvents}/>
-        </TabPanel>
-        <TabPanel value="2" sx={{padding: 0}}>
-          <EventCardsBar event_ids={monthEvents}/>
-        </TabPanel>
-        <TabPanel value="3" sx={{padding: 0}}>
-          <EventCardsBar event_ids={yearEvents}/>
-        </TabPanel>
-      </TabContext>
-    </Section>
+    <>
+      {!(yearEvents === 0)
+        ? <Section sx={{pt: 13}}>
+            <TabContext value={upcomingValue}>
+              <SectionHeading>
+                Upcoming Events
+                <Divider orientation="vertical" variant="middle" flexItem/>
+                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                  <Tabs
+                    onChange={upcomingChange}
+                    textColor="secondary"
+                    indicatorColor="secondary"
+                    scrollButtons
+                    value={upcomingValue}
+                    >
+                    <Tab label="This Week" value="1" />
+                    <Tab label="This Month" value="2" />
+                    <Tab label="This Year" value="3" />
+                  </Tabs>
+                </Box>
+                <Box
+                  sx={{
+                    width: 'auto',
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    justifyContent: 'flex-end',
+                    paddingBottom: '6px',
+                    flexGrow: '4'
+                  }}
+                >
+                  <Button color='secondary'>
+                    see all
+                  </Button>
+                </Box>
+              </SectionHeading>
+              <TabPanel value="1" sx={{padding: 0}}>
+                <EventCardsBar event_ids={weekEvents}/>
+              </TabPanel>
+              <TabPanel value="2" sx={{padding: 0}}>
+                <EventCardsBar event_ids={monthEvents}/>
+              </TabPanel>
+              <TabPanel value="3" sx={{padding: 0}}>
+                <EventCardsBar event_ids={yearEvents}/>
+              </TabPanel>
+            </TabContext>
+          </Section>
+        : <></>
+      }
+    </>
   )
 }

@@ -25,7 +25,7 @@ const CardsBar = styled(Box)({
   fontWeight: 'light',
   display: 'flex',
   justifyContent: 'flex-start',
-  gap: '15px',
+  gap: 20,
   flexWrap: 'nowrap'
 })
 
@@ -34,6 +34,7 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
 
   React.useEffect(() => {
     setEventIds(event_ids)
+    console.log('new events list')
   }, [event_ids])
   // const paramsObj = {
   //   page_start: 0,
@@ -55,12 +56,14 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
   // }, [])
 
   return (
-    <CardsBar>
-      {eventIds.map((value, key) => {
-        return (
-          <EventCard key={key} event_id={value}/>
-        )
-      })}
-    </CardsBar>
+    <Box sx={{display: 'flex', width: '100%', justifyContent: 'center', backgroundColor: '#F6F6F6',}}>
+      <CardsBar>
+        {eventIds.map((value, key) => {
+          return (
+            <EventCard key={key} event_id={value}/>
+          )
+        })}
+      </CardsBar>
+    </Box>
   )
 }
