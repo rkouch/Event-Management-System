@@ -13,6 +13,7 @@ import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.AnnouncementRequest;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockUnitPurchaseAPI;
@@ -85,6 +86,9 @@ public class TestAnnouncement {
                 .withEventName("Test Event Name")
                 .build(hostToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null,
+                null, null, null, null, null, null, null, true));
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),
