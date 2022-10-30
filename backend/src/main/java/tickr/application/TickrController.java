@@ -1011,7 +1011,74 @@ public class TickrController {
         if (pageStart < 0 || maxResults <= 0) {
             throw new BadRequestException("Invalid paging values!");
         }
-        return new CustomerEventsResponse(user.getBookings(pageStart, maxResults));
+        var bookings = user.getBookings();
+        var numResults = new AtomicInteger();
+        var paginatedBookings = bookings.stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .collect(Collectors.toList());
+        return new CustomerEventsResponse(paginatedBookings, numResults.get());
+    }
+
+    public EventHostingFutureResponse eventHostingFuture (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = session.getByUnique(User.class, "email", params.get("email"))
+                .orElseThrow(() -> new ForbiddenException("Invalid email!"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(e -> e.getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC"))))
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new EventHostingFutureResponse(eventIds, numResults.get());
+    }
+    
+    public EventHostingPastResponse eventHostingPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("email")) {
+            throw new BadRequestException("Missing email!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = session.getByUnique(User.class, "email", params.get("email"))
+                .orElseThrow(() -> new ForbiddenException("Invalid email!"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(e -> e.getEventStart().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new EventHostingPastResponse(eventIds, numResults.get());
     }
     
     public void commentReact (ModelSession session, ReactRequest request) {
