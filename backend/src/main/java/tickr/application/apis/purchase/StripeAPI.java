@@ -113,6 +113,7 @@ public class StripeAPI implements IPurchaseAPI {
 
         @Override
         public IOrderBuilder withUrls (String successUrl, String cancelUrl) {
+            cancelUrl = String.format("http://localhost:8080/api/payment/cancel?url=%s&order_id=%s", cancelUrl, orderId);
             logger.debug("Setting redirect urls: {}, {}!", successUrl, cancelUrl);
             paramsBuilder = paramsBuilder.setSuccessUrl(successUrl).setCancelUrl(cancelUrl);
             return this;
