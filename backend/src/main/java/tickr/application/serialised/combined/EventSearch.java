@@ -33,8 +33,8 @@ public class EventSearch {
 
         public Options (SerializedLocation location, LocalDateTime startTime, LocalDateTime endTime, List<String> tags, List<String> categories, String text) {
             this.location = location;
-            this.startTime = startTime.format(DateTimeFormatter.ISO_DATE_TIME);
-            this.endTime = endTime.format(DateTimeFormatter.ISO_DATE_TIME);
+            this.startTime = startTime != null ? startTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
+            this.endTime = endTime != null ? endTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
             this.tags = tags;
             this.categories = categories;
             this.text = text;

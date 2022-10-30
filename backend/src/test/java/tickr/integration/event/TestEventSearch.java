@@ -15,6 +15,8 @@ import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -57,6 +59,33 @@ public class TestEventSearch {
         searchResponse = makeSearch(0, 100, null);
         assertEquals(1, searchResponse.numResults);
         assertEquals(eventId, searchResponse.eventIds.get(0));
+    }
+
+    @Test
+    public void testSearchOptions () {
+        var response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+                .withTags(Set.of("test1", "test2")).build(authToken));
+        assertEquals(200, response.getStatus());
+        var e1 = response.getBody(CreateEventResponse.class).event_id;
+
+        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+                .withDescription("pizza apples").build(authToken));
+        assertEquals(200, response.getStatus());
+        var e2 = response.getBody(CreateEventResponse.class).event_id;
+
+        var ids = makeSearch(0, 100,
+                new EventSearch.Options(null, null, null, List.of("test1"), null, null)).eventIds;
+        assertEquals(1, ids.size());
+        assertEquals(e1, ids.get(0));
+
+        ids = makeSearch(0, 100,
+                new EventSearch.Options(null, null, null, null, null, "aPpLeS pears")).eventIds;
+        assertEquals(1, ids.size());
+        assertEquals(e2, ids.get(0));
+
+        ids = makeSearch(0, 100,
+                new EventSearch.Options(null, null, null, null, null, "money money money")).eventIds;
+        assertEquals(0, ids.size());
     }
 
 

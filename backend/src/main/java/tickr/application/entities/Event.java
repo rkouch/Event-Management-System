@@ -2,6 +2,7 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
@@ -14,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.util.Utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -465,5 +467,36 @@ public class Event {
         if (eventPicture != null) {
             FileHelper.deleteFileAtUrl(eventPicture);
         }
+    }
+
+    public boolean matchesCategories (List<String> categories) {
+        return categories.size() == 0 || getCategories().stream()
+                .map(Category::getCategory)
+                .anyMatch(categories::contains);
+    }
+
+    public boolean matchesTags (List<String> tags) {
+        return tags.size() == 0 || getTags().stream()
+                .map(Tag::getTags)
+                .anyMatch(tags::contains);
+    }
+
+    public boolean startsAfter (LocalDateTime startTime) {
+        return startTime == null || getEventStart().isAfter(startTime) || getEventStart().isEqual(startTime);
+    }
+
+    public boolean endsBefore (LocalDateTime endTime) {
+        return endTime == null || getEventEnd().isBefore(endTime) || getEventEnd().isEqual(endTime);
+    }
+
+    public boolean matchesDescription (Set<String> words) {
+        if (words.size() == 0) {
+            return true;
+        }
+        var wordList = new HashSet<String>();
+        wordList.addAll(Utils.toWords(getEventName()));
+        wordList.addAll(Utils.toWords(getEventDescription()));
+
+        return !Collections.disjoint(words, wordList);
     }
 }

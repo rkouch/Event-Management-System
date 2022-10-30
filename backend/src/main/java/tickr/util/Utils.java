@@ -1,6 +1,11 @@
 package tickr.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Utils {
     // From https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
@@ -11,5 +16,13 @@ public class Utils {
 
     public static boolean isValidEmail (String email) {
         return EMAIL_REGEX.matcher(email.toLowerCase().trim()).matches();
+    }
+
+    public static Set<String> toWords (String text) {
+        if (text == null) {
+            return new HashSet<>();
+        }
+        return Arrays.stream(text.replaceAll("\\p{P}", "").toLowerCase(Locale.ROOT)
+                .split("\\s")).collect(Collectors.toSet());
     }
 }
