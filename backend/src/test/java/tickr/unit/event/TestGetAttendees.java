@@ -152,7 +152,7 @@ public class TestGetAttendees {
     public void testExceptions() {
         assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("event_id", eventId)).getAttendees());
         assertThrows(BadRequestException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken)).getAttendees());
-        assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
+        // assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
         assertThrows(ForbiddenException.class, () -> controller.GetEventAttendees(session, Map.of("auth_token", authToken2, "event_id", eventId)));
     }
 }
