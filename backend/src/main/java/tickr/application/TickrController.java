@@ -907,6 +907,7 @@ public class TickrController {
 
         var eventIds = events.stream()
             .filter(e -> e.getEventStart().isBefore(beforeDate))
+            .filter(e -> e.isPublished())
             .peek(i -> numResults.incrementAndGet())
             .sorted(Comparator.comparing(Event::getEventStart))
             .skip(pageStart)

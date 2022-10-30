@@ -22,7 +22,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
-import { TkrButton, TkrButton2 } from "../Styles/InputStyles";
+import { ContrastInputNoOutline, ContrastInputWrapper, TkrButton, TkrButton2 } from "../Styles/InputStyles";
 import EventReview from "../Components/EventReview";
 
 export const EventForm = styled("div")({
@@ -40,7 +40,9 @@ export const EventForm = styled("div")({
 
 export default function ViewEvent({}) {
   var calendar = require('dayjs/plugin/calendar')
+  var utc = require('dayjs/plugin/utc')
   dayjs.extend(calendar)
+  dayjs.extend(utc)
   const params = useParams()
   const navigate = useNavigate()
   const [editable, setEditable] = React.useState(false)
@@ -48,6 +50,8 @@ export default function ViewEvent({}) {
   const [soldOut, setSoldOut] = React.useState(false)
   const [isAttendee, setIsAttendee] = React.useState(false)
   const [ticketIds, setTicketIds] = React.useState([])
+  const [announcement, setAnnouncement] = React.useState('')
+
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -67,6 +71,11 @@ export default function ViewEvent({}) {
     picture: "",
     host_id: ''
   })
+
+  // Handle new announced
+  const handleAnnouncement = (e) => {
+    setAnnouncement(e.target.value)
+  }
 
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
@@ -183,24 +192,30 @@ export default function ViewEvent({}) {
                               <Chip sx={{color: alpha('#6A7B8A', 0.7)}} label="Event Passed"/>
                             </CentredBox>
                           </Box>
-                        : <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-                            <Typography
-                              sx={{
-                                fontSize: 40,
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {event.event_name}
-                            </Typography>
-                            {(editable)
-                              ? <Tooltip title="Edit Event">
-                                  <IconButton onClick={goEdit}>
-                                    <EditIcon/>
-                                  </IconButton>
-                                </Tooltip>
-                              : <></>
-                            }
-                          </Box>
+                        : <Grid container spacing={2}>
+                            <Grid item xs={10}>
+                              <Typography
+                                sx={{
+                                  fontSize: 40,
+                                  fontWeight: 'bold',
+                                }}
+                              >
+                                {event.event_name}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                              {(editable)
+                                ? <Box sx={{display: 'flex', height: '100%', alignItems: 'center'}}>
+                                    <Tooltip title="Edit Event">
+                                      <IconButton onClick={goEdit}>
+                                        <EditIcon/>
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                : <></>
+                              }
+                            </Grid>
+                          </Grid> 
                       }
                     </Grid>
                     <Grid item xs={12}>
@@ -217,7 +232,7 @@ export default function ViewEvent({}) {
                               color: "#AE759F",
                             }}
                           >
-                            {dayjs(event.start_date).format('LLLL')} - {dayjs(event.end_date).format('LLLL')}
+                            {dayjs(event.start_date).local().format('LLLL')} - {dayjs(event.end_date).local().format('LLLL')}
                           </Typography>
                         </Grid>
                       </Grid>
@@ -367,6 +382,30 @@ export default function ViewEvent({}) {
                       </Box>
                   }
                   <br/>
+                  <br/>
+                  {editable
+                    ? <Box>
+                        <Typography
+                          sx={{
+                            color: "#999999"
+                          }}
+                        >
+                          Make an announcement
+                        </Typography>
+                        <Divider/>
+                        <ContrastInputWrapper sx={{mt: 2}}>
+                          <ContrastInputNoOutline
+                            multiline
+                            placeholder={'Enter an announcement'}
+                            rows={4}
+                            fullWidth
+                          >
+                          </ContrastInputNoOutline>
+                        </ContrastInputWrapper>
+                      </Box>
+                    : <></>
+
+                  }
                 </Grid>
               </Grid>
             </EventForm>

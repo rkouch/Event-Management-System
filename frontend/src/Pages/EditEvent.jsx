@@ -173,35 +173,43 @@ export default function EditEvent({}) {
 
   // Set Values
   React.useEffect(() => {
-    console.log(event)
-    setFieldInState('value', event.event_name, eventName, setEventName)
-    setFieldInState('value', event.description, description, setDescription)
-    const eventLocation = event.location
-    setFieldInState('value', eventLocation.street_no.toString() + ' ' + eventLocation.street_name, address, setAddress)
-    setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
-    setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
-    setFieldInState('value', eventLocation.state, state, setState)
-    setFieldInState('value', eventLocation.country, country, setCountry)
-    setAdminList(event.admins)
-    setTags(event.tags)
-    setFieldInState('start', dayjs(event.start_date), start, setStartValue)
-    setFieldInState('end', dayjs(event.end_date), end, setEndValue)
-    setEventPicture(event.picture)
-    setPublished(event.published)
+    try {
+      console.log(event)
+      setFieldInState('value', event.event_name, eventName, setEventName)
+      setFieldInState('value', event.description, description, setDescription)
+      const eventLocation = event.location
+      setFieldInState('value', eventLocation.street_no.toString() + ' ' + eventLocation.street_name, address, setAddress)
+      setFieldInState('value', eventLocation.postcode, postcode, setPostcode)
+      setFieldInState('value', eventLocation.suburb, suburb, setSuburb)
+      setFieldInState('value', eventLocation.state, state, setState)
+      setFieldInState('value', eventLocation.country, country, setCountry)
+      setAdminList(event.admins)
+      setTags(event.tags)
 
-    const currentSeatingDetails = []
-    for (const i in event.seating_details) {
-      const section = event.seating_details[i]
-      console.log(section)
-      section['availability'] = section.total_seats
-      currentSeatingDetails.push(section)
+
+
+      setFieldInState('start', dayjs(event.start_date).local().format(), start, setStartValue)
+      setFieldInState('end', dayjs(event.end_date).utc().local().format(), end, setEndValue)
+      setEventPicture(event.picture)
+      setPublished(event.published)
+
+      const currentSeatingDetails = []
+      for (const i in event.seating_details) {
+        const section = event.seating_details[i]
+        console.log(section)
+        section['availability'] = section.total_seats
+        currentSeatingDetails.push(section)
+      }
+      console.log(currentSeatingDetails)
+      setSeatingList(currentSeatingDetails)
+      // setPublished(response.published)
+
+      // Set if it is the host who is logged in
+      checkIfUser(event.host_id, setIsHost)
+    } catch (e) {
+      console.log(e)
     }
-    console.log(currentSeatingDetails)
-    setSeatingList(currentSeatingDetails)
-    // setPublished(response.published)
-
-    // Set if it is the host who is logged in
-    checkIfUser(event.host_id, setIsHost)
+    
   }, [event])
 
 
@@ -452,6 +460,12 @@ export default function EditEvent({}) {
       longitude: '',
       latitude: ''
     };
+    
+    console.log('startDate before conversion')
+    console.log(start.start)
+    console.log('startDate after conversion')
+    const start_date_t = dayjs(start.start).utc().toISOString()
+    console.log(start_date_t)
 
     const body = {
       auth_token: getToken(),
@@ -459,8 +473,8 @@ export default function EditEvent({}) {
       event_name: eventName.value,
       picture: newPhoto ? eventPicture : null,
       location: locationBody,
-      start_date: start.start.toISOString(),
-      end_date: end.end.toISOString(),
+      start_date: start_date_t,
+      end_date: dayjs(end.end).utc(),
       description: description.value,
       seating_details: seatingList,
       categories: [],
@@ -469,8 +483,7 @@ export default function EditEvent({}) {
       published:published,
     };
 
-    
-
+  
     try {
       const response = await apiFetch('PUT', '/api/event/edit', body)
       console.log(response)
@@ -714,11 +727,6 @@ export default function EditEvent({}) {
                                 inputFormat="DD/MM/YYYY HH:mm"
                                 renderInput={(params) => <TextField {...params} />}
                                 disablePast = {true}
-                                sx={{
-                                  '.MuiOutlinedInput-notchedOutline': {
-                                    borderColor: country.error ? "red" : "rgba(0,0,0,0)"
-                                  },
-                                }}
                               />
                             </ContrastInputWrapper>
                           </FormControl>

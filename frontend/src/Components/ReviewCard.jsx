@@ -1,4 +1,4 @@
-import { Button, Collapse, Grid, IconButton, Typography } from '@mui/material'
+import { Button, Collapse, Divider, Grid, IconButton, Typography } from '@mui/material'
 import { Box, alpha } from '@mui/system'
 import React from 'react'
 import UserAvatar from './UserAvatar'
@@ -18,7 +18,7 @@ import ReactBar from './ReactBar';
 import ReactionsList from './ReactionsList';
 import { useParams } from 'react-router-dom';
 
-export default function ReviewCard({review_details, review_num}) {
+export default function ReviewCard({review_details, review_num, isAttendee}) {
   const params = useParams()
   const [review, setReview] = React.useState(review_details)
   const [reactBar, setReactBar] = React.useState(false)
@@ -28,11 +28,11 @@ export default function ReviewCard({review_details, review_num}) {
   const [replyCount, setReplyCount] = React.useState(0)
   const [repliesLoading, setRepliesLoading] = React.useState(false)
   const [isReviewer, setIsReviewer] = React.useState(false)
+  const [moreReplies, setMoreReplies] = React.useState(false)
 
   const checkIfUser = async () => {
     const profile_response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
     const user_response = await apiFetch('GET',`/api/user/search?email=${profile_response.email}`)
-    console.log(review.authorId === user_response.user_id)
     setIsReviewer(review.authorId === user_response.user_id)
   }
   
@@ -102,17 +102,24 @@ export default function ReviewCard({review_details, review_num}) {
       reply: reply
     }
     
+    // Fetch the new reply to be displayed
     try {
       const response = await apiFetch('POST', '/api/event/review/reply', body)
       setReply('')
-      fetchReplies(0, 10)
+      fetchReplies(0, replyCount+1)
+      setTimeout(showReplyInput, 250)
     } catch (e) {
       console.log(e)
     }
   }
 
+  // Function to handle more replies
+  const handleMoreReplies = () => {
+    fetchReplies(replyCount, 10)
+  }
+
   // Function to fetch replies
-  const fetchReplies = async (pageStart, maxResults) => {
+  const fetchReplies = async (pageStart, maxResults, afterReply=false) => {
     var loggedInId = ''
     // Get the id of the user logged in
     if (loggedIn()) {
@@ -130,6 +137,7 @@ export default function ReviewCard({review_details, review_num}) {
     const searchParams = new URLSearchParams(body)
     try {
       const response = await apiFetch('GET', `/api/event/reviews/replies?${searchParams}`, null) 
+      console.log(response)
       if (response.replies.length > 0) {
         setRepliesLoading(true)
       }
@@ -140,11 +148,18 @@ export default function ReviewCard({review_details, review_num}) {
       if (pageStart === 0) {
         setRepliesLoading(false)
         setReplies(response.replies.reverse())
-        setReplyCount(response.num_results)
+        setReplyCount(response.replies.length)
+        setMoreReplies((response.replies.length) < response.num_results)
+        if (afterReply) {
+          setTimeout(showReplyInput, 250)
+        }
       } else {
         setRepliesLoading(false)
-        setReplies(current => [response.replies.reverser(), ...replies])
-        setReplyCount(replyCount + response.num_results)
+        response.replies.reverse()
+        const replies_t = response.replies.concat(replies)
+        setReplies(replies_t)
+        setReplyCount(replyCount + response.replies.length)
+        setMoreReplies((replyCount + response.replies.length) < response.num_results)
       }
     } catch (e) {
       console.log(e)
@@ -157,7 +172,6 @@ export default function ReviewCard({review_details, review_num}) {
       fetchReplies(0, 10)
     }
   }, [review])
-
 
   return (
     <Box>
@@ -180,7 +194,7 @@ export default function ReviewCard({review_details, review_num}) {
             </Grid>
           </Grid>
           <br/>
-          {loggedIn()
+          {(loggedIn() && isAttendee)
             ? <Grid container>
                 <Grid item xs={1}>
                   {!isReviewer
@@ -220,7 +234,7 @@ export default function ReviewCard({review_details, review_num}) {
           }
         </Box>
         <>
-          {(loggedIn())
+          {(loggedIn() && isAttendee)
             ? <Collapse in={reactBar} sx={{width: '40%', ml: 4}} onMouseLeave={closeReactBar}>
                 <Box>
                   <ReactBar comment_id={review.reviewId} onReact={onReact}/>
@@ -231,9 +245,17 @@ export default function ReviewCard({review_details, review_num}) {
         </>  
       </Box>
       <Box sx={{mr: 10, ml: 10, pt: 2, display: 'flex', gap: 2, flexDirection: 'column'}}>
+        {moreReplies
+          ? <Divider sx={{width: '60%', ml: 'auto', mr: 'auto'}} flexItem>
+              <Button sx={{textTransform: 'none', color: '#CCCCCC'}} onClick={handleMoreReplies}>
+                More Replies
+              </Button>
+            </Divider>
+          : <></>
+        }
         {repliesLoading
           ? <CentredBox> <CircularProgress sx={{color: '#AE759F'}}/> </CentredBox>
-          : <ReviewReplies replies={replies} review_id={review.reviewId}/>
+          : <ReviewReplies replies={replies} review_id={review.reviewId} isAttendee={isAttendee}/>
         }
         <Collapse in={showReply}>
           <Box sx={{display: 'flex', justifyContent: 'flex-end'}} ref={replyRef}>
