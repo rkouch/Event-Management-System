@@ -521,7 +521,7 @@ public class Event {
 
         for (var i : tickets) {
             if (!seen.contains(i.getUser().getId())) {
-                EmailHelper.sendAnnouncement(i.getUser(), this, announcement);
+                EmailHelper.sendAnnouncement(user, i.getUser(), this, announcement);
                 seen.add(i.getUser().getId());
             }
         }
