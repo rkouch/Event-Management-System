@@ -106,5 +106,8 @@ public class TicketReservation {
         this.section = section;
     }
 
+    public boolean canCancel (User user) {
+        return this.user.getId().equals(user.getId()) && purchaseItem == null;
+    }
     
 }

@@ -91,6 +91,7 @@ public class Server {
         get("/api/event/hosting", TickrController::eventHostings);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
         get("/api/event/reserved", TickrController::eventReservedSeats);
+        delete("/api/ticket/reserve/cancel", TickrController::reservationCancel, ReserveCancelRequest.class);
 
         get("/api/home", TickrController::userEvents);
         get("/api/user/bookings", TickrController::customerBookings);

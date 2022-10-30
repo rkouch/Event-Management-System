@@ -686,6 +686,22 @@ public class TickrController {
         return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)));
     }
 
+    public void reservationCancel (ModelSession session, ReserveCancelRequest request) {
+        var user = authenticateToken(session, request.authToken);
+        if (request.reservations.size() == 0) {
+            throw new BadRequestException("Empty reservations!");
+        }
+
+        for (var i : request.reservations) {
+            var entity = session.getById(TicketReservation.class, parseUUID(i))
+                    .orElseThrow(() -> new ForbiddenException("Invalid ticket reservation!"));
+            if (!entity.canCancel(user)) {
+                throw new ForbiddenException("Unable to cancel reservation!");
+            }
+            session.remove(entity);
+        }
+    }
+
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.info("Ticket purchase {} success!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
