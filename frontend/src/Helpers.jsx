@@ -131,6 +131,7 @@ export const getEventData = async (eventId, setEventData=null) => {
     setEventData(response)
   } catch (error) {
     console.log(error)
+    throw(error)
   }
 }
 
