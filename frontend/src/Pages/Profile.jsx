@@ -25,6 +25,7 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { borderRadius, styled, alpha } from '@mui/system';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import LoadingButton from '../Components/LoadingButton';
+import HostEvents from '../Components/HostEvents';
 
 export default function Profile({editable=false}){
   const params = useParams()
@@ -473,6 +474,15 @@ export default function Profile({editable=false}){
                   }
                 </Grid>
                 <Grid item xs={2}></Grid>
+                <Grid item xs={4}></Grid>
+                <Grid item xs={6}>
+                  <br/>
+                  <Typography>
+                    Hosted/Hosting Events
+                  </Typography>
+                  <Divider/>
+                  <HostEvents userDetails={profile}/>
+                </Grid>
               </Grid>
           }
         </Box>
