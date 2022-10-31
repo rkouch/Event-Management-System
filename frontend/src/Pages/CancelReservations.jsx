@@ -24,6 +24,10 @@ export default function CancelReservations({ticketOrder}){
     }
   }
 
+  React.useEffect(() => {
+    cancelReservations()
+  })
+
   return (
     <BackdropNoBG>
       <Header/>
