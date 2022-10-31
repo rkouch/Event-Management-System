@@ -37,7 +37,7 @@ export default function EventCard({event_id}) {
   React.useEffect(() => {
     try {
       getEventData(event_id, setEvent)
-      setSuccessLoad(ture)
+      setSuccessLoad(true)
     } catch(e) {
       console.log(e)
     }
