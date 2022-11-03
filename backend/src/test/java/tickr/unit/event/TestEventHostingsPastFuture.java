@@ -131,4 +131,64 @@ public class TestEventHostingsPastFuture {
         assertEquals(2, events.eventIds.size());
         assertEquals(2, events.numResults);
     }
+
+    @Test 
+    public void testExceptions() {
+        int pageStart = 0;
+        int maxResults = 10;
+        assertThrows(BadRequestException.class, () -> controller.eventHostingPast(session, Map.of(
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingPast(session, Map.of(
+            "email", email, 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingPast(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(pageStart)
+        )));
+        assertThrows(ForbiddenException.class, () -> controller.eventHostingPast(session, Map.of(
+            "email", UUID.randomUUID().toString(), 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingPast(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(-1), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingPast(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(-1)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "email", email, 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(pageStart)
+        )));
+        assertThrows(ForbiddenException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "email", UUID.randomUUID().toString(), 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(-1), 
+            "max_results", Integer.toString(maxResults)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.eventHostingFuture(session, Map.of(
+            "email", email, 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(-1)
+        )));
+    }
 }
