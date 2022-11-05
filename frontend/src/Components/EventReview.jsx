@@ -27,11 +27,19 @@ export default function EventReview({isAttendee, event_id}) {
   const [reviewNum, setReviewNum] = React.useState(0)
   const [moreReviews, setMoreReviews] = React.useState(false)
 
+  const [userId, setUserId] = React.useState(null)
+
   // Fetch Reviews
   React.useEffect(() => {
+    getUserId()
     fetchReviews(0, 10)
   }, [])
 
+  const getUserId = async () => {
+    const profile_response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
+    const user_response = await apiFetch('GET',`/api/user/search?email=${profile_response.email}`)
+    setUserId(user_response.user_id)
+  }
 
   // On initial review fetch, scroll to bottom
   React.useEffect(() => {
@@ -52,6 +60,7 @@ export default function EventReview({isAttendee, event_id}) {
 
   // Async function to request for reviews
   const fetchReviews = async (pageStart, maxResults) => {
+    console.log('Fetching reviews')
     try {
       const params = {
         event_id: event_id,
@@ -72,6 +81,14 @@ export default function EventReview({isAttendee, event_id}) {
     } catch (e) {
       setInitFectch(true)
     }
+  }
+  // Handle for when a review is removed
+  const handleRemoveReview = (index) => {
+    console.log('Removing review')
+    const reviews_t = reviews.splice(index, 1)
+    const reviewToRemove = reviews_t.splice(index, 1)
+    console.log(reviewToRemove)
+    setReviews(reviews_t)
   }
 
   // Handle posting of review
@@ -123,21 +140,24 @@ export default function EventReview({isAttendee, event_id}) {
         </Typography>
       </Divider>
       <br/>
-      <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 3, maxHeight: 1000}} id='reviews'>
-        {moreReviews
-          ? <Divider>
-              <Button sx={{textTransform: 'none', color: '#CCCCCC'}} variant='text'>
-                More Reviews
-              </Button>
-            </Divider>
-          : <></>
-        }
-        {reviews.map((review, key) => {
-          return (
-            <ReviewCard key={key} review_details={review} review_num={reviews.length-key-1} isAttendee={isAttendee}/>
-          )
-        })}
-      </ScrollableBox>
+      {(userId !== null)
+        ? <ScrollableBox sx={{display: 'flex', justifyContent: 'flex-start', ml: 15, mr:15, flexDirection: 'column', gap: 3, maxHeight: 1000}} id='reviews'>
+            {moreReviews
+              ? <Divider>
+                  <Button sx={{textTransform: 'none', color: '#CCCCCC'}} variant='text'>
+                    More Reviews
+                  </Button>
+                </Divider>
+              : <></>
+            }
+            {reviews.map((review, key) => {
+              return (
+                <ReviewCard key={key} review_details={review} review_num={reviews.length-key-1} isAttendee={isAttendee} isReviewer={review.authorId ===  userId} handleRemoveReview={handleRemoveReview} index={key}/>
+              )
+            })}
+          </ScrollableBox>
+        : <></>
+      }
       {isAttendee
         ? <>
             <br/>

@@ -1,12 +1,12 @@
 import React from 'react'
 import Box from '@mui/material/Box';
 import Header from '../Components/Header'
-import { Backdrop, BackdropNoBG, CentredBox, ContentBox } from '../Styles/HelperStyles';
+import { Backdrop, BackdropNoBG, CentredBox, ContentBox, ScrollableBox } from '../Styles/HelperStyles';
 import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
 import Header2 from '../Components/Header2';
-import { Container, Divider } from '@mui/material';
+import { Container, Divider, Typography } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import TabContext from '@mui/lab/TabContext';
@@ -62,29 +62,47 @@ export default function Landing({}) {
     setValue(newValue)
   }
 
+
   return (
-    <div>
-      <BackdropNoBG
-      >
+    <Box sx={{overflow: 'hidden'}}>
+      <BackdropNoBG>
         <Header/>
-        <CentredBox
-          sx={{
-            height: 200,
-            backgroundColor: "#F1F9F9"
-          }}
-        >
-          <h1>
-            Welcome to Tickr.
-          </h1>
-        </CentredBox>
-        <UserHosting/>
-        <UserBookings/>
-        <UpcomingEvents/>
-        <br />
-        <br />
-        <br />
-        <br />
+        <ScrollableBox sx={{height: '90vh'}}>
+          <Box 
+            sx={{
+              backgroundColor: '#FFFFFF',
+              mt: 5,
+              p: 2,
+              borderRadius: 5,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              ml: 'auto',
+              mr: 'auto',
+              maxWidth: 1600,
+              width: '100%', 
+            }}
+          >
+              <Typography
+                sx={{
+                  p: 10,
+                  fontSize: 60,
+                  fontWeight: 'bold',
+                  fontFamily: 'Segoe UI',
+                  textAlign: 'center'
+                }}
+              >
+                Welcome to Tickr
+              </Typography>
+              <UpcomingEvents/>
+              <UserBookings/>
+              <UserHosting/>
+              <br/>
+              <br/>
+          </Box>
+          <br/>
+        </ScrollableBox>
       </BackdropNoBG>
-    </div>
+    </Box>
   )
 }

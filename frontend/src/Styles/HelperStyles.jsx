@@ -66,6 +66,7 @@ export const HeaderBar = styled(AppBar)({
   background: "#AFDEDC",
   position: "sticky",
   padding: '10px',
+  height: '70px'
 })
 
 export const UploadPhoto = styled(`img`)({

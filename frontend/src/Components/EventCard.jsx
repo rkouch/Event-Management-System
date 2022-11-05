@@ -65,7 +65,7 @@ export default function EventCard({event_id}) {
             onClick={handleClick}
           > 
             {(event.event_name === "")
-              ? <Stack sx={{width: '100%', height: '100%', p: 1}} spacing={1}>
+              ? <Stack sx={{width: '100%', p: 1}} spacing={1}>
                   <Skeleton variant="rounded" width={230} height={"125px"} />
                   <Skeleton variant="text" sx={{ fontSize: '2rem', width: 200}} />
                   <Skeleton variant="text" sx={{ fontSize: '1rem', width: 200 }} />
