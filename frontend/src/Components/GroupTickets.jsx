@@ -51,6 +51,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
   }
 
   const handleSelectTicket = (reserve_id) => {
+    setInfo(false)
     setShowInvite(true)
     setSelectTicket(reserve_id)
     setInvites([])
@@ -76,7 +77,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
           </Tooltip>
         </Box>
         <Collapse in={info}>
-          <Box sx={{p: 1, backgroundColor: '#DDDDDD', borderRadius: 5, mb: 1}}>
+          <Box sx={{p: 3, backgroundColor: '#DDDDDD', borderRadius: 5, mb: 1}}>
             <Typography
               sx={{
                 fontFamily: "Segoe UI",
