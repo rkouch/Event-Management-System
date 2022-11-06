@@ -1,7 +1,7 @@
 import React from 'react'
 import Box from '@mui/material/Box';
 import Header from '../Components/Header'
-import { Backdrop, BackdropNoBG, CentredBox, ContentBox, ScrollableBox } from '../Styles/HelperStyles';
+import { Backdrop, BackdropNoBG_VH, CentredBox, ContentBox, ScrollableBox } from '../Styles/HelperStyles';
 import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
@@ -65,14 +65,13 @@ export default function Landing({}) {
 
   return (
     <Box sx={{overflow: 'hidden'}}>
-      <BackdropNoBG>
+      <BackdropNoBG_VH>
         <Header/>
-        <ScrollableBox sx={{height: '90vh'}}>
+        <ScrollableBox sx={{height: 'calc(100vh - 70px)'}}>
           <Box 
             sx={{
               backgroundColor: '#FFFFFF',
               mt: 5,
-              p: 2,
               borderRadius: 5,
               display: 'flex',
               flexDirection: 'column',
@@ -102,7 +101,7 @@ export default function Landing({}) {
           </Box>
           <br/>
         </ScrollableBox>
-      </BackdropNoBG>
+      </BackdropNoBG_VH>
     </Box>
   )
 }

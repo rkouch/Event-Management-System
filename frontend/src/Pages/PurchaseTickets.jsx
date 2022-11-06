@@ -4,7 +4,7 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, sortSection } from "../Helpers";
+import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, setReservedTicketsLocal, sortSection } from "../Helpers";
 import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -14,8 +14,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { borderRadius, styled, alpha } from '@mui/system';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Switch from '@mui/material/Switch';
-import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
+import { ContrastInput, ContrastInputWrapper, TextButton2, TkrButton } from "../Styles/InputStyles";
 import SectionDetails from "../Components/SectionDetails";
+import GroupsIcon from '@mui/icons-material/Groups';
+import GroupTickets from "../Components/GroupTickets";
+import OrderDetails from "../Components/OrderDetails";
 
 
 const ExpandMore = styled((props) => {
@@ -80,6 +83,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     email: ''
   })
 
+  const [groupTicketBuy, setGroupTicketBuy] = React.useState(false)
+
 
   // Get section details and available seats
   const getSectionDetails = async () => {
@@ -142,7 +147,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const param2 = new URLSearchParams(body2)
       const response2 = await apiFetch('GET', `/api/event/reserved?${param2}`, null)
       const reserved = response2.reserved
-      console.log(reserved)
+
       // Sort through tickets bought and attach to respective section
       sectionDetails_t.forEach(function (section) {
         reserved.forEach(function(reserve) {
@@ -271,6 +276,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       
       const reservedTickets_t = []
       setTicketOrder(response.reserve_tickets)
+      setReservedTicketsLocal(response.reserve_tickets)
+
       response.reserve_tickets.forEach((function (reserve) {
         reserve['first_name'] = ''
         reserve['last_name'] = ''
@@ -304,6 +311,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       setError(true)
       setErrorMsg(error.reason)
     }
+  }
+
+  const openGroupTicketBuy = () => {
+    setGroupTicketBuy(true)
   }
 
   React.useEffect(() => {
@@ -376,10 +387,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         console.log(error)
       }
     }
-
-    
-    
-
   }
 
   return (
@@ -448,6 +455,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                   <br/>
                   <br/>
                   <Box sx={{pl: 1, pr: 1}}>
+                    {/* Select Tickets */}
                     <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: ticketSelect ? '#FFFFFF' : '#EEEEEE'}}>
                       <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -519,6 +527,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                       </Collapse>
                     </Box>
                     <br/>
+                    {/* Enter in Order Details */}
                     <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: detailsInput ? '#FFFFFF' : '#EEEEEE'}}>
                       <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -544,108 +553,75 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         </Grid>
                       </Grid>
                       <Collapse in={detailsInput}>
-                        <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
-                          <br/>
-                          {/* Custom Name Seating */}
-                          <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
-                                <FormGroup >
-                                  <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
-                                </FormGroup>
-                              </Box>  
-                            </Grid>
-                          </Grid>
-                          {customNames
-                            ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
-                                {orderDetails.map((section, key) => {
-                                  return (
-                                    <SectionDetails key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
-                                  )
-                                })}
-                              </Box>
-                            : <Grid container spacing={2}>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={4}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      fullWidth
-                                      placeholder="First Name"
-                                      value={userDetails.firstName}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('firstName', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={4}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      fullWidth
-                                      placeholder="Last Name"
-                                      value={userDetails.lastName}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('lastName', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={8}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      placeholder="Email"
-                                      fullWidth
-                                      value={userDetails.email}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('email', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={2}></Grid>
+                        <Collapse in={!groupTicketBuy}>
+                          <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
+                            <br/>
+                            {/* Custom Name Seating */}
+                            <Grid container spacing={2}>
+                              <Grid item xs={6}>
                               </Grid>
-                          }
-                          <br/>
-                          <TkrButton
-                            sx={{width: '100%'}}
-                            onClick={handlePayment}
-                            startIcon={<ShoppingCartOutlinedIcon/>}
-                          >
-                            Checkout
-                          </TkrButton>
-                          <br/>
-                          <br/>
-                          <Collapse in={error2}>
-                            <CentredBox>
-                              <Alert severity="error">{errorMsg2}</Alert>
-                            </CentredBox>
-                          </Collapse>
-                        </CentredBox>
+                              <Grid item xs={6}>
+                                <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+                                  <FormGroup >
+                                    <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
+                                  </FormGroup>
+                                </Box>  
+                              </Grid>
+                            </Grid>
+                            {customNames
+                              ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
+                                  {orderDetails.map((section, key) => {
+                                    return (
+                                      <SectionDetails key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
+                                    )
+                                  })}
+                                </Box>
+                              : <OrderDetails setError={setError2} userDetails={userDetails} setUserDetails={setUserDetails} setErrorMsg={setErrorMsg2} />
+                            }
+                            <br/>
+                            <Grid container>
+                              <Grid xs={8} item>
+
+                              </Grid>
+                              <Grid xs item>
+                                <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                                  <TextButton2 startIcon={<GroupsIcon/>} onClick={openGroupTicketBuy}>
+                                    Buying as a group?
+                                  </TextButton2> 
+                                </Box>
+                              </Grid>
+                            </Grid>
+                            <br/>
+                            <TkrButton
+                              sx={{width: '100%'}}
+                              onClick={handlePayment}
+                              startIcon={<ShoppingCartOutlinedIcon/>}
+                            >
+                              Checkout
+                            </TkrButton>
+                            <br/>
+                            <br/>
+                            <Collapse in={error2}>
+                              <CentredBox>
+                                <Alert severity="error">{errorMsg2}</Alert>
+                              </CentredBox>
+                            </Collapse>
+                          </CentredBox>
+                        </Collapse>
+                        {/* Group ticket buying menu */}
+                        <Collapse in={groupTicketBuy}>
+                          <GroupTickets reservedTickets={reservedTickets} setGroupTicketBuy={setGroupTicketBuy}/>
+                        </Collapse>
                       </Collapse>
                     </Box>
                   </Box>
-                  
-                  
                 </Grid>
                 <Divider orientation="vertical" flexItem></Divider>
                 <Grid item xs={4}>
                   <Box sx={{height: "100%"}}>
                     <CentredBox sx={{flexDirection: 'column', widht: '100%'}}>
                       {(event.picture !== '')
-                        ? <UploadPhoto src={event.picture}/>
+                        ? <UploadPhoto src={event.picture} sx={{width:'100%', height: 300}}/>
                         : <Box sx={{width: '100%', height: 300, borderRadius: 5, backgroundColor: '#EEEEEE'}}>
                             <CentredBox sx={{height: '100%', alignItems: 'center'}}>
                               <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>

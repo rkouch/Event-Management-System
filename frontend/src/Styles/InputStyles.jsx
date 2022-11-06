@@ -55,6 +55,15 @@ export const TextButton = styled(Button)({
   }
 })
 
+export const TextButton2 = styled(Button)({
+  variant: 'text',
+  color: '#CCCCCC',
+  "&:hover": {
+    color: "#444444"
+  },
+  textTransform: 'none'
+})
+
 export const ContrastInput = styled(OutlinedInput)(({ theme }) => ({
   '.MuiOutlinedInput-notchedOutline': {
     borderColor: "#FFFFFF"
@@ -112,5 +121,13 @@ export const ContrastInputWrapper = styled('div')(({ theme }) => ({
   },
   width: '100%',
 }));
+
+export const TicketOption = styled(Button)({
+  backgroundColor: alpha('#6A7B8A', 0.3),
+  '&:hover': {
+    backgroundColor: '#D9BFD2'
+  },
+  color: '#444444'
+})
 
 

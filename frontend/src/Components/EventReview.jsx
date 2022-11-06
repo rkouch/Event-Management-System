@@ -23,6 +23,7 @@ export default function EventReview({isAttendee, event_id}) {
   const [reviews, setReviews] = React.useState([])
   const [postReview, setPostReview] = React.useState(false)
   const [initFetch, setInitFectch] = React.useState(false)
+  const [hasReview, setHasReview] = React.useState(false)
 
   const [reviewNum, setReviewNum] = React.useState(0)
   const [moreReviews, setMoreReviews] = React.useState(false)
@@ -91,6 +92,7 @@ export default function EventReview({isAttendee, event_id}) {
     setReviews(reviews_t)
   }
 
+  
   // Handle posting of review
   const handlePost = async () => {
     // Check for empty fields, display error if any
@@ -158,7 +160,7 @@ export default function EventReview({isAttendee, event_id}) {
           </ScrollableBox>
         : <></>
       }
-      {isAttendee
+      {(isAttendee && !hasReview)
         ? <>
             <br/>
             <Divider sx={{ml: 20, mr: 20}}>Leave a Review</Divider>

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import React from 'react';
 import { Route } from 'react-router';
 
@@ -128,6 +129,10 @@ export const getEventData = async (eventId, setEventData=null) => {
       response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
     }
     sortSection(response.seating_details)
+    const start_date = response.start_date
+    const end_date = response.end_date
+    response.start_date = start_date.concat('Z')
+    response.end_date = end_date.concat('Z')
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -265,4 +270,43 @@ export const getTicketDetails = async(ticket_id, setTicketDetails) => {
     response['sectionName'] = name
   }
   setTicketDetails(response)
+}
+
+// Set reserved tickets in local storage
+export const setReservedTicketsLocal = (reserved_tickets) => {
+  // Check if there are reserved tickets in local storage, clear them if there are
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  if (ticketNum !== null) {
+    var i = 0
+    while (i < ticketNum) {
+      localStorage.removeItem(`reserve_${i}`)
+      i += 1
+    }
+  }
+  localStorage.setItem('reserve_ticket_num', reserved_tickets.length)
+  for (const m in reserved_tickets) {
+    const reserve = reserved_tickets[m]
+    localStorage.setItem(`reserve_${m}`, reserve.reserve_id)
+  }
+}
+
+export const getReservedTicketsLocal = () => {
+  const reservedTickets = []
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  var i = 0
+  while (i < ticketNum) {
+    reservedTickets.push(localStorage.getItem(`reserve_${i}`))
+    i+= 1
+  }
+  return (reservedTickets)
+}
+
+export const clearReservedTicketsLocal = () => {
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  var i = 0
+  while (i < ticketNum) {
+    localStorage.removeItem(`reserve_${i}`)
+    i+= 1
+  }
+  localStorage.removeItem('reserve_ticket_num')
 }

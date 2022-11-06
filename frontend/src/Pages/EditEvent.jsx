@@ -55,14 +55,16 @@ export const EventForm = styled("div")({
 export default function EditEvent({}) {
   const params = useParams()
   const navigate = useNavigate()
+  var utc = require('dayjs/plugin/utc')
+  dayjs.extend(utc)
   // States
   const [start, setStartValue] = React.useState({
-    start: dayjs("2014-08-18T21:11:54"),
+    start: "2014-08-18T21:11:54",
     error: false,
   });
 
   const [end, setEndValue] = React.useState({
-    end: dayjs("2014-08-18T21:11:54"),
+    end: "2014-08-18T21:11:54",
     error: false,
     errorMsg: "",
   });
@@ -174,7 +176,6 @@ export default function EditEvent({}) {
   // Set Values
   React.useEffect(() => {
     try {
-      console.log(event)
       setFieldInState('value', event.event_name, eventName, setEventName)
       setFieldInState('value', event.description, description, setDescription)
       const eventLocation = event.location
@@ -186,21 +187,19 @@ export default function EditEvent({}) {
       setAdminList(event.admins)
       setTags(event.tags)
 
-
-
-      setFieldInState('start', dayjs(event.start_date).format(), start, setStartValue)
-      setFieldInState('end', dayjs(event.end_date).format(), end, setEndValue)
+      const start_date_t = dayjs(event.start_date)
+      setFieldInState('start', start_date_t.utc().local().format(), start, setStartValue)
+      const end_date_t = dayjs(event.end_date)
+      setFieldInState('end', end_date_t.utc().local().format(), end, setEndValue)
       setEventPicture(event.picture)
       setPublished(event.published)
 
       const currentSeatingDetails = []
       for (const i in event.seating_details) {
         const section = event.seating_details[i]
-        console.log(section)
         section['availability'] = section.total_seats
         currentSeatingDetails.push(section)
       }
-      console.log(currentSeatingDetails)
       setSeatingList(currentSeatingDetails)
       // setPublished(response.published)
 
@@ -263,7 +262,6 @@ export default function EditEvent({}) {
   
 
   const addAdmin = async (e) => {
-    console.log(adminList)
 
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
@@ -292,7 +290,7 @@ export default function EditEvent({}) {
     // Check if user exists
     try {
       const response = await apiFetch('GET', `/api/user/search?email=${newAdmin.email}`, null)
-      console.log(response)
+
       // Check if user already added as an admin
       if (adminList.includes(response.user_id)) {
         setFieldInState('email', '', newAdmin, setNewAdmin)
@@ -339,7 +337,6 @@ export default function EditEvent({}) {
   };
 
   const handleNewHost = async () => {
-    console.log(newHost)
     // Send api request for admin
     const body = {
       auth_token: getToken(),
@@ -377,8 +374,6 @@ export default function EditEvent({}) {
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
-      console.log("event empty")
-      console.log(eventName)
       setFieldInState('error', true, eventName, setEventName)
       error = true
     }
@@ -461,14 +456,17 @@ export default function EditEvent({}) {
       latitude: ''
     };
 
+    const start_date_t = dayjs(start.start).utc().format()
+    const end_date_t = dayjs(end.end).utc().format()
+
     const body = {
       auth_token: getToken(),
       event_id: params.event_id,
       event_name: eventName.value,
       picture: newPhoto ? eventPicture : null,
       location: locationBody,
-      start_date:  dayjs(start.start),
-      end_date: dayjs(end.end),
+      start_date:  start_date_t,
+      end_date: end_date_t,
       description: description.value,
       seating_details: seatingList,
       categories: [],
@@ -477,10 +475,8 @@ export default function EditEvent({}) {
       published:published,
     };
 
-  
     try {
       const response = await apiFetch('PUT', '/api/event/edit', body)
-      console.log(response)
       navigate(`/view_event/${params.event_id}`)
     } catch (error) {
       console.log(error)
@@ -600,7 +596,6 @@ export default function EditEvent({}) {
                                   const image = await fileToDataUrl(e.target.files[0])
                                   setEventPicture(image)
                                   setNewPhoto(true)
-                                  console.log("uploaded image")
                                 }}
                               />
                             </Button>

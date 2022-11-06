@@ -48,6 +48,15 @@ export const BackdropNoBG = styled(Box)({
   backgroundColor: '#F1F9F9',
 })
 
+export const BackdropNoBG_VH = styled(Box)({
+  width: '100%',
+  backgroundSize: 'cover',
+  margin: 'auto',
+  minHeight: '100vh',
+  height: '100vh',
+  backgroundColor: '#F1F9F9',
+})
+
 export const CentredBox = styled(Box)({
   display: "flex",
   alignItems:'center',

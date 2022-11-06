@@ -368,12 +368,15 @@ export default function CreateEvent({}) {
       latitude: ''
     };
 
+    const start_date_t = dayjs(start.start).utc().format()
+    const end_date_t = dayjs(end.end).utc().format()
+
     const body = {
       auth_token: getToken(),
       event_name: eventName.value,
       location: locationBody,
-      start_date: start.start.utc().toISOString(),
-      end_date: end.end.utc().toISOString(),
+      start_date: start_date_t,
+      end_date: end_date_t,
       description: description.value,
       seating_details: seatingList,
       categories: [],

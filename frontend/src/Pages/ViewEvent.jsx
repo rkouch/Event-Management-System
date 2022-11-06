@@ -386,7 +386,7 @@ export default function ViewEvent({}) {
                               </Grid>
                             </Grid> 
                           : <CentredBox>
-                              {!soldOut
+                              {(!soldOut)
                                 ? <>  
                                     {loggedIn()
                                       ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
@@ -410,7 +410,7 @@ export default function ViewEvent({}) {
                   }
                   <br/>
                   <br/>
-                  {editable
+                  {(editable && event.published)
                     ? <Box>
                         <Typography
                           sx={{

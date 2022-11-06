@@ -29,29 +29,13 @@ export default function SectionDetails ({section, getTicketDetails, handleTicket
             </Typography>
           </Grid>
           <Grid item xs={4}>
-            <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
-              <ExpandMore
-                sx={{
-                  m:0
-                }}
-                expand={section.expanded}
-                onClick={(e)=> {handleSectionExpanded(section)}}
-                aria-expanded={section.expanded}
-                aria-label="show more"
-              >
-                <ExpandMoreIcon />
-              </ExpandMore>
-            </Box>
-            
           </Grid>
         </Grid>
-        <Collapse in={section.expanded}>
-          {section.reserved_seats.map((seat, key) => {
-            return (
-              <Ticket key={key} seatNum={seat.seat_number} reserve_id={seat.reserve_id} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput}/>
-            )
-          })}
-        </Collapse>
+        {section.reserved_seats.map((seat, key) => {
+          return (
+            <Ticket key={key} seatNum={seat.seat_number} reserve_id={seat.reserve_id} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput}/>
+          )
+        })}
       </Box>
       <br/>
     </>
