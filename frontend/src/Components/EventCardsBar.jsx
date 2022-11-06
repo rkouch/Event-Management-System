@@ -56,7 +56,7 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
   // }, [])
 
   return (
-    <Box sx={{display: 'flex', width: '100%', justifyContent: 'center', backgroundColor: '#F6F6F6',}}>
+    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6',}}>
       {(event_ids.length > 0)
         ? <CardsBar>
             {eventIds.map((value, key) => {

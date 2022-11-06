@@ -233,7 +233,7 @@ export default function HostEvents({userDetails}) {
   return (
     <>
       {!(yearEvents === 0)
-        ? <Section sx={{  }}>
+        ? <Section sx={{ml: 0, mr: 0}}>
             <TabContext value={upcomingValue}>
               <SectionHeading>
                 <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
