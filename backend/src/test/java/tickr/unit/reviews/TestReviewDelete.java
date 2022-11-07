@@ -40,6 +40,7 @@ public class TestReviewDelete {
     private ModelSession session;
     private String hostToken;
     private String authToken;
+    private String authToken2;
     private String eventId;
 
     private LocalDateTime startTime;
@@ -65,6 +66,10 @@ public class TestReviewDelete {
         authToken = controller.userRegister(session, new UserRegisterRequest("TestUsername", "Test", "User", "test@example.com",
                 "Password123!", "2010-10-07")).authToken;
         hostToken = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        authToken2 = controller.userRegister(session, new UserRegisterRequest("TestUsername", "Test", "User", "test2@example.com",
+                "Password123!", "2010-10-07")).authToken;
         session = TestHelper.commitMakeSession(model, session);
 
         eventId = controller.createEventUnsafe(session, new CreateEventReqBuilder()
@@ -93,6 +98,21 @@ public class TestReviewDelete {
         purchaseAPI.addCustomer("test_customer", 1000000);
         assertEquals("http://example.com/success", purchaseAPI.fulfillOrder(redirectUrl, "test_customer"));
 
+        response = controller.ticketReserve(session, new TicketReserve.Request(authToken2, eventId, startTime, List.of(
+                new TicketReserve.TicketDetails("test_section", 1, List.of()),
+                new TicketReserve.TicketDetails("test_section2", 1, List.of())
+        )));
+        session = TestHelper.commitMakeSession(model, session);
+        requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
+        purchaseAPI = new MockUnitPurchaseAPI(controller, model);
+        ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
+                "http://example.com/success", "http://example.com/failure", requestIds.stream()
+                .map(i -> new TicketPurchase.TicketDetails(i, null, null, null)).collect(Collectors.toList()))).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+        purchaseAPI.addCustomer("test_customer", 1000000);
+        assertEquals("http://example.com/success", purchaseAPI.fulfillOrder(redirectUrl, "test_customer"));
+
         
     }
 
@@ -110,13 +130,6 @@ public class TestReviewDelete {
         session = TestHelper.commitMakeSession(model, session);
         var replyId2 = controller.replyCreate(session, new ReplyCreate.Request(authToken, reviewId1, "reply text2")).replyId;
         session = TestHelper.commitMakeSession(model, session);
-
-        // var authToken2 = controller.userRegister(session, new UserRegisterRequest("TestUsername", "Test", "User", "test2@example.com",
-        // "Password123!", "2010-10-07")).authToken;
-        // session = TestHelper.commitMakeSession(model, session);
-
-        // var reviewId2 = controller.reviewCreate(session, new ReviewCreate.Request(authToken2, eventId, "title", "review 2", 1.0f)).reviewId;
-        // session = TestHelper.commitMakeSession(model, session);
 
         controller.reviewDelete(session, new ReviewDeleteRequest(authToken, reviewId1));
         session = TestHelper.commitMakeSession(model, session);
@@ -157,5 +170,9 @@ public class TestReviewDelete {
         assertThrows(BadRequestException.class, () -> controller.reviewDelete(session, new ReviewDeleteRequest(authToken, null)));
         assertThrows(ForbiddenException.class, () -> controller.reviewDelete(session, new ReviewDeleteRequest(authToken, UUID.randomUUID().toString())));
         assertThrows(UnauthorizedException.class, () -> controller.reviewDelete(session, new ReviewDeleteRequest(null, reviewId1)));
+
+        var reviewId2 = controller.reviewCreate(session, new ReviewCreate.Request(authToken2, eventId, "title", "review 2", 1.0f)).reviewId;
+        session = TestHelper.commitMakeSession(model, session);
+        assertThrows(ForbiddenException.class, () -> controller.reviewDelete(session, new ReviewDeleteRequest(authToken, reviewId2)));
     }
 }
