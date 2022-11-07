@@ -9,6 +9,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
@@ -115,6 +118,28 @@ public class TestEventReserved {
     public void testEventReserved() {
         var reserved = controller.eventReservedSeats(session, Map.of("auth_token", authToken, "event_id", eventId)).reserved;
         assertEquals(7, reserved.size());
+        Collections.sort(reserved, new Comparator<Reserved> () {
+            @Override 
+            public int compare(Reserved r1, Reserved r2) {
+                if (r1.section.equals(r2.section)) {
+                    return Integer.valueOf(r1.seatNumber).compareTo(Integer.valueOf(r2.seatNumber));
+                }
+                return r1.section.compareTo(r2.section);
+            }
+        });
+        for (int i = 0; i < 3; i ++) {
+            assertEquals("SectionA", reserved.get(i).section);
+        }
+        assertEquals(1, reserved.get(0).seatNumber);
+        assertEquals(5, reserved.get(1).seatNumber);
+        assertEquals(6, reserved.get(2).seatNumber);
+        for (int i = 3; i < 7; i ++) {
+            assertEquals("SectionB", reserved.get(i).section);
+        }
+        assertEquals(2, reserved.get(3).seatNumber);
+        assertEquals(3, reserved.get(4).seatNumber);
+        assertEquals(4, reserved.get(5).seatNumber);
+        assertEquals(5, reserved.get(6).seatNumber);
     }
 
     @Test 

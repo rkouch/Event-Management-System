@@ -1,4 +1,4 @@
-import { Button, Collapse, Divider, Grid, IconButton, Typography } from '@mui/material'
+import { Button, Collapse, Divider, Grid, IconButton, Tooltip, Typography } from '@mui/material'
 import { Box, alpha } from '@mui/system'
 import React from 'react'
 import UserAvatar from './UserAvatar'
@@ -9,7 +9,7 @@ import { CentredBox } from '../Styles/HelperStyles';
 import Emoji from './Emoji';
 import ReplyIcon from '@mui/icons-material/Reply';
 import SendIcon from '@mui/icons-material/Send';
-import { apiFetch, checkIfUser, getToken, loggedIn } from '../Helpers';
+import { apiFetch, getToken, loggedIn } from '../Helpers';
 import ReplyCard from './ReplyCard';
 import EventReplies from './ReviewReplies';
 import ReviewReplies from './ReviewReplies';
@@ -17,8 +17,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ReactBar from './ReactBar';
 import ReactionsList from './ReactionsList';
 import { useParams } from 'react-router-dom';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-export default function ReviewCard({review_details, review_num, isAttendee, isHost}) {
+export default function ReviewCard({review_details, review_num, isAttendee, isHost, isReviewer, handleRemoveReview, index}) {
+  console.log(review_details)
+  console.log(isReviewer)
   const params = useParams()
   const [review, setReview] = React.useState(review_details)
   const [reactBar, setReactBar] = React.useState(false)
@@ -27,18 +30,8 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
   const [replies, setReplies] = React.useState([])
   const [replyCount, setReplyCount] = React.useState(0)
   const [repliesLoading, setRepliesLoading] = React.useState(false)
-  const [isReviewer, setIsReviewer] = React.useState(false)
+  // const [isReviewer, setIsReviewer] = React.useState(false)
   const [moreReplies, setMoreReplies] = React.useState(false)
-
-  const checkIfUser = async () => {
-    const profile_response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
-    const user_response = await apiFetch('GET',`/api/user/search?email=${profile_response.email}`)
-    setIsReviewer(review.authorId === user_response.user_id)
-  }
-  
-  React.useEffect(() => {
-    checkIfUser()
-  }, [])
 
   const replyRef = React.useRef(null)
 
@@ -113,6 +106,20 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
     }
   }
 
+  // Function to delete review
+  const handleDeleteReview = async () => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        comment_id: review.review_id
+      }
+      const response = await apiFetch('DELETE', '/api/event/review/delete', body)
+    } catch (e) {
+      console.log(e)
+    }
+    handleRemoveReview(index)
+  }
+
   // Function to handle more replies
   const handleMoreReplies = () => {
     fetchReplies(replyCount, 10)
@@ -137,7 +144,6 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
     const searchParams = new URLSearchParams(body)
     try {
       const response = await apiFetch('GET', `/api/event/reviews/replies?${searchParams}`, null) 
-      console.log(response)
       if (response.replies.length > 0) {
         setRepliesLoading(true)
       }
@@ -201,15 +207,28 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
                     ? <Box 
                         sx={{display: 'flex', pl:1}}
                       >
-                        <IconButton
-                          onClick={() => {
-                            handleReactToggle();
-                          }}
-                        >
-                          <AddReaction />
-                        </IconButton>
+                        <Tooltip title='Add Reaction'>
+                          <IconButton
+                            onClick={() => {
+                              handleReactToggle();
+                            }}
+                          >
+                            <AddReaction />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
-                    : <></>
+                    : <Box
+                        sx={{display: 'flex', pl:1}}
+                      >
+                        <Tooltip title='Delete review'>
+                          <IconButton
+                            onClick={handleDeleteReview}
+                          >
+                            <DeleteIcon/>
+                          </IconButton>
+                        </Tooltip>
+                        
+                      </Box>
                   }
                 </Grid>
                 <Grid item xs={5} sx={{pl: 2}}>

@@ -222,7 +222,7 @@ export default function UserHosting({}) {
   return (
     <>
       {!(yearEvents === 0)
-        ? <Section sx={{pt: 13}}>
+        ? <Section>
             <TabContext value={upcomingValue}>
               <SectionHeading>
                 Events

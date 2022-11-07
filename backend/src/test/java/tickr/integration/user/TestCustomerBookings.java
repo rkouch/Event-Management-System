@@ -2,7 +2,9 @@ package tickr.integration.user;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +25,13 @@ import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.application.serialised.responses.CustomerEventsResponse;
 import tickr.application.serialised.responses.EventHostingsResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.UserEventsResponse;
@@ -43,7 +47,7 @@ public class TestCustomerBookings {
     private MockHttpPurchaseAPI purchaseAPI;
 
     private String authToken; 
-    private String eventId; 
+    private String eventId1; 
     private String eventId2;
     private String eventId3;
 
@@ -53,134 +57,143 @@ public class TestCustomerBookings {
 
     @BeforeEach
     public void setup () {
-        // hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
-        // purchaseAPI = new MockHttpPurchaseAPI("http://localhost:8080");
-        // ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        purchaseAPI = new MockHttpPurchaseAPI("http://localhost:8080");
+        ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
 
-        // Server.start(8080, null, hibernateModel);
-        // httpHelper = new HTTPHelper("http://localhost:8080");
-        // Spark.awaitInitialization();
+        Server.start(8080, null, hibernateModel);
+        httpHelper = new HTTPHelper("http://localhost:8080");
+        Spark.awaitInitialization();
 
-        // var response = httpHelper.post("/api/user/register", new UserRegisterRequest("test", "first", "last", "test1@example.com",
-        //         "Password123!", "2022-04-14"));
-        // assertEquals(200, response.getStatus());
-        // authToken = response.getBody(AuthTokenResponse.class).authToken;
+        var response = httpHelper.post("/api/user/register", new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                "Password123!", "2022-04-14"));
+        assertEquals(200, response.getStatus());
+        authToken = response.getBody(AuthTokenResponse.class).authToken;
 
-        // List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
-        // seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section", 10, 50, true));
-        // seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section2", 20, 30, true));
+        List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
+        seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section", 10, 50, true));
+        seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section2", 20, 30, true));
 
-        // var startTime1 = LocalDateTime.now().plusDays(1);
-        // var startTime2 = LocalDateTime.now().plusDays(3);
-        // var startTime3 = LocalDateTime.now().plusDays(6);
-        // var endTime1 = LocalDateTime.now().plusDays(2);
-        // var endTime2 = LocalDateTime.now().plusDays(4);
-        // var endTime3 = LocalDateTime.now().plusDays(7);
+        var startTime1 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        var startTime2 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
+        var startTime3 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6));
+        var endTime1 = startTime1.plus(Duration.ofDays(1));
+        var endTime2 = startTime2.plus(Duration.ofDays(1));
+        var endTime3 = startTime3.plus(Duration.ofDays(1));
 
-        // response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
-        //         .withEventName("Test Event")
-        //         .withSeatingDetails(seatingDetails)
-        //         .withStartDate(startTime1)
-        //         .withEndDate(endTime1)
-        //         .build(authToken));
-        // assertEquals(200, response.getStatus());
-        // eventId = response.getBody(CreateEventResponse.class).event_id;
+        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+                .withEventName("Test Event")
+                .withSeatingDetails(seatingDetails)
+                .withStartDate(startTime1.minusMinutes(2))
+                .withEndDate(endTime1)
+                .build(authToken));
+        assertEquals(200, response.getStatus());
+        eventId1 = response.getBody(CreateEventResponse.class).event_id;
 
-        // response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
-        //         .withEventName("Test Event")
-        //         .withSeatingDetails(seatingDetails)
-        //         .withStartDate(startTime2)
-        //         .withEndDate(endTime2)
-        //         .build(authToken));
-        // assertEquals(200, response.getStatus());
-        // eventId2 = response.getBody(CreateEventResponse.class).event_id;
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
-        // response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
-        //         .withEventName("Test Event")
-        //         .withSeatingDetails(seatingDetails)
-        //         .withStartDate(startTime3)
-        //         .withEndDate(endTime3)
-        //         .build(authToken));
-        // assertEquals(200, response.getStatus());
-        // eventId3 = response.getBody(CreateEventResponse.class).event_id;
+        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+                .withEventName("Test Event")
+                .withSeatingDetails(seatingDetails)
+                .withStartDate(startTime2.minusMinutes(2))
+                .withEndDate(endTime2)
+                .build(authToken));
+        assertEquals(200, response.getStatus());
+        eventId2 = response.getBody(CreateEventResponse.class).event_id;
 
-        // response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime1, List.of(
-        //         new TicketReserve.TicketDetails("test_section", 1, List.of(1)),
-        //         new TicketReserve.TicketDetails("test_section2", 1, List.of(2))
-        // )));
-        // assertEquals(200, response.getStatus());
-        // var reserveResponse = response.getBody(TicketReserve.Response.class);
-        // requestIds = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.reserveId)
-        //         .collect(Collectors.toList());
-        // requestPrice = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.price)
-        //         .reduce(0.0f, Float::sum);
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
-        // var requestDetails = requestIds.stream()        
-        //         .map(TicketPurchase.TicketDetails::new)
-        //         .collect(Collectors.toList());
-        // purchaseAPI.addCustomer("test_customer", 1000);
-        // response = httpHelper.post("/api/ticket/purchase",
-        //         new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
-        // assertEquals(200, response.getStatus());
-        // var redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
-        // assertTrue(purchaseAPI.isUrlValid(redirectUrl));
-        // var result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
-        // assertEquals("https://example.com/success", result);
+        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+                .withEventName("Test Event")
+                .withSeatingDetails(seatingDetails)
+                .withStartDate(startTime3.minusMinutes(2))
+                .withEndDate(endTime3)
+                .build(authToken));
+        assertEquals(200, response.getStatus());
+        eventId3 = response.getBody(CreateEventResponse.class).event_id;
 
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        assertEquals(200, response.getStatus());
 
-        // response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId2, startTime2, List.of(
-        //         new TicketReserve.TicketDetails("test_section", 2, List.of(3, 4)),
-        //         new TicketReserve.TicketDetails("test_section2", 1, List.of(5))
-        // )));
-        // assertEquals(200, response.getStatus());
-        // reserveResponse = response.getBody(TicketReserve.Response.class);
-        // requestIds = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.reserveId)
-        //         .collect(Collectors.toList());
-        // requestPrice = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.price)
-        //         .reduce(0.0f, Float::sum);
+        response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId1, startTime1, List.of(
+                new TicketReserve.TicketDetails("test_section", 1, List.of(1)),
+                new TicketReserve.TicketDetails("test_section2", 1, List.of(2))
+        )));
+        assertEquals(200, response.getStatus());
+        var reserveResponse = response.getBody(TicketReserve.Response.class);
+        requestIds = reserveResponse.reserveTickets.stream()
+                .map(t -> t.reserveId)
+                .collect(Collectors.toList());
+        requestPrice = reserveResponse.reserveTickets.stream()
+                .map(t -> t.price)
+                .reduce(0.0f, Float::sum);
 
-        // requestDetails = requestIds.stream()        
-        //         .map(TicketPurchase.TicketDetails::new)
-        //         .collect(Collectors.toList());
-        // purchaseAPI.addCustomer("test_customer", 1000);
-        // response = httpHelper.post("/api/ticket/purchase",
-        //         new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
-        // assertEquals(200, response.getStatus());
-        // redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
-        // assertTrue(purchaseAPI.isUrlValid(redirectUrl));
-        // result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
-        // assertEquals("https://example.com/success", result);
+        var requestDetails = requestIds.stream()        
+                .map(TicketPurchase.TicketDetails::new)
+                .collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 1000);
+        response = httpHelper.post("/api/ticket/purchase",
+                new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
+        assertEquals(200, response.getStatus());
+        var redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
+        assertTrue(purchaseAPI.isUrlValid(redirectUrl));
+        var result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
 
 
+        response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId2, startTime2, List.of(
+                new TicketReserve.TicketDetails("test_section", 2, List.of(3, 4)),
+                new TicketReserve.TicketDetails("test_section2", 1, List.of(5))
+        )));
+        assertEquals(200, response.getStatus());
+        reserveResponse = response.getBody(TicketReserve.Response.class);
+        requestIds = reserveResponse.reserveTickets.stream()
+                .map(t -> t.reserveId)
+                .collect(Collectors.toList());
+        requestPrice = reserveResponse.reserveTickets.stream()
+                .map(t -> t.price)
+                .reduce(0.0f, Float::sum);
 
-        // response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId3, startTime3, List.of(
-        //         new TicketReserve.TicketDetails("test_section", 2, List.of(6, 7)),
-        //         new TicketReserve.TicketDetails("test_section2", 2, List.of(8, 9))
-        // )));
-        // assertEquals(200, response.getStatus());
-        // reserveResponse = response.getBody(TicketReserve.Response.class);
-        // requestIds = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.reserveId)
-        //         .collect(Collectors.toList());
-        // requestPrice = reserveResponse.reserveTickets.stream()
-        //         .map(t -> t.price)
-        //         .reduce(0.0f, Float::sum);
+        requestDetails = requestIds.stream()        
+                .map(TicketPurchase.TicketDetails::new)
+                .collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 1000);
+        response = httpHelper.post("/api/ticket/purchase",
+                new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
+        assertEquals(200, response.getStatus());
+        redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
+        assertTrue(purchaseAPI.isUrlValid(redirectUrl));
+        result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
 
-        // requestDetails = requestIds.stream()        
-        //         .map(TicketPurchase.TicketDetails::new)
-        //         .collect(Collectors.toList());
-        // purchaseAPI.addCustomer("test_customer", 1000);
-        // response = httpHelper.post("/api/ticket/purchase",
-        //         new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
-        // assertEquals(200, response.getStatus());
-        // redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
-        // assertTrue(purchaseAPI.isUrlValid(redirectUrl));
-        // result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
-        // assertEquals("https://example.com/success", result);
+
+
+        response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId3, startTime3, List.of(
+                new TicketReserve.TicketDetails("test_section", 2, List.of(6, 7)),
+                new TicketReserve.TicketDetails("test_section2", 2, List.of(8, 9))
+        )));
+        assertEquals(200, response.getStatus());
+        reserveResponse = response.getBody(TicketReserve.Response.class);
+        requestIds = reserveResponse.reserveTickets.stream()
+                .map(t -> t.reserveId)
+                .collect(Collectors.toList());
+        requestPrice = reserveResponse.reserveTickets.stream()
+                .map(t -> t.price)
+                .reduce(0.0f, Float::sum);
+
+        requestDetails = requestIds.stream()        
+                .map(TicketPurchase.TicketDetails::new)
+                .collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 1000);
+        response = httpHelper.post("/api/ticket/purchase",
+                new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
+        assertEquals(200, response.getStatus());
+        redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
+        assertTrue(purchaseAPI.isUrlValid(redirectUrl));
+        result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
     }
 
     @AfterEach
@@ -188,5 +201,69 @@ public class TestCustomerBookings {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+    }
+
+    @Test 
+    public void testCustomerBookings() {
+        int pageStart = 0;
+        int maxResults = 10;
+        var response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults)
+        ));
+        assertEquals(200, response.getStatus()); 
+        var bookings = response.getBody(CustomerEventsResponse.class).bookings;
+        assertEquals(3, bookings.size());
+        assertEquals(eventId1, bookings.get(0).eventId);
+        assertEquals(eventId1, bookings.get(0).eventId);
+        assertEquals(eventId1, bookings.get(0).eventId);
+        var event1Ids = bookings.get(0).ticketIds; 
+        var event2Ids = bookings.get(1).ticketIds; 
+        var event3Ids = bookings.get(2).ticketIds; 
+        assertEquals(2, event1Ids.size());
+        assertEquals(3, event2Ids.size());
+        assertEquals(4, event3Ids.size());
+        response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(2)
+        ));
+        assertEquals(200, response.getStatus()); 
+        bookings = response.getBody(CustomerEventsResponse.class).bookings;
+        assertEquals(2, bookings.size());
+        assertEquals(bookings.get(0).eventId, eventId1);
+        assertEquals(bookings.get(1).eventId, eventId2);
+    }
+
+    @Test 
+    public void testExceptions() {
+        var response = httpHelper.get("/api/user/bookings", Map.of(
+            "page_start", Integer.toString(0), 
+            "max_results", Integer.toString(10)
+        ));
+        assertEquals(400, response.getStatus()); 
+        response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "max_results", Integer.toString(10)
+        ));
+        assertEquals(400, response.getStatus()); 
+        response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(0)
+        ));
+        assertEquals(400, response.getStatus()); 
+        response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(-1), 
+            "max_results", Integer.toString(10)
+        ));
+        assertEquals(400, response.getStatus()); 
+        response = httpHelper.get("/api/user/bookings", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(0), 
+            "max_results", Integer.toString(-1)
+        ));
+        assertEquals(400, response.getStatus()); 
     }
 }

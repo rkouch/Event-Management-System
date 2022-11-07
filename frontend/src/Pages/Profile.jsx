@@ -476,10 +476,10 @@ export default function Profile({editable=false}){
                 <Grid item xs={4}></Grid>
                 <Grid item xs={7}>
                   <br/>
-                  <Typography>
+                  <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
                     Hosted/Hosting Events
                   </Typography>
-                  <Divider/>
+                  <Divider width={245}/>
                   <HostEvents userDetails={profile}/>
                 </Grid>
               </Grid>
