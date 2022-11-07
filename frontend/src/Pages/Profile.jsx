@@ -415,7 +415,7 @@ export default function Profile({editable=false}){
                   }
                 </Grid>
                 <Grid item xs={4}></Grid>
-                <Grid item xs={6}>
+                <Grid item xs={7}>
                   {editable
                     ? <Box sx={{}}>
                         <Typography
@@ -473,14 +473,13 @@ export default function Profile({editable=false}){
                     : <div></div>
                   }
                 </Grid>
-                <Grid item xs={2}></Grid>
                 <Grid item xs={4}></Grid>
-                <Grid item xs={6}>
+                <Grid item xs={7}>
                   <br/>
-                  <Typography>
+                  <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
                     Hosted/Hosting Events
                   </Typography>
-                  <Divider/>
+                  <Divider width={245}/>
                   <HostEvents userDetails={profile}/>
                 </Grid>
               </Grid>
