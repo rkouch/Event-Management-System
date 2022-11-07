@@ -283,9 +283,9 @@ public class Event {
         List<String> set = new ArrayList<>();
         Set<Ticket> tmpTickets = this.tickets;
         List<Ticket> tickets = new ArrayList<>(tmpTickets);
-        Collections.sort(tickets, new Comparator<Ticket>() {
+        tickets.sort(new Comparator<>() {
             @Override
-            public int compare(Ticket t1, Ticket t2) {
+            public int compare (Ticket t1, Ticket t2) {
                 if (t1.getSection().getSection().compareTo(t2.getSection().getSection()) == 0) {
                     Integer i1 = t1.getSeatNumber();
                     Integer i2 = t2.getSeatNumber();

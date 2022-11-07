@@ -350,6 +350,10 @@ public class TestTicketReserve {
         reservation.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
         session = TestHelper.commitMakeSession(model, session);
 
+
+        var eventReserveResponse = controller.eventReservedSeats(session, Map.of("auth_token", authToken, "event_id", eventId));
+        assertEquals(0, eventReserveResponse.reserved.size());
+
         assertDoesNotThrow(() -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
                 List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))));
     }

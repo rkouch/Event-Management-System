@@ -100,14 +100,7 @@ public class SeatingPlan {
     }
 
     public int getAvailableSeats () {
-        int availableSeats = totalSeats;
-        if (tickets != null) {
-            availableSeats -= tickets.size();
-        }
-        if (reservations != null) {
-            availableSeats -= reservations.size();
-        }
-        return availableSeats;
+        return totalSeats - getAllocatedNumbers().size();
     }
 
     public int getTotalSeats () {
@@ -133,7 +126,9 @@ public class SeatingPlan {
     
 
     public Set<TicketReservation> getReservations() {
-        return reservations;
+        return reservations.stream()
+                .filter(Predicate.not(TicketReservation::hasExpired))
+                .collect(Collectors.toSet());
     }
 
     public void setReservations(Set<TicketReservation> reservations) {
