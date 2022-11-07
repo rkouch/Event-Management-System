@@ -6,6 +6,8 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,7 +39,22 @@ public class Group {
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private Set<User> users;
 
-    private UUID getId () {
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.REMOVE)
+    private Set<TicketReservation> ticketReservations;
+
+
+    public Group(User leader, LocalDateTime timeCreated, int size, Set<TicketReservation> ticketReservations) {
+        this.leader = leader;
+        this.timeCreated = timeCreated;
+        this.size = size;
+        this.ticketsAvailable = ticketReservations.size();
+        this.ticketReservations = ticketReservations;
+        this.users = new HashSet<>();
+    }
+
+    public Group()  {}
+
+    public UUID getId () {
         return id;
     }
 
@@ -45,7 +62,7 @@ public class Group {
         this.id = id;
     }
 
-    private User getLeader () {
+    public User getLeader () {
         return leader;
     }
 
@@ -53,7 +70,7 @@ public class Group {
         this.leader = leader;
     }
 
-    private int getSize () {
+    public int getSize () {
         return size;
     }
 
@@ -61,7 +78,7 @@ public class Group {
         this.size = size;
     }
 
-    private LocalDateTime getTimeCreated () {
+    public LocalDateTime getTimeCreated () {
         return timeCreated;
     }
 
@@ -69,7 +86,7 @@ public class Group {
         this.timeCreated = timeCreated;
     }
 
-    private int getTicketsAvailable () {
+    public int getTicketsAvailable () {
         return ticketsAvailable;
     }
 
@@ -77,11 +94,29 @@ public class Group {
         this.ticketsAvailable = ticketsAvailable;
     }
 
-    private Set<User> getUsers () {
+    public Set<User> getUsers () {
         return users;
     }
 
     private void setUsers (Set<User> users) {
         this.users = users;
+    }
+
+    public void addUser(User user) {
+        this.users.add(user);
+    }
+
+    public Set<TicketReservation> getTicketReservations() {
+        return ticketReservations;
+    }
+
+    public void setTicketReservations(Set<TicketReservation> ticketReservations) {
+        this.ticketReservations = ticketReservations;
+    }
+
+    public void addGroupToTicketReservations() {
+        for (TicketReservation t : ticketReservations) {
+            t.setGroup(this);
+        }
     }
 }

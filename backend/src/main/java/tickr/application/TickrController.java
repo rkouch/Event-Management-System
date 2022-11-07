@@ -12,17 +12,6 @@ import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.*;
-import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.application.serialised.responses.CreateEventResponse;
-import tickr.application.serialised.responses.EventAttendeesResponse;
-import tickr.application.serialised.responses.EventViewResponse;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
-import tickr.application.serialised.responses.TestResponses;
-import tickr.application.serialised.responses.TicketBookingsResponse;
-import tickr.application.serialised.responses.TicketViewEmailResponse;
-import tickr.application.serialised.responses.TicketViewResponse;
-import tickr.application.serialised.responses.UserIdResponse;
-import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
@@ -1135,5 +1124,50 @@ public class TickrController {
             }
         }
         session.remove(review);
+    }   
+
+    public GroupCreateResponse groupCreate (ModelSession session, GroupCreateRequest request) {
+        if (request.reservedIds == null) {
+            throw new BadRequestException("Missing reserved ids!");
+        }
+        User user = authenticateToken(session, request.authToken);
+
+        if (user.isGroupAlreadyCreated(request.reservedIds)) {
+            throw new ForbiddenException("Group has already been created for reserve IDs!");
+        }
+
+        Group group = new Group(user, LocalDateTime.now(ZoneId.of("UTC")), 0, request.getTicketReservations(session));
+        session.save(group);
+        user.addGroup(group);
+        user.addOwnedGroup(group);
+        group.addUser(user);
+        group.addGroupToTicketReservations();
+        return new GroupCreateResponse(group.getId().toString());
+    }
+
+    public GroupIdsResponse getGroupIds (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth token!!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var groupIds = user.getGroups().stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Group::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new GroupIdsResponse(groupIds, numResults.get());
     }
 }

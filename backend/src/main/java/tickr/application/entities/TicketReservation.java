@@ -44,6 +44,10 @@ public class TicketReservation {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "ticketReservation", cascade = CascadeType.REMOVE)
     private PurchaseItem purchaseItem;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     public TicketReservation () {
 
     }
@@ -72,6 +76,15 @@ public class TicketReservation {
     public boolean hasExpired () {
         return LocalDateTime.now(ZoneId.of("UTC"))
                 .isAfter(expiryTime);
+    }
+
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public TicketReserve.ReserveDetails getDetails () {
@@ -108,6 +121,14 @@ public class TicketReservation {
 
     public boolean canCancel (User user) {
         return this.user.getId().equals(user.getId()) && purchaseItem == null;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
     }
     
 }

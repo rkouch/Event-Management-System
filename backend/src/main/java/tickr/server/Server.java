@@ -100,6 +100,9 @@ public class Server {
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
 
+        post("/api/group/create", TickrController::groupCreate, GroupCreateRequest.class);
+        get("/api/groups/get", TickrController::getGroupIds);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
