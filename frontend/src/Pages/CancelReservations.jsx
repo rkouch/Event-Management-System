@@ -1,12 +1,13 @@
 import { Typography } from "@mui/material"
 import { Box } from "@mui/system"
 import React from "react"
+import { useParams } from "react-router-dom"
 import Header from "../Components/Header"
 import { apiFetch, clearReservedTicketsLocal, getReservedTicketsLocal, getToken } from "../Helpers"
 import { BackdropNoBG } from "../Styles/HelperStyles"
 
 export default function CancelReservations({ticketOrder}){
-
+  const params = useParams()
   const cancelReservations = async () => {
     const reservation_ids = getReservedTicketsLocal()
     const body = {
@@ -15,7 +16,7 @@ export default function CancelReservations({ticketOrder}){
     }
     try {
       const response = await apiFetch('DELETE', '/api/ticket/reserve/cancel', body)
-      window.location.replace('http://localhost:3000/')
+      window.location.replace(`http://localhost:3000/view_event/${params.event_id}`)
       clearReservedTicketsLocal()
     } catch (e) {
       console.log(e)

@@ -1,22 +1,11 @@
 import React from "react"
-import { Alert, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
-import Collapse from '@mui/material/Collapse';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { FormControl, FormHelperText, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system"
-import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
-import { styled, alpha } from '@mui/system';
-import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
+import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
+import { alpha } from '@mui/system';
+import { CentredBox } from "../Styles/HelperStyles"
+import { checkValidEmail, hasNumber, setFieldInState } from "../Helpers";
 
-const ExpandMore = styled((props) => {
-  const { expand, ...other } = props;
-  return <IconButton {...other} />;
-})(({ theme, expand }) => ({
-  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-  marginLeft: 'auto',
-  transition: theme.transitions.create('transform', {
-    duration: theme.transitions.duration.shortest,
-  }),
-}));
 
 export default function SectionDetails ({section, getTicketDetails, handleTicketInput, handleSectionExpanded, reserve_id}) {
   return (
@@ -43,6 +32,75 @@ export default function SectionDetails ({section, getTicketDetails, handleTicket
 }
 
 function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketInput}) {
+
+  // States
+  const [firstName, setFirstName] = React.useState({
+    label: 'first name',
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+  const [lastName, setLastName] = React.useState({
+    label: 'last name',
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+  const [email, setEmail] = React.useState({
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+
+  // Handles for state changes
+  const handleFirstNameChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, firstName, setFirstName)
+    setFieldInState('errorMsg', '', firstName, setFirstName)
+
+    // Check valid first name
+    setFieldInState('value', e.target.value, firstName, setFirstName)
+  }
+
+  const handleLastNameChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, lastName, setLastName)
+    setFieldInState('errorMsg', '', lastName, setLastName)
+
+    // Check valid last name
+    setFieldInState('value', e.target.value, lastName, setLastName)
+  }
+
+  const handleEmailChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, email, setEmail)
+    setFieldInState('errorMsg', '', email, setFirstName)
+
+    // check valid email
+    setFieldInState('value', e.target.value, email, setEmail)
+  }
+
+
+  // handle onblur event, setState in parent element, to avoid unnecesary re-renders
+  const handleOnBlur = (field, state, setState) => {
+    // check valid input
+    if (state === email) {
+      if (!checkValidEmail(state.value)){
+        setFieldInState('error', true, state, setState)
+        setFieldInState('errorMsg', 'Invalid email.', state, setState)
+        return
+      }
+    } else {
+      if (state.value.length <= 0 || hasNumber(state.value)) {
+        setFieldInState('error', true, state, setState)
+        setFieldInState('errorMsg', `Invalid ${state.label}.`, state, setState)
+        return
+      }
+    }
+
+    handleTicketInput(reserve_id, field, state.value)
+  }
+
   return (
     <Box sx={{pt: 1, pb: 1}}>
       <Grid container spacing={2}>
@@ -58,37 +116,51 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
         <Grid item xs>
           <Grid container spacing={1}>
             <Grid item xs={6}>
-              <ContrastInputWrapper>
-                <ContrastInput
-                  fullWidth
-                  placeholder="First Name"
-                  onChange={(e) => {handleTicketInput(reserve_id, 'first_name', e.target.value)}}
-                  defaultValue={getTicketDetails('first_name', reserve_id)}
-                >
-                </ContrastInput>
-              </ContrastInputWrapper>
+              <FormControl>
+                <ContrastInputWrapper>
+                  <ContrastInput
+                    fullWidth
+                    placeholder="First Name"
+                    onChange={handleFirstNameChange}
+                    defaultValue={firstName.value}
+                    error={firstName.error}
+                    onBlur={() => {handleOnBlur('first_name', firstName, setFirstName)}}
+                  >
+                  </ContrastInput>
+                </ContrastInputWrapper>
+                <FormHelperText>{firstName.errorMsg}</FormHelperText>
+              </FormControl>
             </Grid>
             <Grid item xs={6}>
-              <ContrastInputWrapper>
-                <ContrastInput
-                  fullWidth
-                  placeholder="Last Name"
-                  onChange={(e) => {handleTicketInput(reserve_id, 'last_name', e.target.value)}}
-                  defaultValue={getTicketDetails('last_name', reserve_id)}
-                >
-                </ContrastInput>
-              </ContrastInputWrapper>
+              <FormControl>
+                <ContrastInputWrapper>
+                  <ContrastInput
+                    fullWidth
+                    placeholder="Last Name"
+                    onChange={handleLastNameChange}
+                    value={lastName.value}
+                    error={lastName.error}
+                    onBlur={() => {handleOnBlur('last_name', lastName, setLastName)}}
+                  />
+                </ContrastInputWrapper>
+                <FormHelperText>{lastName.errorMsg}</FormHelperText>
+              </FormControl>
             </Grid>
             <Grid item xs={12}>
-              <ContrastInputWrapper>
-                <ContrastInput
-                  placeholder="Email"
-                  fullWidth
-                  onChange={(e) => {handleTicketInput(reserve_id, 'email', e.target.value)}}
-                  defaultValue={getTicketDetails('email', reserve_id)}
-                >
-                </ContrastInput>
-              </ContrastInputWrapper>
+              <FormControl sx={{width: '100%'}}>
+                <ContrastInputWrapper>
+                  <ContrastInput
+                    placeholder="Email"
+                    fullWidth
+                    onChange={handleEmailChange}
+                    value={email.value}
+                    error={email.error}
+                    onBlur={() => {handleOnBlur('email', email, setEmail)}}
+                  >
+                  </ContrastInput>
+                </ContrastInputWrapper>
+                <FormHelperText>{email.errorMsg}</FormHelperText>
+              </FormControl>
             </Grid>
           </Grid>
         </Grid>

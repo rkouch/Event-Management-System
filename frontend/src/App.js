@@ -102,7 +102,7 @@ function App() {
       element: <TestViewEvent/>
     },
     {
-      path: '/cancel_reservation',
+      path: '/cancel_reservation/:event_id',
       element: <CancelReservations ticketOrder={ticketOrder}/>
     }
   ])
