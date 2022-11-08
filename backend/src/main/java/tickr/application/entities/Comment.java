@@ -80,7 +80,7 @@ public class Comment {
         this.event = event;
     }
 
-    private Comment getParent () {
+    public Comment getParent () {
         return parent;
     }
 
@@ -88,7 +88,7 @@ public class Comment {
         this.parent = parent;
     }
 
-    private Set<Comment> getChildren () {
+    public Set<Comment> getChildren () {
         return children;
     }
 
@@ -104,7 +104,7 @@ public class Comment {
         this.reactions = reactions;
     }
 
-    private User getAuthor () {
+    public User getAuthor () {
         return author;
     }
 
