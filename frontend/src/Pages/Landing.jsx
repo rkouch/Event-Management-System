@@ -80,6 +80,9 @@ export default function Landing({}) {
               mr: 'auto',
               maxWidth: 1600,
               width: '100%', 
+              mb: 5,
+              height: 'fit-content',
+              pb: 5,
             }}
           >
               <Typography

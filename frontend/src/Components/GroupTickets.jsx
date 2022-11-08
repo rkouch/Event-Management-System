@@ -1,4 +1,4 @@
-import { Collapse, Divider, Grid, IconButton, Tooltip, Typography, Button, styled, alpha } from "@mui/material";
+import { Collapse, FormControl, FormHelperText, Divider, Grid, IconButton, Tooltip, Typography, Button, styled, alpha } from "@mui/material";
 import { Box } from "@mui/system";
 import React from "react";
 import { CentredBox } from "../Styles/HelperStyles";
@@ -9,6 +9,8 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { checkValidEmail, setFieldInState } from "../Helpers";
+import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
 
 const steps = ['Select assigned ticket', 'Invite group members']
 
@@ -25,6 +27,8 @@ const ExpandMore = styled((props) => {
 
 
 export default function GroupTickets({reservedTickets, setGroupTicketBuy, createGroup}) {
+  // States
+  
   const [info, setInfo] = React.useState(true)
   const [activeStep, setActiveStep] = React.useState(0);
   const [showSelect, setShowSelect] = React.useState(true)
@@ -33,7 +37,56 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
   const [invites, setInvites] = React.useState([])
   const [groupId, setGroupId] = React.useState('')
 
-  console.log(reservedTickets)
+  const [firstName, setFirstName] = React.useState({
+    label: 'first name',
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+  const [lastName, setLastName] = React.useState({
+    label: 'last name',
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+  const [email, setEmail] = React.useState({
+    value: '',
+    error: false,
+    errorMsg: ''
+  })
+
+  // Handles for state changes
+  const handleFirstNameChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, firstName, setFirstName)
+    setFieldInState('errorMsg', '', firstName, setFirstName)
+
+    // Check valid first name
+    setFieldInState('value', e.target.value, firstName, setFirstName)
+  }
+
+  const handleLastNameChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, lastName, setLastName)
+    setFieldInState('errorMsg', '', lastName, setLastName)
+
+    // Check valid last name
+    setFieldInState('value', e.target.value, lastName, setLastName)
+  }
+
+  const handleEmailChange = (e) => {
+    // Clear error
+    setFieldInState('error', false, email, setEmail)
+    setFieldInState('errorMsg', '', email, setFirstName)
+
+    // check valid email
+    setFieldInState('value', e.target.value, email, setEmail)
+  }
+
+  const handleOnBlur = () => {
+    return
+  }
+
   const cancelTicketBuy = () => {
     setGroupTicketBuy(false)
   }
@@ -92,6 +145,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
         </Collapse>
       </Box>
       <Box sx={{width: '100%'}}>
+        {/* Select gorup leaders ticket */}
         <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
           <Typography
             sx={{
@@ -130,9 +184,59 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
               )
             })}
           </CentredBox>
+          <CentredBox sx={{ml: 10, mr: 10}}>
+            <Grid container spacing={1}>
+              <Grid item xs={6}>
+                <FormControl sx={{width: '100%'}}>
+                  <ContrastInputWrapper>
+                    <ContrastInput
+                      fullWidth
+                      placeholder="First Name"
+                      onChange={handleFirstNameChange}
+                      defaultValue={firstName.value}
+                      error={firstName.error}
+                      onBlur={() => {handleOnBlur('first_name', firstName, setFirstName)}}
+                    >
+                    </ContrastInput>
+                  </ContrastInputWrapper>
+                  <FormHelperText>{firstName.errorMsg}</FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl sx={{width: '100%'}}>
+                  <ContrastInputWrapper>
+                    <ContrastInput
+                      fullWidth
+                      placeholder="Last Name"
+                      onChange={handleLastNameChange}
+                      value={lastName.value}
+                      error={lastName.error}
+                      onBlur={() => {handleOnBlur('last_name', lastName, setLastName)}}
+                    />
+                  </ContrastInputWrapper>
+                  <FormHelperText>{lastName.errorMsg}</FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl sx={{width: '100%'}}>
+                  <ContrastInputWrapper>
+                    <ContrastInput
+                      placeholder="Email"
+                      fullWidth
+                      onChange={handleEmailChange}
+                      value={email.value}
+                      error={email.error}
+                      onBlur={() => {handleOnBlur('email', email, setEmail)}}
+                    >
+                    </ContrastInput>
+                  </ContrastInputWrapper>
+                  <FormHelperText>{email.errorMsg}</FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CentredBox>
         </Collapse>
       </Box>
-      
       <Box sx={{width: '100%'}}>
         <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
           <Typography

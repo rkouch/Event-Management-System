@@ -1,6 +1,3 @@
-import dayjs from 'dayjs';
-import React from 'react';
-import { Route } from 'react-router';
 
 // Function to make api calls
 export const apiFetch = (method, route, body) => {
@@ -309,4 +306,9 @@ export const clearReservedTicketsLocal = () => {
     i+= 1
   }
   localStorage.removeItem('reserve_ticket_num')
+}
+
+// Check if a string has a number
+export const hasNumber = (string) => {
+  return /\d/.test(string);
 }

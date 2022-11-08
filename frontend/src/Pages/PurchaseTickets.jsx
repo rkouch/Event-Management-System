@@ -208,7 +208,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
 
   const handleTicketInput = (reserve_id, field, value) => {
-    // Find tciket within ticket details
+    // Find ticket within ticket details
     setError(false)
     setErrorMsg('')
     const newState = reservedTickets.map(ticket => {
@@ -218,6 +218,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
       return ticket
     })
+    console.log(newState)
     setReservedTickets(newState)
   }
 
@@ -421,7 +422,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         <Tooltip title="Back to event">
                           <IconButton onClick={()=>{
                             if (areTicketsReserved) {
-                              window.location.replace('http://localhost:3000/cancel_reservation')
+                              window.location.replace(`http://localhost:3000/cancel_reservation/${params.event_id}`)
                             } else {
                               navigate(`/view_event/${params.event_id}`)
                             }
@@ -581,7 +582,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                             <br/>
                             <Grid container>
                               <Grid xs={8} item>
-
                               </Grid>
                               <Grid xs item>
                                 <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
