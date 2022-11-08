@@ -123,4 +123,45 @@ public class TestCreateGroup {
         assertEquals(1, groups.groups.size());
         assertEquals(1, groups.numResults);
     }
+
+    @Test 
+    public void testGroupCreateExceptions () {
+        var response = httpHelper.post("/api/group/create", new GroupCreateRequest(null, reserveIdList));
+        assertEquals(401, response.getStatus());
+        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString())));
+        assertEquals(403, response.getStatus());
+        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, null));
+        assertEquals(400, response.getStatus());
+    }       
+
+    @Test 
+    public void testGetGroupIdExceptions() {
+        var response = httpHelper.get("/api/groups/get", Map.of(
+        "page_start", "0", 
+        "max_results", "10"
+        ));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.get("/api/groups/get", Map.of(
+        "auth_token", authToken, 
+        "max_results", "10"
+        ));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.get("/api/groups/get", Map.of(
+        "auth_token", authToken, 
+        "page_start", "0"
+        ));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.get("/api/groups/get", Map.of(
+        "auth_token", authToken, 
+        "page_start", "-1", 
+        "max_results", "10"
+        ));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.get("/api/groups/get", Map.of(
+        "auth_token", authToken, 
+        "page_start", "0", 
+        "max_results", "-1"
+        ));
+        assertEquals(400, response.getStatus());
+    }
 }

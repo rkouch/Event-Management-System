@@ -453,12 +453,11 @@ public class User {
     }
 
     public boolean isGroupAlreadyCreated(List<String> reservedIds) {
-        boolean result = false;
         for (Group group : ownedGroups) {
             if (group.getTicketReservations().stream().anyMatch(t -> reservedIds.contains(t.getId().toString()))) {
-                result = true;
+                return true;
             }
         }
-        return result;
+        return false;
     }
 }
