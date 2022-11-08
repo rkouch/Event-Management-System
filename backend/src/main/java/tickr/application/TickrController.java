@@ -1119,4 +1119,21 @@ public class TickrController {
         return url;
     }
 
+    public void reviewDelete (ModelSession session, ReviewDeleteRequest request) {
+        if (request.commentId == null) {
+            throw new BadRequestException("Missing comment ID!");
+        }
+        User user = authenticateToken(session, request.authToken);
+        Comment review = session.getById(Comment.class, UUID.fromString(request.commentId))
+                .orElseThrow(() -> new ForbiddenException("Invalid comment ID!"));
+        if (user != review.getAuthor()) {
+            throw new ForbiddenException("User is not author of this review!");
+        }
+        if (review.getParent() == null) {
+            for (Comment reply : review.getChildren()) {
+                session.remove(reply);
+            }
+        }
+        session.remove(review);
+    }
 }
