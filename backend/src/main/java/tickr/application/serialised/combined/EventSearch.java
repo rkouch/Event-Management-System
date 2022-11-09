@@ -7,6 +7,7 @@ import tickr.application.serialised.SerializedLocation;
 import tickr.server.exceptions.BadRequestException;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class EventSearch {
 
         }
 
-        public Options (SerializedLocation location, LocalDateTime startTime, LocalDateTime endTime, List<String> tags, List<String> categories, String text) {
+        public Options (SerializedLocation location, ZonedDateTime startTime, ZonedDateTime endTime, List<String> tags, List<String> categories, String text) {
             this.location = location;
             this.startTime = startTime != null ? startTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
             this.endTime = endTime != null ? endTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
@@ -40,23 +41,23 @@ public class EventSearch {
             this.text = text;
         }
 
-        public LocalDateTime getStartTime () {
+        public ZonedDateTime getStartTime () {
             if (startTime == null) {
                 return null;
             }
             try {
-                return LocalDateTime.parse(startTime, DateTimeFormatter.ISO_DATE_TIME);
+                return ZonedDateTime.parse(startTime, DateTimeFormatter.ISO_DATE_TIME);
             } catch (DateTimeParseException e) {
                 throw new BadRequestException("Invalid start time: " + startTime, e);
             }
         }
 
-        public LocalDateTime getEndTime () {
+        public ZonedDateTime getEndTime () {
             if (endTime == null) {
                 return null;
             }
             try {
-                return LocalDateTime.parse(endTime, DateTimeFormatter.ISO_DATE_TIME);
+                return ZonedDateTime.parse(endTime, DateTimeFormatter.ISO_DATE_TIME);
             } catch (DateTimeParseException e) {
                 throw new BadRequestException("Invalid end time: " + endTime, e);
             }

@@ -67,7 +67,7 @@ create table `user_groups` (
     id          varchar(36) not null,
     leader_id    varchar(36) not null,
     size        int not null,
-    time_created timestamp,
+    time_created datetime,
     ticket_available int,
     primary key (id),
     foreign key (leader_id) references users(id)
@@ -173,7 +173,7 @@ create table event_comments (
     author_id varchar(36) not null,
     comment_title varchar(255),
     comment_text text not null,
-    comment_time timestamp not null,
+    comment_time datetime not null,
     rating float,
 
     primary key (id),
@@ -186,7 +186,7 @@ create table reactions (
     id varchar(36) not null,
     comment_id varchar(36) not null,
     author_id varchar(36) not null,
-    react_time timestamp not null,
+    react_time datetime not null,
     react_type char(255) not null,
 
     primary key (id),
@@ -206,7 +206,7 @@ create table group_users (
 create table reset_tokens (
     id varchar(36) not null,
     user_id varchar(36) not null,
-    expiry_time timestamp not null,
+    expiry_time datetime not null,
 
     primary key (id),
     foreign key (user_id) references users(id)

@@ -7,10 +7,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -49,11 +46,11 @@ public class SeatingPlan {
     public boolean hasSeats;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section", cascade = CascadeType.REMOVE)
-    private Set<TicketReservation> reservations;
+    private Set<TicketReservation> reservations = new HashSet<>();
 
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "section", cascade = CascadeType.REMOVE)
-    private Set<Ticket> tickets;
+    private Set<Ticket> tickets = new HashSet<>();
 
     public SeatingPlan () {}    
 
