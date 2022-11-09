@@ -398,9 +398,10 @@ public class Event {
         if (locations != null) {
             session.remove(this.location);
             Location newLocation = new Location(locations.streetNo, locations.streetName, locations.unitNo, locations.postcode,
-                    locations.suburb, locations.state, locations.country, locations.longitude, locations.latitude);
+                    locations.suburb, locations.state, locations.country);
             session.save(newLocation);
             this.location = newLocation;
+            this.location.lookupLongitudeLatitude();
 
             seatingPlans.forEach(s -> s.updateLocation(newLocation));
         }

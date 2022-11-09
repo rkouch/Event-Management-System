@@ -32,8 +32,8 @@ public class LocationCache {
         }
 
         cache.put(searchText, point);
-        try (var writer = new BufferedWriter(new OutputStreamWriter(FileHelper.openOutputStream(cachePath)))) {
-            writer.write(String.format("%s%s%s", searchText, FILE_SEPARATOR, point.serialise()));
+        try (var writer = new BufferedWriter(new OutputStreamWriter(FileHelper.openOutputStream(cachePath, true)))) {
+            writer.write(String.format("%s%s%s\n", searchText, FILE_SEPARATOR, point.serialise()));
         } catch (IOException e) {
             logger.error("Failed to write to cache file {}!", cachePath);
         }

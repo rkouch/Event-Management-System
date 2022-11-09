@@ -6,6 +6,8 @@ import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.email.NullEmailAPI;
 import tickr.application.apis.email.SendGridAPI;
+import tickr.application.apis.location.ILocationAPI;
+import tickr.application.apis.location.NominatimAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.apis.purchase.NullPurchaseAPI;
 import tickr.application.apis.purchase.StripeAPI;
@@ -82,6 +84,8 @@ public class Main {
             logger.info("Using testing payments API!");
             ApiLocator.addLocator(IPurchaseAPI.class, () -> new NullPurchaseAPI("http://localhost:" + portFinal));
         }
+
+        ApiLocator.addLocator(ILocationAPI.class, () -> new NominatimAPI(databaseModel));
 
         logger.info("Starting tickr server on http://localhost:{}!", port);
 

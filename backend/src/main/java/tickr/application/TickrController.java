@@ -304,8 +304,9 @@ public class TickrController {
         Location location = null;
         if (request.location != null) {
             location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                    request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+                    request.location.suburb, request.location.state, request.location.country);
             session.save(location);
+            location.lookupLongitudeLatitude();
         }
 
         // creating event from request
@@ -1135,5 +1136,30 @@ public class TickrController {
             }
         }
         session.remove(review);
+    }
+
+    public void clearDatabase (ModelSession session, Object request) {
+        logger.info("Clearing database!");
+        clearType(session, AuthToken.class);
+        clearType(session, Category.class);
+        clearType(session, Comment.class);
+        clearType(session, Event.class);
+        clearType(session, Group.class);
+        clearType(session, Location.class);
+        clearType(session, PurchaseItem.class);
+        clearType(session, Reaction.class);
+        clearType(session, ResetToken.class);
+        clearType(session, SeatingPlan.class);
+        clearType(session, Tag.class);
+        clearType(session, TestEntity.class);
+        clearType(session, Ticket.class);
+        clearType(session, TicketReservation.class);
+        clearType(session, User.class);
+    }
+
+    private <T> void clearType (ModelSession session, Class<T> tClass) {
+        for (var i : session.getAll(tClass)) {
+            session.remove(i);
+        }
     }
 }

@@ -27,15 +27,21 @@ public class NominatimAPI implements ILocationAPI {
     private final DataModel model;
 
     private final NominatimWorker worker;
+    private LocationCache cache;
 
     public NominatimAPI (DataModel model) {
         this.model = model;
-        LocationCache cache = new LocationCache("location_cache.csv");
+        cache = new LocationCache("location_cache.csv");
         worker = new NominatimWorker(cache);
     }
 
     @Override
     public LocationPoint getLocation (LocationRequest request) {
+        var locationOpt = cache.lookupPoint(request.buildSearchString());
+        if (locationOpt.isPresent()) {
+            return locationOpt.orElseThrow();
+        }
+
         var future = new CompletableFuture<LocationPoint>();
 
         logger.debug("Queuing immediate job for request \"{}\"", request.buildSearchString());
@@ -93,8 +99,10 @@ public class NominatimAPI implements ILocationAPI {
         private void runnerLoop () {
             while (true) {
                 var job = waitOnJob();
-                lastJobStart = System.currentTimeMillis();
-                job.executeQuery(httpHelper, cache);
+                var newJobStart = System.currentTimeMillis();
+                if (job.executeQuery(httpHelper, cache)) {
+                    lastJobStart = newJobStart;
+                }
             }
         }
 
@@ -129,19 +137,22 @@ public class NominatimAPI implements ILocationAPI {
         }
 
         @SuppressWarnings("BusyWait")
-        public void executeQuery (HTTPHelper httpHelper, LocationCache cache) {
+        public boolean executeQuery (HTTPHelper httpHelper, LocationCache cache) {
             logger.debug("Executing log query \"{}\"", request.buildSearchString());
+            boolean requestSent;
             var cacheResult = cache.lookupPoint(request.buildSearchString());
 
             LocationPoint result;
             if (cacheResult.isPresent()) {
                 logger.debug("Cache hit inside job for \"{}\"", request.buildSearchString());
                 result = cacheResult.orElseThrow();
+                requestSent = false;
             } else {
                 result = queryAPI(httpHelper);
                 if (result != null) {
                     cache.cachePoint(request.buildSearchString(), result);
                 }
+                requestSent = true;
             }
 
             // TODO
@@ -154,6 +165,7 @@ public class NominatimAPI implements ILocationAPI {
             }
 
             pointConsumer.accept(result);
+            return requestSent;
         }
 
         public boolean matchesTag (Object query) {
@@ -195,7 +207,7 @@ public class NominatimAPI implements ILocationAPI {
                 return null;
             }
 
-            return new LocationPoint(results[0].latitude, results[1].longitude);
+            return new LocationPoint(results[0].latitude, results[0].longitude);
         }
     }
 }

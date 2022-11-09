@@ -9,5 +9,6 @@ build
 bin
 
 jwt_key
+*.csv
 !gradle/wrapper/*.jar
 public

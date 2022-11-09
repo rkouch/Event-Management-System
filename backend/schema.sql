@@ -32,8 +32,8 @@ create table locations (
     postcode    varchar(255) not null,
     state       char(255) not null,
     country     char(255) not null,
-    longitude   varchar(255) not null,
-    latitude    varchar(255) not null,
+    longitude   varchar(255),
+    latitude    varchar(255),
     primary key (id)
 );
 
