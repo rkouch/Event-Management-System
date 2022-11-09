@@ -45,6 +45,22 @@ public class HTTPHelper {
                 .orTimeout(1000, TimeUnit.MILLISECONDS)
                 .join();
     }
+    public Response get (String route, Map<String, String> params, Map<String, String> headers, long timeoutMs) {
+        var requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(buildParamsUrl(serverUrl + route, params)))
+                .GET();
+
+        for (var i : headers.entrySet()) {
+            requestBuilder.header(i.getKey(), i.getValue());
+        }
+
+        var request = requestBuilder.build();
+
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
+                .orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                .join();
+    }
 
     /**
      * Sends a GET request to a route

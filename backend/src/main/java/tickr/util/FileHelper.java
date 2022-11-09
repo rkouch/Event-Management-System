@@ -117,6 +117,15 @@ public class FileHelper {
         }
     }
 
+    public static void createFileAtPath (String filePath) {
+        try {
+            Files.createFile(Path.of(filePath));
+        } catch (IOException e) {
+            logger.error("Failed to create file at path " + filePath + "!");
+            throw new RuntimeException("Failed to create file at path " + filePath + "!");
+        }
+    }
+
     private static class DataUri {
         String mediaType;
         String data;
