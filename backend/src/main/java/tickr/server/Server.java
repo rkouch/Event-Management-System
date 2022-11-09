@@ -102,6 +102,8 @@ public class Server {
 
         post("/api/group/create", TickrController::groupCreate, GroupCreateRequest.class);
         get("/api/groups/get", TickrController::getGroupIds);
+        post("/api/group/invite", TickrController::groupInvite, GroupInviteRequest.class);
+        post("/api/group/accept", TickrController::groupAccept, GroupAcceptRequest.class);
 
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {

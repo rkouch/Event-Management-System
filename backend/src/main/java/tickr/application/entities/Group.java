@@ -42,6 +42,9 @@ public class Group {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> ticketReservations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.REMOVE)
+    private Set<Invitation> invitations; 
+
 
     public Group(User leader, LocalDateTime timeCreated, int size, Set<TicketReservation> ticketReservations) {
         this.leader = leader;
@@ -118,5 +121,9 @@ public class Group {
         for (TicketReservation t : ticketReservations) {
             t.setGroup(this);
         }
+    }
+
+    public void addInvitation(Invitation invitation) {
+        this.invitations.add(invitation);
     }
 }

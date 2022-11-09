@@ -1113,16 +1113,20 @@ public class TickrController {
             throw new BadRequestException("Missing comment ID!");
         }
         User user = authenticateToken(session, request.authToken);
+
         Comment review = session.getById(Comment.class, UUID.fromString(request.commentId))
                 .orElseThrow(() -> new ForbiddenException("Invalid comment ID!"));
+
         if (user != review.getAuthor()) {
             throw new ForbiddenException("User is not author of this review!");
         }
+
         if (review.getParent() == null) {
             for (Comment reply : review.getChildren()) {
                 session.remove(reply);
             }
         }
+
         session.remove(review);
     }   
 
@@ -1169,5 +1173,41 @@ public class TickrController {
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         return new GroupIdsResponse(groupIds, numResults.get());
+    }
+
+    public GroupInviteResponse groupInvite(ModelSession session, GroupInviteRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.reserveId == null) {
+            throw new BadRequestException("Invalid reserve ID!");
+        }
+        if (request.email == null || !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid Email!");
+        }
+
+        User user = authenticateToken(session, request.authToken);
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new BadRequestException("Invalid group ID!"));
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.reserveId))
+                .orElseThrow(() -> new BadRequestException("Invalid reserve ID!"));
+
+        reserve.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
+
+        Invitation invitation = new Invitation(group, reserve);
+        session.save(invitation);
+        group.addInvitation(invitation);
+
+        var inviteUrl = String.format("http://localhost:3000/ticket/purchase/group/%s", invitation.getId().toString());
+        var message = String.format("Please click below to view your group invitation <a href=\"%s\">here</a>.\n", inviteUrl);
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(request.email, "User group invitation", message);
+
+        return new GroupInviteResponse(true);
+    }
+
+    public GroupAcceptResponse groupAccept(ModelSession session, GroupAcceptRequest request) {
+        return new GroupAcceptResponse(null);
     }
 }

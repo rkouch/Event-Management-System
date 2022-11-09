@@ -214,6 +214,16 @@ create table reset_tokens (
     foreign key (user_id) references users(id)
 );
 
+create table invitation (
+    id  varchar(36) not null,
+    group_id  varchar(36) not null,
+    reserve_id  varchar(36) not null,
+    
+    primary key (id),
+    foreign key (group_id) references `user_groups`(id),
+    foreign key (reserve_id) references ticket_reservation(id)
+);
+
 create table TestTable
 (
     id    varchar(36),
@@ -222,4 +232,5 @@ create table TestTable
     constraint TestTable_pk
         primary key (id)
 );
+
 
