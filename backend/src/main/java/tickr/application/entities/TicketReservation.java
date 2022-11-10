@@ -48,6 +48,12 @@ public class TicketReservation {
     @JoinColumn(name = "group_id")
     private Group group;
 
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "ticketReservation", cascade = CascadeType.REMOVE)
+    private Invitation invitation;
+
+    @Column(name = "group_accepted")
+    private boolean groupAccepted;
+
     public TicketReservation () {
 
     }
@@ -108,7 +114,11 @@ public class TicketReservation {
     }
 
     public Ticket convert (String firstName, String lastName, String email) {
-        return new Ticket(user, section, seatNum, firstName, lastName, email);
+        Ticket ticket = new Ticket(user, section, seatNum, firstName, lastName, email);
+        if (group != null) {
+            group.convert(ticket, this);
+        }
+        return ticket;
     }
 
     public SeatingPlan getSection() {
@@ -130,5 +140,34 @@ public class TicketReservation {
     public void setGroup(Group group) {
         this.group = group;
     }
+
+    public Invitation getInvitation() {
+        return invitation;
+    }
+
+    public void setInvitation(Invitation invitation) {
+        this.invitation = invitation;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public boolean isGroupAccepted() {
+        return groupAccepted;
+    }
+
+    public void setGroupAccepted(boolean groupAccepted) {
+        this.groupAccepted = groupAccepted;
+    }
     
+    public void acceptInvitation (User user) {
+        setUser(user);
+        setInvitation(null);
+        setGroupAccepted(true);
+    }
 }

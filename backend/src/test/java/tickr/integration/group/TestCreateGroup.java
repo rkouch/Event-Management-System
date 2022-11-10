@@ -112,7 +112,7 @@ public class TestCreateGroup {
 
     @Test 
     public void testCreateGroup() {
-        var response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, reserveIdList));
+        var response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, reserveIdList, reserveIdList.get(0)));
         assertEquals(200, response.getStatus());
         var group = response.getBody(GroupCreateResponse.class);
         assertNotNull(group.groupId);
@@ -126,11 +126,11 @@ public class TestCreateGroup {
 
     @Test 
     public void testGroupCreateExceptions () {
-        var response = httpHelper.post("/api/group/create", new GroupCreateRequest(null, reserveIdList));
+        var response = httpHelper.post("/api/group/create", new GroupCreateRequest(null, reserveIdList, reserveIdList.get(0)));
         assertEquals(401, response.getStatus());
-        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString())));
+        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString()), reserveIdList.get(0)));
         assertEquals(403, response.getStatus());
-        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, null));
+        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, null, reserveIdList.get(0)));
         assertEquals(400, response.getStatus());
     }       
 

@@ -1140,12 +1140,18 @@ public class TickrController {
             throw new ForbiddenException("Group has already been created for reserve IDs!");
         }
 
-        Group group = new Group(user, LocalDateTime.now(ZoneId.of("UTC")), 0, request.getTicketReservations(session));
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.hostReserveId))
+        .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
+
+        Group group = new Group(user, LocalDateTime.now(ZoneId.of("UTC")), 1, request.getTicketReservations(session, reserve));
+
+        
         session.save(group);
         user.addGroup(group);
         user.addOwnedGroup(group);
         group.addUser(user);
         group.addGroupToTicketReservations();
+        
         return new GroupCreateResponse(group.getId().toString());
     }
 
@@ -1188,6 +1194,12 @@ public class TickrController {
 
         User user = authenticateToken(session, request.authToken);
 
+        User inviteUser = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new BadRequestException("User with email does not exist!"));
+        if (user.equals(inviteUser)) {
+            throw new BadRequestException("Host cannot send invite to themself!");
+        }
+
         Group group = session.getById(Group.class, UUID.fromString(request.groupId))
                 .orElseThrow(() -> new BadRequestException("Invalid group ID!"));
 
@@ -1196,9 +1208,18 @@ public class TickrController {
 
         reserve.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
 
-        Invitation invitation = new Invitation(group, reserve);
-        session.save(invitation);
-        group.addInvitation(invitation);
+        Invitation invitation;
+        if (reserve.getInvitation() == null) {
+            invitation = new Invitation(group, reserve);
+            session.save(invitation);
+            group.addInvitation(invitation);
+            reserve.setInvitation(invitation);
+        } else {
+            invitation = session.getByUnique(Invitation.class, "ticketReservation", reserve)
+                    .orElseThrow(() -> new BadRequestException("Invitation does not exist for this reserve ID!"));
+        }
+
+        // logger.info("{}", invitation.getId().toString());
 
         var inviteUrl = String.format("http://localhost:3000/ticket/purchase/group/%s", invitation.getId().toString());
         var message = String.format("Please click below to view your group invitation <a href=\"%s\">here</a>.\n", inviteUrl);
@@ -1208,6 +1229,40 @@ public class TickrController {
     }
 
     public GroupAcceptResponse groupAccept(ModelSession session, GroupAcceptRequest request) {
-        return new GroupAcceptResponse(null);
+        if (request.inviteId == null) {
+            throw new BadRequestException("Invalid invite ID!");
+        }
+        User user = authenticateToken(session, request.authToken);
+        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.inviteId))
+                .orElseThrow(() -> new BadRequestException("Invitation does not exist for this invite ID!"));
+
+        invitation.acceptInvitation(user);
+        session.remove(invitation);
+        return new GroupAcceptResponse(invitation.getTicketReservation().getId().toString());
+    }
+    
+    public void groupDeny(ModelSession session, GroupDenyRequest request) {
+        if (request.invideId == null) {
+            throw new BadRequestException("Invalid invite ID!");
+        }
+        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.invideId))
+                .orElseThrow(() -> new BadRequestException("Invitation does not exist for this invite ID!"));
+
+        invitation.denyInvitation();
+        session.remove(invitation);
+    }
+
+    public GroupDetailsResponse groupDetails(ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth token!!");
+        }
+        if (!params.containsKey("group_id")) {
+            throw new BadRequestException("Missing group ID!");
+        }
+        User host = authenticateToken(session, params.get("auth_token"));
+        Group group = session.getById(Group.class, UUID.fromString(params.get("group_id")))
+                .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
+
+        return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getUserDetails(), group.getAvailableReserves(host));
     }
 }

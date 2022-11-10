@@ -13,12 +13,15 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.combined.TicketReserve.ReserveDetails;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.GroupAcceptRequest;
 import tickr.application.serialised.requests.GroupCreateRequest;
+import tickr.application.serialised.requests.GroupDenyRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse;
+import tickr.application.serialised.responses.GroupAcceptResponse;
 import tickr.application.serialised.responses.GroupCreateResponse;
 import tickr.application.serialised.responses.GroupIdsResponse;
 import tickr.application.serialised.responses.TicketBookingsResponse;
@@ -41,7 +44,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-public class TestGroupInvitation {
+public class TestGroupAccept {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
 
@@ -50,6 +53,10 @@ public class TestGroupInvitation {
 
     private String authToken;
     private String authToken2;
+    private String authToken3;
+
+    private String inviteId1;
+    private String inviteId2;
 
     private String eventId;
     private String groupId;
@@ -80,6 +87,11 @@ public class TestGroupInvitation {
                 "Password123!", "2010-10-07"));
         assertEquals(200, response.getStatus());
         authToken2 = response.getBody(AuthTokenResponse.class).authToken;
+
+        response = httpHelper.post("/api/user/register", new UserRegisterRequest("TestUsername", "Test", "User", "test3@example.com",
+                "Password123!", "2010-10-07"));
+        assertEquals(200, response.getStatus());
+        authToken3 = response.getBody(AuthTokenResponse.class).authToken;
 
         startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
@@ -117,6 +129,18 @@ public class TestGroupInvitation {
         
         emailAPI = new MockEmailAPI();
         ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
+
+        response = httpHelper.post("/api/group/invite", 
+                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+        assertEquals(200, response.getStatus());
+        response = httpHelper.post("/api/group/invite", 
+                new GroupInviteRequest(authToken, groupId, reserveIdList.get(1), "test3@example.com"));
+        assertEquals(200, response.getStatus());
+
+        var message1 = emailAPI.getSentMessages().get(0);
+        var message2 = emailAPI.getSentMessages().get(1);
+        inviteId1 = message1.getBody().split("/group/")[1].split("\"")[0];
+        inviteId2 = message2.getBody().split("/group/")[1].split("\"")[0];
     }
 
     @AfterEach
@@ -129,28 +153,48 @@ public class TestGroupInvitation {
     }    
 
     @Test 
-    public void testGroupInvite () {
-        assertEquals(200, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com")).getStatus());
-        assertEquals(200, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(1), "test2@example.com")).getStatus());
+    public void testAcceptInvite() {
+        var response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, inviteId1));
+        assertEquals(200, response.getStatus());
+        assertEquals(reserveIdList.get(0), response.getBody(GroupAcceptResponse.class).reserveId);
+
+        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, inviteId1));
+        assertEquals(400, response.getStatus());
+
+
+        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken3, inviteId2));
+        assertEquals(200, response.getStatus());
+        assertEquals(reserveIdList.get(1), response.getBody(GroupAcceptResponse.class).reserveId);
+
+        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, inviteId2));
+        assertEquals(400, response.getStatus());
     }
 
     @Test 
-    public void testExceptions () {
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, null, reserveIdList.get(0), "test2@example.com")).getStatus());
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, UUID.randomUUID().toString(), reserveIdList.get(0), "test2@example.com")).getStatus());
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, null, "test2@example.com")).getStatus());
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, UUID.randomUUID().toString(), "test2@example.com")).getStatus());
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "null")).getStatus());
-        assertEquals(400, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "email")).getStatus());
-        assertEquals(401, httpHelper.post("/api/group/invite", 
-                new GroupInviteRequest(null, groupId, reserveIdList.get(0), "test2@example.com")).getStatus());
+    public void testDenyInvite () {
+        var response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId1));
+        assertEquals(200, response.getStatus());
+        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId1));
+        assertEquals(400, response.getStatus());
+
+        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId2));
+        assertEquals(200, response.getStatus());
+        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId2));
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test 
+    public void testExceptions() {
+        var response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(null, inviteId1));
+        assertEquals(401, response.getStatus());
+        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, null));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, UUID.randomUUID().toString()));
+        assertEquals(400, response.getStatus());
+
+        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(null));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(UUID.randomUUID().toString()));
+        assertEquals(400, response.getStatus());
     }
 }

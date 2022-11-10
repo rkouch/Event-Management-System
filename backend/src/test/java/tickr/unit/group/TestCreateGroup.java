@@ -120,21 +120,21 @@ public class TestCreateGroup {
 
     @Test 
     public void testCreateGroup() {
-        var group = controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList));
+        var group = controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList, reserveIdList.get(0)));
         assertNotNull(group.groupId);
         session = TestHelper.commitMakeSession(model, session);
         var groups = controller.getGroupIds(session, Map.of("auth_token", authToken, "page_start", "0", "max_results", "10"));
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(1, groups.groups.size());
         assertEquals(1, groups.numResults);
-        assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList)));
+        assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList, reserveIdList.get(0))));
     }
 
     @Test 
     public void testGroupCreateExceptions() {
-        assertThrows(UnauthorizedException.class, () -> controller.groupCreate(session, new GroupCreateRequest(null, reserveIdList)));
-        assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString()))));
-        assertThrows(BadRequestException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, null)));
+        assertThrows(UnauthorizedException.class, () -> controller.groupCreate(session, new GroupCreateRequest(null, reserveIdList, reserveIdList.get(0))));
+        assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString()), reserveIdList.get(0))));
+        assertThrows(BadRequestException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, null, reserveIdList.get(0))));
     }
 
     @Test 

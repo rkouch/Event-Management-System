@@ -62,5 +62,15 @@ public class Invitation {
         this.ticketReservation = ticketReservation;
     }
 
-    
+    public void acceptInvitation(User user) {
+        group.acceptInvitation(this, user);
+        ticketReservation.acceptInvitation(user);
+        user.addReservation(ticketReservation);
+    }
+
+    public void denyInvitation() {
+        group.removeInvitation(this);
+        ticketReservation.setInvitation(null);
+        ticketReservation.setGroupAccepted(false);
+    }
 }

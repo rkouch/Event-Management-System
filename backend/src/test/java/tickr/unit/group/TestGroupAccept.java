@@ -22,7 +22,9 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.combined.TicketReserve.ReserveDetails;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.GroupAcceptRequest;
 import tickr.application.serialised.requests.GroupCreateRequest;
+import tickr.application.serialised.requests.GroupDenyRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
@@ -46,17 +48,21 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.swing.GroupLayout.Group;
-public class TestGroupInvitation {
+public class TestGroupAccept {
     private DataModel model;
     private TickrController controller;
     private ModelSession session;
     private AbstractMockPurchaseAPI purchaseAPI;
     private MockEmailAPI emailAPI;
-    
+
     private String eventId;
     private String authToken; 
     private String authToken2;
+    private String authToken3;
+
+    private String inviteId1;
+    private String inviteId2;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -93,6 +99,12 @@ public class TestGroupInvitation {
 
         session = TestHelper.commitMakeSession(model, session);
 
+        authToken3 = controller.userRegister(session,
+        new UserRegisterRequest("test", "first", "last", "test3@example.com",
+                "Password123!", "2022-04-14")).authToken;
+
+        session = TestHelper.commitMakeSession(model, session);
+
         startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
         
@@ -123,6 +135,16 @@ public class TestGroupInvitation {
 
         emailAPI = new MockEmailAPI();
         ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
+
+        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+        session = TestHelper.commitMakeSession(model, session);
+        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(1), "test3@example.com"));
+        session = TestHelper.commitMakeSession(model, session);
+
+        var message1 = emailAPI.getSentMessages().get(0);
+        var message2 = emailAPI.getSentMessages().get(1);
+        inviteId1 = message1.getBody().split("/group/")[1].split("\"")[0];
+        inviteId2 = message2.getBody().split("/group/")[1].split("\"")[0];
     }
 
     @AfterEach
@@ -132,59 +154,55 @@ public class TestGroupInvitation {
     }
 
     @Test 
-    public void testGroupInvite() {
-        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+    public void testAcceptInvite() {
+        var invitations = session.getAll(Invitation.class);
+        assertEquals(2, invitations.size());
+
+        var response = controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId1));
         session = TestHelper.commitMakeSession(model, session);
 
-        assertEquals(1, emailAPI.getSentMessages().size());
-        var message = emailAPI.getSentMessages().get(0);
-        assertEquals("test2@example.com", message.getToEmail());
-        assertEquals("User group invitation", message.getSubject());
-        var pattern = Pattern.compile("<a href=\"http://localhost:3000/ticket/purchase/group/(.*)\">.*</a>");
-        var matcher = pattern.matcher(message.getBody());
-        assertTrue(matcher.find());
+        assertEquals(reserveIdList.get(0), response.reserveId);
+        invitations = session.getAll(Invitation.class);
+        assertEquals(1, invitations.size());
 
-        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+        assertThrows(BadRequestException.class, () -> controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId1)));
+
+        response = controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId2));
         session = TestHelper.commitMakeSession(model, session);
-        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+
+        assertEquals(reserveIdList.get(1), response.reserveId);
+        invitations = session.getAll(Invitation.class);
+        assertEquals(0, invitations.size());
+
+        assertThrows(BadRequestException.class, () -> controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId2)));
+    }
+
+    @Test 
+    public void testDenyInvite() {
+        assertDoesNotThrow(() -> controller.groupDeny(session, new GroupDenyRequest(inviteId1)));
         session = TestHelper.commitMakeSession(model, session);
-        assertEquals(3, emailAPI.getSentMessages().size());
 
         var invitations = session.getAll(Invitation.class);
         assertEquals(1, invitations.size());
 
-        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+        assertThrows(BadRequestException.class, () -> controller.groupDeny(session, new GroupDenyRequest(inviteId1)));
+
+        assertDoesNotThrow(() -> controller.groupDeny(session, new GroupDenyRequest(inviteId2)));
         session = TestHelper.commitMakeSession(model, session);
 
         invitations = session.getAll(Invitation.class);
-        assertEquals(1, invitations.size());
+        assertEquals(0, invitations.size());
 
-        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(1), "test2@example.com"));
-        session = TestHelper.commitMakeSession(model, session);
-        
-        invitations = session.getAll(Invitation.class);
-        assertEquals(2, invitations.size());
+        assertThrows(BadRequestException.class, () -> controller.groupDeny(session, new GroupDenyRequest(inviteId2)));
     }
 
     @Test 
-    public void testExceptions () {
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, null, reserveIdList.get(0), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, UUID.randomUUID().toString(), reserveIdList.get(0), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, UUID.randomUUID().toString(), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, null, "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), null)));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "email")));
-        assertThrows(UnauthorizedException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(null, groupId, reserveIdList.get(0), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test1@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "invalidemail@example.com")));
+    public void testExceptions() {
+        assertThrows(BadRequestException.class, () -> controller.groupAccept(session, new GroupAcceptRequest(authToken2, null)));
+        assertThrows(BadRequestException.class, () -> controller.groupAccept(session, new GroupAcceptRequest(authToken2, UUID.randomUUID().toString())));
+        assertThrows(UnauthorizedException.class, () -> controller.groupAccept(session, new GroupAcceptRequest(null, inviteId1)));
+    
+        assertThrows(BadRequestException.class, () -> controller.groupDeny(session, new GroupDenyRequest(null)));
+        assertThrows(BadRequestException.class, () -> controller.groupDeny(session, new GroupDenyRequest(UUID.randomUUID().toString())));
     }
 }

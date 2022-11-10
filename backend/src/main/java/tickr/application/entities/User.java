@@ -460,4 +460,8 @@ public class User {
         }
         return false;
     }
+
+    public void addReservation(TicketReservation t) {
+        reservations.add(t);
+    }
 }

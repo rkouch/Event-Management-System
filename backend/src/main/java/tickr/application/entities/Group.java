@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -8,8 +10,10 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "user_groups")
@@ -45,6 +49,8 @@ public class Group {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.REMOVE)
     private Set<Invitation> invitations; 
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group")
+    private Set<Ticket> tickets; 
 
     public Group(User leader, LocalDateTime timeCreated, int size, Set<TicketReservation> ticketReservations) {
         this.leader = leader;
@@ -93,7 +99,7 @@ public class Group {
         return ticketsAvailable;
     }
 
-    private void setTicketsAvailable (int ticketsAvailable) {
+    public void setTicketsAvailable (int ticketsAvailable) {
         this.ticketsAvailable = ticketsAvailable;
     }
 
@@ -126,4 +132,66 @@ public class Group {
     public void addInvitation(Invitation invitation) {
         this.invitations.add(invitation);
     }
+
+    public void removeInvitation(Invitation invitation) {
+        invitations.remove(invitation);
+    }
+
+    public Set<Ticket> getTickets() {
+        return tickets;
+    }
+
+    public void setTickets(Set<Ticket> tickets) {
+        this.tickets = tickets;
+    }
+
+    public void addTickets(Ticket ticket) {
+        this.tickets.add(ticket);
+    }
+
+    public void removeReservation(TicketReservation ticket) {
+        this.ticketReservations.remove(ticket);
+    }
+
+    public void acceptInvitation(Invitation invitation, User user) {
+        if (!getUsers().contains(user)) {
+            addUser(user);
+            setSize(this.size + 1);
+        }
+        removeInvitation(invitation);
+    }
+
+    public void convert(Ticket ticket, TicketReservation reserve) {
+        addTickets(ticket);
+        removeReservation(reserve);
+        setTicketsAvailable(this.ticketsAvailable - 1);
+        ticket.setGroup(this);
+    }
+
+    public List<Users> getUserDetails() {
+        List<Users> users = new ArrayList<>();
+        for (Ticket t : tickets) {
+            users.add(new Users(t.getUser().getId().toString(), t.getEmail(), t.getSection().getSection(), t.getSeatNumber(), true));
+        }
+        for (TicketReservation r : ticketReservations) {
+            // invited but no response / accepted invitation
+            if (r.getInvitation() != null && !r.isGroupAccepted()) {
+                users.add(new Users(r.getSection().getSection(), r.getSeatNum(), false));
+            } else if (r.getInvitation() == null && r.isGroupAccepted()) {
+                users.add(new Users(r.getUser().getId().toString(), r.getUser().getEmail(), r.getSection().getSection(), r .getSeatNum(), true));
+            }
+        }
+        return users;
+    }
+    
+    public List<String> getAvailableReserves(User host) {
+        return  host.equals(this.getLeader()) 
+        ? ticketReservations.stream()
+                .filter(t -> t.getInvitation() == null && !t.isGroupAccepted())
+                .map(TicketReservation::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList())
+        : null;
+    }
+
 }

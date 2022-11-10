@@ -1,5 +1,8 @@
 package tickr.application.serialised.requests;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,16 +21,24 @@ public class GroupCreateRequest {
     @SerializedName("reserved_ids")
     public List<String> reservedIds;
 
-    public GroupCreateRequest(String authToken, List<String> reservedIds) {
+    @SerializedName("host_reserve_id")
+    public String hostReserveId;
+
+    public GroupCreateRequest(String authToken, List<String> reservedIds, String hostReserveId) {
         this.authToken = authToken;
         this.reservedIds = reservedIds;
+        this.hostReserveId = hostReserveId;
     } 
 
-    public Set<TicketReservation> getTicketReservations (ModelSession session) {
+    public Set<TicketReservation> getTicketReservations (ModelSession session, TicketReservation reserve) {
         Set<TicketReservation> set = new HashSet<>();
         for (String id : reservedIds) {
             var reserveId = session.getById(TicketReservation.class, UUID.fromString(id))
                     .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
+            if (reserveId.equals(reserve)) {
+                reserveId.setGroupAccepted(true);
+                reserveId.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
+            }
             set.add(reserveId);
         }
         return set;
