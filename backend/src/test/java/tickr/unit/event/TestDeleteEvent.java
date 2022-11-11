@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +59,8 @@ public class TestDeleteEvent {
         eventId = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(1))
-            .withEndDate(LocalDateTime.now().plusDays(2))
+            .withStartDate(ZonedDateTime.now().plusDays(1))
+            .withEndDate(ZonedDateTime.now().plusDays(2))
             .build(authToken)).event_id;
 
         session = TestHelper.commitMakeSession(model, session);

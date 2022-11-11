@@ -75,8 +75,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var eventResponse = httpHelper.post("/api/event/create", new CreateEventRequest(authTokenString, "test event", null, location
-        , "2031-12-03T10:15:30",
-        "2031-12-04T10:15:30", "description", seats, admins, categories, tags));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags));
         assertEquals(200, eventResponse.getStatus());
         event_id = eventResponse.getBody(CreateEventResponse.class).event_id;
 
@@ -95,8 +95,8 @@ public class TestViewEvent {
         assertEquals(location.country, response.location.country);
         assertEquals(location.longitude, response.location.longitude);
         assertEquals(location.latitude, response.location.latitude);
-        assertEquals("2031-12-03T10:15:30", response.startDate);
-        assertEquals("2031-12-04T10:15:30", response.endDate);
+        assertEquals("2031-12-03T10:15:30Z", response.startDate);
+        assertEquals("2031-12-04T10:15:30Z", response.endDate);
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
         assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availableSeats);

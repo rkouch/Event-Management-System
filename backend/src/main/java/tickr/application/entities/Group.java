@@ -5,7 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ public class Group {
     private int size;
 
     @Column(name = "time_created")
-    private LocalDateTime timeCreated;
+    private ZonedDateTime timeCreated;
 
     @Column(name = "ticket_available")
     private int ticketsAvailable;
@@ -61,11 +61,11 @@ public class Group {
         this.size = size;
     }
 
-    private LocalDateTime getTimeCreated () {
+    private ZonedDateTime getTimeCreated () {
         return timeCreated;
     }
 
-    private void setTimeCreated (LocalDateTime timeCreated) {
+    private void setTimeCreated (ZonedDateTime timeCreated) {
         this.timeCreated = timeCreated;
     }
 

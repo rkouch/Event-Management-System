@@ -1,7 +1,7 @@
 package tickr.integration.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,8 +61,8 @@ public class TestEventHostingsPastFuture {
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().minusDays(5))
-                .withEndDate(LocalDateTime.now().minusDays(4))
+                .withStartDate(ZonedDateTime.now().minusDays(5))
+                .withEndDate(ZonedDateTime.now().minusDays(4))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event1 = response.getBody(CreateEventResponse.class).event_id;
@@ -71,8 +71,8 @@ public class TestEventHostingsPastFuture {
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().minusDays(2))
-                .withEndDate(LocalDateTime.now().minusDays(1))
+                .withStartDate(ZonedDateTime.now().minusDays(2))
+                .withEndDate(ZonedDateTime.now().minusDays(1))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event2 = response.getBody(CreateEventResponse.class).event_id;
@@ -80,8 +80,8 @@ public class TestEventHostingsPastFuture {
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(5))
-                .withEndDate(LocalDateTime.now().plusDays(6))
+                .withStartDate(ZonedDateTime.now().plusDays(5))
+                .withEndDate(ZonedDateTime.now().plusDays(6))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event3 = response.getBody(CreateEventResponse.class).event_id;
@@ -89,8 +89,8 @@ public class TestEventHostingsPastFuture {
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(15))
-                .withEndDate(LocalDateTime.now().plusDays(16))
+                .withStartDate(ZonedDateTime.now().plusDays(15))
+                .withEndDate(ZonedDateTime.now().plusDays(16))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event4 = response.getBody(CreateEventResponse.class).event_id;
@@ -98,8 +98,8 @@ public class TestEventHostingsPastFuture {
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(20))
-                .withEndDate(LocalDateTime.now().plusDays(21))
+                .withStartDate(ZonedDateTime.now().plusDays(20))
+                .withEndDate(ZonedDateTime.now().plusDays(21))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event5 = response.getBody(CreateEventResponse.class).event_id;

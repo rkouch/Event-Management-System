@@ -25,7 +25,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +45,8 @@ public class TestAnnouncement {
     private String adminToken;
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
     private MockUnitPurchaseAPI purchaseAPI;
@@ -59,7 +59,7 @@ public class TestAnnouncement {
         emailAPI = new MockEmailAPI();
         ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
