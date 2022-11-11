@@ -22,12 +22,15 @@ import jdk.jfr.Event;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventHostingsResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -47,6 +50,7 @@ public class TestUserEvents {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -115,6 +119,7 @@ public class TestUserEvents {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 
@@ -126,6 +131,7 @@ public class TestUserEvents {
         )).getEventIds();
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(5, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
@@ -134,6 +140,7 @@ public class TestUserEvents {
         )).getEventIds();
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(4, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
@@ -142,6 +149,7 @@ public class TestUserEvents {
         )).getEventIds();
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(3, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
@@ -150,6 +158,7 @@ public class TestUserEvents {
         )).getEventIds();
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(0, events.size());
+        session = TestHelper.commitMakeSession(model, session);
     }
 
     @Test

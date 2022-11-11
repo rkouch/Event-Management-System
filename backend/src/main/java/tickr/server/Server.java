@@ -131,6 +131,8 @@ public class Server {
             paymentAPI.handleWebhookEvent(ctx.controller, ctx.session, ctx.request.body(), sigHeader);
             return new Object();
         }));
+
+        delete("/api/test/clear", TickrController::clearDatabase, Object.class);
     }
 
     /**

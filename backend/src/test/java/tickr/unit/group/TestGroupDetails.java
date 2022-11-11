@@ -11,6 +11,7 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.Invitation;
 import tickr.application.entities.PurchaseItem;
@@ -32,6 +33,7 @@ import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockEmailAPI;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -87,6 +89,7 @@ public class TestGroupDetails {
 
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -171,6 +174,7 @@ public class TestGroupDetails {
     public void cleanup () {
         model.cleanup();
         ApiLocator.clearLocator(IEmailAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 

@@ -7,6 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.location.ILocationAPI;
+import tickr.application.apis.location.LocationPoint;
+import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
@@ -290,8 +293,9 @@ public class TickrController {
         Location location = null;
         if (request.location != null) {
             location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                    request.location.suburb, request.location.state, request.location.country, request.location.longitude, request.location.latitude);
+                    request.location.suburb, request.location.state, request.location.country);
             session.save(location);
+            location.lookupLongitudeLatitude();
         }
 
         // creating event from request
@@ -577,20 +581,34 @@ public class TickrController {
             options = EventSearch.fromParams(params.get("search_options"));
         }
 
+        if (options != null && ((options.location != null && options.maxDistance == null) || (options.location == null && options.maxDistance != null)
+                || (options.maxDistance != null && options.maxDistance < 0))) {
+            throw new BadRequestException("Invalid location options!");
+        }
+
+        LocationPoint queryLocation = null;
+        if (options != null && options.location != null) {
+            queryLocation = ApiLocator.locateApi(ILocationAPI.class).getLocation(LocationRequest.fromSerialised(options.location));
+        }
+
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
                 .filter(x -> !x.getEventEnd().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .filter(Event::isPublished)
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
+
         if (options != null) {
+            double maxDistance = options.maxDistance != null ? options.maxDistance : -1;
             var options1 = options;
+            LocationPoint finalQueryLocation = queryLocation;
             eventStream = eventStream
                     .filter(e -> e.startsAfter(options1.getStartTime()))
                     .filter(e -> e.endsBefore(options1.getEndTime()))
                     .filter(e -> e.matchesCategories(options1.categories))
                     .filter(e -> e.matchesTags(options1.tags))
-                    .filter(e -> e.matchesDescription(Utils.toWords(options1.text)));
+                    .filter(e -> e.matchesDescription(Utils.toWords(options1.text)))
+                    .filter(e -> e.getLocation().getDistance(finalQueryLocation) <= maxDistance);
         }
 
         var eventList = eventStream.skip(pageStart)
@@ -1264,5 +1282,30 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
 
         return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getUserDetails(), group.getAvailableReserves(host));
+    }
+
+    public void clearDatabase (ModelSession session, Object request) {
+        logger.info("Clearing database!");
+        clearType(session, AuthToken.class);
+        clearType(session, Category.class);
+        clearType(session, Comment.class);
+        clearType(session, Event.class);
+        clearType(session, Group.class);
+        clearType(session, Location.class);
+        clearType(session, PurchaseItem.class);
+        clearType(session, Reaction.class);
+        clearType(session, ResetToken.class);
+        clearType(session, SeatingPlan.class);
+        clearType(session, Tag.class);
+        clearType(session, TestEntity.class);
+        clearType(session, Ticket.class);
+        clearType(session, TicketReservation.class);
+        clearType(session, User.class);
+    }
+
+    private <T> void clearType (ModelSession session, Class<T> tClass) {
+        for (var i : session.getAll(tClass)) {
+            session.remove(i);
+        }
     }
 }

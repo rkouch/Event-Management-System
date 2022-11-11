@@ -9,10 +9,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -30,10 +33,14 @@ public class TestEventSearch {
     private TickrController controller;
     private ModelSession session;
     private String authToken;
+    private MockLocationApi locationApi;
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        locationApi = new MockLocationApi(model);
+        ApiLocator.addLocator(ILocationAPI.class, () -> locationApi);
+
         session = model.makeSession();
         authToken = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
         session = TestHelper.commitMakeSession(model, session);
@@ -42,6 +49,7 @@ public class TestEventSearch {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test
@@ -71,6 +79,13 @@ public class TestEventSearch {
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(1), "max_results", Integer.toString(1), "search_options",
                         Base64.getEncoder().encodeToString("testing123".getBytes()))));
+
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(null, 1.0).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), null).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), -1.0).build()));
     }
 
     @Test
@@ -153,6 +168,35 @@ public class TestEventSearch {
 
         respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build()).eventIds;
         assertEquals(0, respIds.size());
+
+        respIds = makeSearch(0, 100, new OptionsBuilder()
+                .addLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withPostcode("2052")
+                        .withState("NSW")
+                        .withCountry("Australia")
+                        .build(), 30.0)
+                .build()).eventIds;
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(0), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        respIds = makeSearch(0, 100, new OptionsBuilder()
+                .addLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withPostcode("2052")
+                        .withState("NSW")
+                        .withCountry("Australia")
+                        .build(), 260.0)
+                .build()).eventIds;
+        assertEquals(3, respIds.size());
+        assertEquals(ids.get(2), respIds.get(0));
+        assertEquals(ids.get(0), respIds.get(1));
+        assertEquals(ids.get(1), respIds.get(2));
     }
 
     private List<String> createEventOptions () {
@@ -165,6 +209,14 @@ public class TestEventSearch {
                 .withCategories(Set.of("food", "music", "health"))
                 .withTags(Set.of("test1", "test2", "test3"))
                 .withDescription("Testing karaoke burgers hospital")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withState("NSW")
+                        .withPostcode("2052")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(0), authToken, null, null, null, null,
@@ -178,6 +230,14 @@ public class TestEventSearch {
                 .withCategories(Set.of("hobbies", "business", "free"))
                 .withTags(Set.of("test4", "test2", "test5"))
                 .withDescription("money capitalism free sewing")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(235)
+                        .withStreetName("Anzac Parade")
+                        .withSuburb("Kensington")
+                        .withState("NSW")
+                        .withPostcode("2033")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(1), authToken, null, null, null, null,
@@ -191,11 +251,21 @@ public class TestEventSearch {
                 .withCategories(Set.of("food", "education"))
                 .withTags(Set.of("test2", "test5", "test6"))
                 .withDescription("money burgers school")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("Parliament Drive")
+                        .withSuburb("Canberra")
+                        .withState("ACT")
+                        .withPostcode("2600")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(2), authToken, null, null, null, null,
                 null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
+
+        locationApi.awaitLocations();
 
         return entityIds;
     }
@@ -217,6 +287,7 @@ public class TestEventSearch {
 
     private static class OptionsBuilder {
         private SerializedLocation location = null;
+        private Double maxDistance;
 
         private ZonedDateTime startTime = null;
         private ZonedDateTime endTime = null;
@@ -226,8 +297,9 @@ public class TestEventSearch {
 
         private String text = null;
 
-        public OptionsBuilder addLocation (String streetName, int streetNo, String unitNo, String suburb, String postcode, String state, String country, String longitude, String latitude) {
-            this.location = new SerializedLocation(streetName, streetNo, unitNo, suburb, postcode, state, country, longitude, latitude);
+        public OptionsBuilder addLocation (SerializedLocation location, Double maxDistance) {
+            this.location = location;
+            this.maxDistance = maxDistance;
 
             return this;
         }
@@ -264,7 +336,7 @@ public class TestEventSearch {
 
 
         public EventSearch.Options build () {
-            return new EventSearch.Options(location, startTime, endTime, tags, categories, text);
+            return new EventSearch.Options(location, maxDistance, startTime, endTime, tags, categories, text);
         }
     }
 }
