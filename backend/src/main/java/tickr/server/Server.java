@@ -100,6 +100,13 @@ public class Server {
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
 
+        post("/api/group/create", TickrController::groupCreate, GroupCreateRequest.class);
+        get("/api/groups/get", TickrController::getGroupIds);
+        post("/api/group/invite", TickrController::groupInvite, GroupInviteRequest.class);
+        post("/api/group/accept", TickrController::groupAccept, GroupAcceptRequest.class);
+        post("/api/group/deny", TickrController::groupDeny, GroupDenyRequest.class);
+        get("/api/group/details", TickrController::groupDetails);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
@@ -124,6 +131,8 @@ public class Server {
             paymentAPI.handleWebhookEvent(ctx.controller, ctx.session, ctx.request.body(), sigHeader);
             return new Object();
         }));
+
+        delete("/api/test/clear", TickrController::clearDatabase, Object.class);
     }
 
     /**

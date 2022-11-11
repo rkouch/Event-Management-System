@@ -3,6 +3,8 @@ package tickr.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.*;
 import java.net.http.HttpClient;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit;
  * Helper class representing a HTTP connection to a server
  */
 public class HTTPHelper {
+    static Logger logger = LogManager.getLogger();
     private HttpClient client;
     private Gson gson;
     private String serverUrl;
@@ -40,9 +43,29 @@ public class HTTPHelper {
                 .GET()
                 .build();
 
+        logger.debug("Sending GET request {}", request.uri());
+
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
                 .orTimeout(1000, TimeUnit.MILLISECONDS)
+                .join();
+    }
+    public Response get (String route, Map<String, String> params, Map<String, String> headers, long timeoutMs) {
+        var requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(buildParamsUrl(serverUrl + route, params)))
+                .GET();
+
+        for (var i : headers.entrySet()) {
+            requestBuilder.header(i.getKey(), i.getValue());
+        }
+
+        var request = requestBuilder.build();
+
+        logger.debug("Sending GET request {}", request.uri());
+
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
+                .orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
                 .join();
     }
 
@@ -67,6 +90,8 @@ public class HTTPHelper {
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(body)))
                 .build();
 
+        logger.debug("Sending POST request {}", request.uri());
+
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
                 .orTimeout(1000, TimeUnit.MILLISECONDS)
@@ -83,6 +108,8 @@ public class HTTPHelper {
             requestBuilder.header(i.getKey(), i.getValue());
         }
         var request = requestBuilder.build();
+
+        logger.debug("Sending POST request {}", request.uri());
 
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -103,6 +130,8 @@ public class HTTPHelper {
                 .PUT(HttpRequest.BodyPublishers.ofString(gson.toJson(body)))
                 .build();
 
+        logger.debug("Sending PUT request {}", request.uri());
+
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(r -> new Response(r.statusCode(), r.body(), gson))
                 .orTimeout(1000, TimeUnit.MILLISECONDS)
@@ -120,6 +149,8 @@ public class HTTPHelper {
                 .uri(URI.create(serverUrl + route))
                 .method("DELETE", HttpRequest.BodyPublishers.ofString(gson.toJson(body)))
                 .build();
+
+        logger.debug("Sending DELETE request {}", request.uri());
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(r -> new Response(r.statusCode(), r.body(), gson))

@@ -1,11 +1,5 @@
 package tickr.unit.event;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -21,8 +15,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.SeatingPlan;
@@ -31,6 +28,7 @@ import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
@@ -39,20 +37,25 @@ import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestCreateEvent {
     private DataModel model;
     private TickrController controller;
+    private MockLocationApi locationApi;
 
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
-        
+        locationApi = new MockLocationApi(model);
+        ApiLocator.addLocator(ILocationAPI.class, () -> locationApi);
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @AfterAll
@@ -281,8 +284,8 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getPostcode(), location.postcode);
         assertEquals(event.getLocation().getState(), location.state);
         assertEquals(event.getLocation().getCountry(), location.country);
-        assertEquals(event.getLocation().getLatitude(), location.latitude);
-        assertEquals(event.getLocation().getLongitude(), location.longitude);
+        assertNull(event.getLocation().getLatitude());
+        assertNull(event.getLocation().getLongitude());
 
         var newSession = TestHelper.commitMakeSession(model, session); 
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
@@ -361,8 +364,8 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getPostcode(), location.postcode);
         assertEquals(event.getLocation().getState(), location.state);
         assertEquals(event.getLocation().getCountry(), location.country);
-        assertEquals(event.getLocation().getLatitude(), location.latitude);
-        assertEquals(event.getLocation().getLongitude(), location.longitude);
+        assertNull(event.getLocation().getLatitude());
+        assertNull(event.getLocation().getLongitude());
         var event_id2 = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event2", null, location
                                             , "2031-12-03T10:15:30Z",
                                             "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
@@ -392,8 +395,8 @@ public class TestCreateEvent {
         assertEquals(event2.getLocation().getPostcode(), location.postcode);
         assertEquals(event2.getLocation().getState(), location.state);
         assertEquals(event2.getLocation().getCountry(), location.country);
-        assertEquals(event2.getLocation().getLatitude(), location.latitude);
-        assertEquals(event2.getLocation().getLongitude(), location.longitude);
+        assertNull(event2.getLocation().getLatitude());
+        assertNull(event2.getLocation().getLongitude());
     }
 
     @Test
@@ -413,5 +416,34 @@ public class TestCreateEvent {
         var newFilePath = FileHelper.getStaticPath() + "/" + event.getEventPicture();
 
         assertTrue(TestHelper.fileDiff("/test_images/smile.png", newFilePath));
+    }
+
+    @Test
+    public void testCreateEventLocation () {
+        var session = model.makeSession();
+        var authToken = controller.userRegister(session,
+                new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var location = new SerializedLocation.Builder()
+                .withStreetNo(1)
+                .withStreetName("High St")
+                .withSuburb("Kensington")
+                .withPostcode("2052")
+                .withState("NSW")
+                .withCountry("Australia")
+                .build();
+
+        var eventId = controller.createEvent(session, new CreateEventReqBuilder().withLocation(location).build(authToken)).event_id;
+        session.commit();
+        session.close();
+        locationApi.awaitLocations();
+        session = model.makeSession();
+
+        var event = session.getById(Event.class, UUID.fromString(eventId)).orElseThrow(AssertionError::new);
+
+        assertEquals("-33.9148449", event.getLocation().getLatitude());
+        assertEquals("151.2254725", event.getLocation().getLongitude());
     }
 }

@@ -17,6 +17,8 @@ import java.util.List;
 public class EventSearch {
     public static class Options {
         public SerializedLocation location = null;
+        @SerializedName("max_distance")
+        public Double maxDistance;
 
         @SerializedName("start_time")
         private String startTime = null;
@@ -32,13 +34,14 @@ public class EventSearch {
 
         }
 
-        public Options (SerializedLocation location, ZonedDateTime startTime, ZonedDateTime endTime, List<String> tags, List<String> categories, String text) {
+        public Options (SerializedLocation location, Double maxDistance, ZonedDateTime startTime, ZonedDateTime endTime, List<String> tags, List<String> categories, String text) {
             this.location = location;
             this.startTime = startTime != null ? startTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
             this.endTime = endTime != null ? endTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
             this.tags = tags;
             this.categories = categories;
             this.text = text;
+            this.maxDistance = maxDistance;
         }
 
         public ZonedDateTime getStartTime () {

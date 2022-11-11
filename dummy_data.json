@@ -34,11 +34,11 @@
             "id" : "event1",
             "event_name" : "Test Event",
             "location" : {
-                "street_no" : 14,
-                "street_name" : "asda street",
+                "street_no" : 1,
+                "street_name" : "High Street",
                 "unitNo" : "",
-                "postcode" : "2000",
-                "suburb" : "Sydney",
+                "postcode" : "2052",
+                "suburb" : "Kensington",
                 "state" : "NSW",
                 "country" : "Australia",
                 "longitude" : "",
@@ -50,6 +50,66 @@
             "seating_details" : [
                 {
                     "section" : "TestSection",
+                    "availability" : 10
+                }
+            ],
+            "categories" : [],
+            "tags" : [],
+            "admins" : ["test2@example.com"],
+            "published" : true,
+            "picture" : "testing/test1.jpg"
+        },
+        {
+            "host" : "test1@example.com",
+            "id" : "event2",
+            "event_name" : "Test Event 2",
+            "location" : {
+                "street_no" : 235,
+                "street_name" : "Anzac Parade",
+                "unitNo" : "",
+                "postcode" : "2033",
+                "suburb" : "Kensington",
+                "state" : "NSW",
+                "country" : "Australia",
+                "longitude" : "",
+                "latitude" : ""
+            },
+            "start_date" : "2022-12-21T11:00:00Z",
+            "end_date" : "2022-12-21T13:00:00Z",
+            "description" : "test description",
+            "seating_details" : [
+                {
+                    "section" : "TestSectionA",
+                    "availability" : 10
+                }
+            ],
+            "categories" : [],
+            "tags" : [],
+            "admins" : ["test2@example.com"],
+            "published" : true,
+            "picture" : "testing/test1.jpg"
+        },
+        {
+            "host" : "test1@example.com",
+            "id" : "event3",
+            "event_name" : "Test Event 3",
+            "location" : {
+                "street_no" : 1,
+                "street_name" : "Parliament Drive",
+                "unitNo" : "",
+                "postcode" : "2600",
+                "suburb" : "Canberra",
+                "state" : "ACT",
+                "country" : "Australia",
+                "longitude" : "",
+                "latitude" : ""
+            },
+            "start_date" : "2022-12-21T11:00:00Z",
+            "end_date" : "2022-12-21T13:00:00Z",
+            "description" : "test description",
+            "seating_details" : [
+                {
+                    "section" : "TestSectionA",
                     "availability" : 10
                 }
             ],

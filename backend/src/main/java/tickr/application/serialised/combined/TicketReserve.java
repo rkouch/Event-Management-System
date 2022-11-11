@@ -97,5 +97,15 @@ public class TicketReserve {
             this.section = section;
             this.price = price;
         }
+
+        public String getReserveId() {
+            return reserveId;
+        }
+
+        public void setReserveId(String reserveId) {
+            this.reserveId = reserveId;
+        }
+
+        
     }
 }

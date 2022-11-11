@@ -42,6 +42,7 @@
         <mapping class="tickr.application.entities.TicketReservation"/>
         <mapping class="tickr.application.entities.User"/>
         <mapping class="tickr.application.entities.ResetToken"/>
+        <mapping class="tickr.application.entities.Invitation"/>
 
         <mapping class="tickr.application.entities.TestEntity"/>
     </session-factory>
