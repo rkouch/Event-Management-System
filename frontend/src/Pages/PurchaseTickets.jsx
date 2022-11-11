@@ -74,7 +74,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   const [customNames, setCustomNames] = React.useState(false)
   const [areTicketsReserved, setAreTicketsReserved] = React.useState(false)
 
+  // Reserved tickets
   const [reservedTickets, setReservedTickets] = React.useState([])
+
+  // Selected tickets
   const [orderDetails, setOrderDetails] = React.useState([])
 
   const [userDetails, setUserDetails] = React.useState({
@@ -111,7 +114,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       sectionDetails_t.push(section_det)
     }
     // sortSection(sectionDetails_t)
-    console.log(sectionDetails_t)
     
     // Check booked seats
     try {
@@ -165,7 +167,9 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
   // Set up seat selector
   React.useEffect(() => {
-    getSectionDetails()
+    if (!areTicketsReserved) {
+      getSectionDetails()
+    }
   }, [event.event_name])
 
 
@@ -241,7 +245,39 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     }
   }
 
-  const handleCheckout = async () => {
+  // User chooses to edit their selection
+  const handleEditSelection = async () => {
+    // set tickets reserved to false, cancel reserves
+    try {
+      // cancel all reservations
+      console.log(reservedTickets)
+      const reserveIds = []
+      reservedTickets.forEach(function (reserve) {
+        reserveIds.push(reserve.reserve_id)
+      })
+
+      const body = {
+        auth_token: getToken(),
+        reservations: reserveIds
+      }
+
+      const response = await apiFetch('DELETE', '/api/ticket/reserve/cancel', body)
+      // setReservedTickets([])
+    } catch (e) {
+      console.log(e)
+      return
+    }
+    setAreTicketsReserved(false)
+    setTicketSelect(true)
+    setDetailsInput(false)
+    console.log('orderDetails')
+    console.log(orderDetails)
+    console.log('sectionDetails')
+    console.log(sectionDetails)
+    return
+  }
+
+  const handleReserve = async () => {
     // Prepare data package
     const ticketDetails = []
     sectionDetails.forEach(function (section) {
@@ -465,20 +501,15 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                           </Typography>
                         </Grid>
                         <Grid item xs={4}>
-                          {/* <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
-                            <ExpandMore
-                              sx={{
-                                m:0
-                              }}
-                              expand={ticketSelect}
-                              onClick={(e)=> {setTicketSelect(!ticketSelect)}}
-                              aria-expanded={ticketSelect}
-                              aria-label="show more"
-                              disabled={areTicketsReserved}
-                            >
-                              <ExpandMoreIcon />
-                            </ExpandMore>
-                          </Box> */}
+                          <Box sx={{display:'flex', width: '100%', height: '100%', justifyContent: 'flex-end', alignItems: 'center'}}>
+                            {areTicketsReserved
+                              ? <TextButton2 onClick={handleEditSelection}>
+                                  Edit selection
+                                </TextButton2>
+                              : <></>
+                            }
+                            
+                          </Box>
                         </Grid>
                       </Grid>
                       <Collapse in={ticketSelect}>
@@ -501,7 +532,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                             {(allSeatsSelected() && selectedSeats.length !== 0)
                               ? <TkrButton
                                 sx={{width: '100%'}}
-                                  onClick={handleCheckout}
+                                  onClick={handleReserve}
                                 >
                                   Confirm Seats
                                 </TkrButton>

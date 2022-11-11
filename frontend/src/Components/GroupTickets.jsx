@@ -9,7 +9,7 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { checkValidEmail, setFieldInState } from "../Helpers";
+import { checkValidEmail, setFieldInState, hasNumber } from "../Helpers";
 import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
 
 const steps = ['Select assigned ticket', 'Invite group members']
@@ -83,10 +83,24 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
     setFieldInState('value', e.target.value, email, setEmail)
   }
 
-  const handleOnBlur = () => {
-    return
-  }
+  // handle onblur event, setState in parent element, to avoid unnecesary re-renders
+  const handleOnBlur = (field, state, setState) => {
+    // check valid input
+    if (state === email) {
+      if (!checkValidEmail(state.value)){
+        setFieldInState('error', true, state, setState)
+        setFieldInState('errorMsg', 'Invalid email.', state, setState)
+        return
+      }
+    } else {
+      if (state.value.length <= 0 || hasNumber(state.value)) {
+        setFieldInState('error', true, state, setState)
+        setFieldInState('errorMsg', `Invalid ${state.label}.`, state, setState)
+        return
+      }
+    }
 
+  }
   const cancelTicketBuy = () => {
     setGroupTicketBuy(false)
   }
@@ -137,7 +151,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
                 fontSize: 17,
               }}
             >
-              Group ticket buying allows for on person to reserve tickets for a group
+              Group ticket buying allows for one person to reserve tickets for a group
               The group leader is able to send invites to other users of Tickr to purchase
               their delegated seat.
             </Typography>
@@ -184,7 +198,8 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
               )
             })}
           </CentredBox>
-          <CentredBox sx={{ml: 10, mr: 10}}>
+          <br/> 
+          <CentredBox sx={{ml: 15, mr: 15}}>
             <Grid container spacing={1}>
               <Grid item xs={6}>
                 <FormControl sx={{width: '100%'}}>
