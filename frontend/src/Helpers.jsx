@@ -126,10 +126,10 @@ export const getEventData = async (eventId, setEventData=null) => {
       response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
     }
     sortSection(response.seating_details)
-    const start_date = response.start_date
-    const end_date = response.end_date
-    response.start_date = start_date.concat('Z')
-    response.end_date = end_date.concat('Z')
+    // const start_date = response.start_date
+    // const end_date = response.end_date
+    // response.start_date = start_date.concat('Z')
+    // response.end_date = end_date.concat('Z')
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -217,9 +217,7 @@ export const checkIfUser = async (userId, setState) => {
       if (userId === response_2.user_id) {
         setState(true)
         // navigate(`/my_profile`)
-      } else {
-        setState(false)
-      }
+      } 
     } catch (e) {
       console.log(e)
     }

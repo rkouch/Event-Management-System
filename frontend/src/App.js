@@ -26,6 +26,7 @@ import ViewTicket from './Pages/ViewTicket';
 import TestCreatEvent from './Test/TestCreateEvent';
 import TestViewEvent from './Test/TestViewEvent';
 import CancelReservations from './Pages/CancelReservations';
+import SearchResults from './Pages/SearchResults';
 
 
 function App() {  
@@ -104,6 +105,10 @@ function App() {
     {
       path: '/cancel_reservation/:event_id',
       element: <CancelReservations ticketOrder={ticketOrder}/>
+    },
+    {
+      path: '/search/:search_string',
+      element: <SearchResults/>
     }
   ])
 

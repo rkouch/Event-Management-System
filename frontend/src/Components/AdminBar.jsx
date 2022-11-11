@@ -10,10 +10,10 @@ import { Box, FormLabel, List, ListItem } from "@mui/material";
 import { borderRadius, styled, alpha } from '@mui/system';
 import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton } from '../Styles/InputStyles';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import UserAvatar from "./UserAvatar";
+import UserAvatar from "./UserAvatar"; 
 import AdminItem from "./AdminItem";
 
-export default function AdminsBar ({adminsList, editable=false, removeAdmin=null, editEvent=false, openHostMenu=null, setNewHost=null}) {
+export default function AdminsBar ({adminsList, editable=false, removeAdmin=null, newAdmins=[], editEvent=false, openHostMenu=null, setNewHost=null}) {
   return (
     <>
     {(adminsList.length !== 0)
@@ -26,7 +26,7 @@ export default function AdminsBar ({adminsList, editable=false, removeAdmin=null
                   return (
                     <div key={key}>
                       <ContrastInputWrapper >
-                        <AdminItem index={key} adminID={value} removeAdmin={removeAdmin} editEvent={editEvent} openHostMenu={openHostMenu} setNewHost={setNewHost}/>
+                        <AdminItem index={key} adminID={value} removeAdmin={removeAdmin} newAdmins={newAdmins} editEvent={editEvent} openHostMenu={openHostMenu} setNewHost={setNewHost}/>
                       </ContrastInputWrapper>
                       <br/>
                     </div>

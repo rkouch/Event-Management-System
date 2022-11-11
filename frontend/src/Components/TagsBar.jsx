@@ -9,6 +9,8 @@ import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
 import { setFieldInState, stringToColor } from "../Helpers";
 import { Typography } from "@mui/material";
 import TagIcon from '@mui/icons-material/Tag';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import DeleteIcon from '@mui/icons-material/Delete'
 
 export default function TagsBar({tags, setTags=null, editable=false}) {
   const [newTag, setNewTag] = React.useState('')
@@ -26,17 +28,22 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
     setTags(tags_list);
   };
 
+  const handleClear = () => {
+    setTags([])
+  }
+
 
   return (
     <Box>
       {editable
         ? <>
-            <CentredBox sx={{width: 300, alignItems: 'center', gap: '10px'}}>
-              <ContrastInputWrapper>
+            <CentredBox sx={{width: '100%', alignItems: 'center', gap: '10px', justifyContent:"space-between"}}>
+              <ContrastInputWrapper sx={{width: 300}}>
                 <ContrastInput
                   value={newTag}
                   placeholder="Tag"
                   sx={{height: 40}}
+                  fullWidth
                   onChange={(e) => setNewTag(e.target.value)}
                   startAdornment={<CentredBox sx={{pr: 1}}><TagIcon sx={{color: "rgba(0,0,0,0.45)"}}/></CentredBox>}
                 />
@@ -74,6 +81,11 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
                       />
                     );
                   })}
+                  <Chip
+                    deleteIcon={<DeleteIcon/>}
+                    label='Clear Tags'
+                    onDelete={handleClear}
+                  />
                 </>
               : <>
                   {tags.map((data, key) => {

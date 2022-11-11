@@ -5,7 +5,6 @@ import { Backdrop, BackdropNoBG, CentredBox, ContentBox } from '../Styles/Helper
 import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
-import Header2 from '../Components/Header2';
 import { Container, Divider } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';

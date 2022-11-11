@@ -149,6 +149,8 @@ export default function EditEvent({}) {
 
   const [openDeleteMenu, setOpenDeleteMenu] = React.useState(false)
 
+  const [newAdmins, setNewAdmins] = React.useState([])
+
   const [event, setEvent] = React.useState({
     event_name: "",
     location: {
@@ -168,7 +170,7 @@ export default function EditEvent({}) {
     host_id: '',
     published: true,
   })
-  
+
   React.useState(() => {
     getEventData(params.event_id, setEvent)
   }, [])
@@ -274,7 +276,7 @@ export default function EditEvent({}) {
     }
 
     setAdminLoading(true)
-    // Check if you are adding yourself to an event or user already is in event
+    // Check if you are adding yourself to an event
     try {
       const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
       if (newAdmin.email === response.email) {
@@ -300,6 +302,12 @@ export default function EditEvent({}) {
       const adminList_t = [...adminList];
       adminList_t.push(response.user_id);
       setAdminList(adminList_t);
+
+      // Add new admin to new adminList
+      const newAdmins_t = [...newAdmins];
+      newAdmins_t.push(response.user_id);
+      setNewAdmins(newAdmins_t);
+
       setFieldInState('email', '', newAdmin, setNewAdmin)
       setAdminLoading(false)
     } catch (error) {
@@ -784,7 +792,7 @@ export default function EditEvent({}) {
                               </CentredBox>
                             </Grid>
                             <Grid item xs={7}>
-                              <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin} editEvent={true} openHostMenu={setNewHostMenu} setNewHost={setNewHost}/>
+                              <AdminsBar editable={true} adminsList={adminList} newAdmins={newAdmins} removeAdmin={removeAdmin} editEvent={true} openHostMenu={setNewHostMenu} setNewHost={setNewHost}/>
                             </Grid>
                           </>
                         : <>

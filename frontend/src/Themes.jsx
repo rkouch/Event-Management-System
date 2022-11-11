@@ -7,6 +7,9 @@ export const TickrTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
+          ".MuiOutlinedInput-notchedOutline": {
+            borderColor: 'rgba(0,0,0,0)',
+          },
           "&:hover .MuiOutlinedInput-notchedOutline": {
             borderColor: "#AE759F"
           },

@@ -2,7 +2,7 @@ import { borderRadius, styled, alpha } from '@mui/system';
 import { ThemeProvider, createTheme} from '@mui/material/styles';
 import OutlinedInput, { OutlinedInputProps } from '@mui/material/OutlinedInput';
 import Button from '@mui/material/Button';
-import { autocompleteClasses } from '@mui/material';
+import { autocompleteClasses, Chip, Slider } from '@mui/material';
 import Checkbox from '@mui/material/Checkbox';
 
 export const FormInput = styled('div')({
@@ -60,6 +60,15 @@ export const TextButton2 = styled(Button)({
   color: '#CCCCCC',
   "&:hover": {
     color: "#444444"
+  },
+  textTransform: 'none'
+})
+
+export const TextButton3 = styled(Button)({
+  variant: 'text',
+  color: '#CCCCCC',
+  "&:hover": {
+    color: "#AE759F"
   },
   textTransform: 'none'
 })
@@ -131,3 +140,24 @@ export const TicketOption = styled(Button)({
 })
 
 
+export const HoverChipSelected = styled(Chip)({
+  backgroundColor: "#AE759F",
+  '&:hover':  {
+    backgroundColor: "#D9BFD2"
+  },
+  color: '#FFFFFF'
+})
+
+export const HoverChip = styled(Chip)({
+  color: '#FFFFFF'
+})
+
+export const TickrSlider = styled(Slider)(({ theme }) => ({
+  color: '#AE759F', //color of the slider between thumbs
+  "& .MuiSlider-thumb": {
+    backgroundColor: '#AE759F' //color of thumbs
+  },
+  "& .MuiSlider-rail": {
+    color: '#AE759F' ////color of the slider outside  teh area between thumbs
+  }
+}));

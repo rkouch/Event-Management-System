@@ -27,6 +27,7 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
   // Handles for state changes
   const handleFirstNameChange = (e) => {
     // Clear error
+    setError(false)
     setFieldInState('error', false, firstName, setFirstName)
     setFieldInState('errorMsg', '', firstName, setFirstName)
 
@@ -36,6 +37,7 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
 
   const handleLastNameChange = (e) => {
     // Clear error
+    setError(false)
     setFieldInState('error', false, lastName, setLastName)
     setFieldInState('errorMsg', '', lastName, setLastName)
 
@@ -45,8 +47,9 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
 
   const handleEmailChange = (e) => {
     // Clear error
+    setError(false)
     setFieldInState('error', false, email, setEmail)
-    setFieldInState('errorMsg', '', email, setFirstName)
+    setFieldInState('errorMsg', '', email, setEmail)
 
     // check valid email
     setFieldInState('value', e.target.value, email, setEmail)

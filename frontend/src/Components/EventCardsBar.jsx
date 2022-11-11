@@ -5,7 +5,6 @@ import { Backdrop, BackdropNoBG, CentredBox, ContentBox } from '../Styles/Helper
 import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
-import Header2 from '../Components/Header2';
 import { Card, Container, Divider, Typography } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -56,7 +55,7 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
   // }, [])
 
   return (
-    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6',}}>
+    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6', borderRadius: 3}}>
       {(event_ids.length > 0)
         ? <CardsBar>
             {eventIds.map((value, key) => {

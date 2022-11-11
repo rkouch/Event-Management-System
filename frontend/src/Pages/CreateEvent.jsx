@@ -133,6 +133,8 @@ export default function CreateEvent({}) {
 
   const [toggleUpload, setToggleUpload] = React.useState(true)
 
+  const [newAdmins, setNewAdmins] = React.useState([])
+
   React.useEffect(()=> {
     if(!errorStatus) {
       setErrorStatus(false)
@@ -237,6 +239,12 @@ export default function CreateEvent({}) {
       const adminList_t = [...adminList];
       adminList_t.push(response.user_id);
       setAdminList(adminList_t);
+
+      // Add new admin to new adminList
+      const newAdmins_t = [...newAdmins];
+      newAdmins_t.push(response.user_id);
+      setNewAdmins(newAdmins_t);
+
       setFieldInState('email', '', newAdmin, setNewAdmin)
       setAdminLoading(false)
     } catch (error) {
@@ -516,7 +524,7 @@ export default function CreateEvent({}) {
                       setError={setErrorStatus}
                     />
                   </Grid>
-                  <Grid tiem xs={4}>
+                  <Grid item xs={4}>
                     <ShadowInput 
                       state={suburb}
                       sx={{
@@ -659,7 +667,7 @@ export default function CreateEvent({}) {
                     </CentredBox>
                   </Grid>
                   <Grid item xs={7}>
-                    <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin}/>
+                    <AdminsBar editable={true} adminsList={adminList} newAdmins={newAdmins} removeAdmin={removeAdmin}/>
                   </Grid>
                   <Grid item xs={5}/>
                   <Grid item xs={12}>

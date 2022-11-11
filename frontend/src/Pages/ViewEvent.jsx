@@ -22,9 +22,10 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
-import { ContrastInputNoOutline, ContrastInputWrapper, TkrButton, TkrButton2 } from "../Styles/InputStyles";
+import { ContrastInputNoOutline, ContrastInputWrapper, HoverChipSelected, TkrButton, TkrButton2 } from "../Styles/InputStyles";
 import EventReview from "../Components/EventReview";
 import SendIcon from '@mui/icons-material/Send';
+import AddIcon from '@mui/icons-material/Add';
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -52,7 +53,7 @@ export default function ViewEvent({}) {
   const [isAttendee, setIsAttendee] = React.useState(false)
   const [ticketIds, setTicketIds] = React.useState([])
   const [announcement, setAnnouncement] = React.useState('')
-
+  const [following, setFollowing] = React.useState(false)
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -96,22 +97,64 @@ export default function ViewEvent({}) {
   // Initial load
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
-    // getUserData(`auth_token=${getToken()}`,setUserData)
+
+    // Check if we have the host_id is provided
     if (event.host_id !== '') {
       if (dayjs() > dayjs(event.end_date)) {
         setEventOver(true)
       }
+
+      // Check if the user is the host
       checkIfUser(event.host_id, setEditable)
+
+      // Check if the user is in event.admins
       if (!editable) {
         for (const i in event.admins) {
           checkIfUser(event.admins[i], setEditable)
         }
       }
     }
+
+    // If user is logged in get tickets for event if any and get following status
     if (loggedIn()) {
       getTicketIds(params.event_id, setTicketIds)
+      getFollowing()
     }
+
+
   },[event.host_id])
+
+
+  // Check if user is following this event
+  const getFollowing = async() => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        event_id: params.event_id
+      }
+      const searchParams = new URLSearchParams(body)
+      const response = await apiFetch('GET', `/api/event/notifications?${searchParams}`)
+      setFollowing(response.notifications)
+
+
+    } catch (e)  {
+      console.log(e)
+    }
+  }
+
+  const toggleFollowing = async (e) => {
+    setFollowing(!following)
+    try {
+      const body = {
+        auth_token: getToken(),
+        event_id: params.event_id,
+        notifications: !following
+      }
+      const response = await apiFetch('PUT', '/api/event/notifications/update', body)
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   // Check if event is sold out
   React.useEffect(() => {
@@ -211,18 +254,33 @@ export default function ViewEvent({}) {
                           </Box>
                         : <Grid container spacing={2}>
                             <Grid item xs={10}>
-                              <Typography
-                                sx={{
-                                  fontSize: 40,
-                                  fontWeight: 'bold',
-                                }}
-                              >
-                                {event.event_name}
-                              </Typography>
+                              <Box sx={{display: 'flex', gap: 2, alignItems: 'center'}}>
+                                <Typography
+                                  sx={{
+                                    fontSize: 40,
+                                    fontWeight: 'bold',
+                                  }}
+                                >
+                                  {event.event_name}
+                                </Typography>
+                                {event.published
+                                  ? <CentredBox>
+                                      <Tooltip title="Receive email notifications about event changes and announcements.">
+                                        {following
+                                          ? <HoverChipSelected sx={{width: 90}} clickable onClick={toggleFollowing} label="Following"/>
+                                          : <Chip clickable onClick={toggleFollowing} variant="outlined" color='secondary' sx={{ color: "#AE759F", width: 90}} icon={<AddIcon sx={{ color: "#AE759F" }}/>} label="Follow"/>
+                                        }
+                                      </Tooltip>
+                                    </CentredBox>
+                                  : <CentredBox>
+                                      <Chip sx={{color: alpha('#6A7B8A', 0.7)}} label="Not Published"/>
+                                    </CentredBox>
+                                }
+                              </Box>
                             </Grid>
                             <Grid item xs={2}>
                               {(editable)
-                                ? <Box sx={{display: 'flex', height: '100%', alignItems: 'center'}}>
+                                ? <Box sx={{display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'flex-end'}}>
                                     <Tooltip title="Edit Event">
                                       <IconButton onClick={goEdit}>
                                         <EditIcon/>
@@ -365,47 +423,54 @@ export default function ViewEvent({}) {
                             </>
                         }
                         <br/>
-                        {isAttendee
-                          ? <Grid container>
-                              <Grid item xs={6}>
-                                <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_tickets/${params.event_id}`)}>
-                                  View Tickets
-                                </TkrButton2>
-                              </Grid>
-                              <Divider orientation="vertical" flexItem/>
-                              <Grid item xs>
-                                {!soldOut
-                                  ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                                      Purchase tickets
-                                    </TkrButton>
-                                  : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
-                                      Sold Out
-                                    </TkrButton>
-                                }
-                                
-                              </Grid>
-                            </Grid> 
-                          : <CentredBox>
-                              {(!soldOut)
-                                ? <>  
-                                    {loggedIn()
-                                      ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
-                                          Purchase tickets
-                                        </TkrButton>
-                                      : <FormGroup sx={{width: '100%'}}>
-                                          <TkrButton disabled sx={{fontSize: '19px', width: '100%'}} >
-                                            Purchase tickets
+                        <>
+                          {event.published
+                            ? <>
+                                {isAttendee
+                                  ? <Grid container>
+                                      <Grid item xs={6}>
+                                        <TkrButton2 sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/view_tickets/${params.event_id}`)}>
+                                          View Tickets
+                                        </TkrButton2>
+                                      </Grid>
+                                      <Divider orientation="vertical" flexItem/>
+                                      <Grid item xs>
+                                        {!soldOut
+                                          ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                              Purchase tickets
+                                            </TkrButton>
+                                          : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                              Sold Out
+                                            </TkrButton>
+                                        }
+                                        
+                                      </Grid>
+                                    </Grid> 
+                                  : <CentredBox>
+                                      {(!soldOut)
+                                        ? <>  
+                                            {loggedIn()
+                                              ? <TkrButton sx={{fontSize: '19px', width: '100%'}} onClick={() => navigate(`/purchase_ticket/${params.event_id}`)}>
+                                                  Purchase tickets
+                                                </TkrButton>
+                                              : <FormGroup sx={{width: '100%'}}>
+                                                  <TkrButton disabled sx={{fontSize: '19px', width: '100%'}} >
+                                                    Purchase tickets
+                                                  </TkrButton>
+                                                  <FormHelperText><Typography sx={{textAlign: 'center'}}>Log in to purchase</Typography></FormHelperText>
+                                                </FormGroup>
+                                            }
+                                          </>
+                                        : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
+                                            Sold Out
                                           </TkrButton>
-                                          <FormHelperText><Typography sx={{textAlign: 'center'}}>Log in to purchase</Typography></FormHelperText>
-                                        </FormGroup>
-                                    }
-                                  </>
-                                : <TkrButton  disabled sx={{fontSize: '19px', width: '100%', backgroundColor: '#EEEEEE'}}>
-                                    Sold Out
-                                  </TkrButton>
-                              }
-                            </CentredBox>
-                        }
+                                      }
+                                    </CentredBox>
+                                }
+                              </>
+                            : <></>
+                          }
+                        </>
                       </Box>
                   }
                   <br/>

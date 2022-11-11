@@ -189,6 +189,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     setOrderTotal(total)
   }, [sectionDetails])
 
+  // Initial get event data
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
   },[])
@@ -395,7 +396,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
 
     } else {
-      if (userDetails.firstName === '' || userDetails.lastName === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
+      console.log(userDetails)
+      if (userDetails.first_name === '' || userDetails.last_name === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
         setError2(true)
         setErrorMsg2("Invalid form details. Check all fields have been filled.")
         return
