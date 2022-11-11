@@ -1134,6 +1134,9 @@ public class TickrController {
         if (request.reservedIds == null) {
             throw new BadRequestException("Missing reserved ids!");
         }
+        if (request.hostReserveId == null) {
+            throw new BadRequestException("Missing host reserve id!");
+        }
         User user = authenticateToken(session, request.authToken);
 
         if (user.isGroupAlreadyCreated(request.reservedIds)) {

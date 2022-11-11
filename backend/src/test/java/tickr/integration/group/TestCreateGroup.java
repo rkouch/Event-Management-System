@@ -132,6 +132,8 @@ public class TestCreateGroup {
         assertEquals(403, response.getStatus());
         response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, null, reserveIdList.get(0)));
         assertEquals(400, response.getStatus());
+        response = httpHelper.post("/api/group/create", new GroupCreateRequest(authToken, reserveIdList, null));
+        assertEquals(400, response.getStatus());
     }       
 
     @Test 
