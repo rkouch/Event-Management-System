@@ -17,7 +17,7 @@ public class EventSearch {
     public static class Options {
         public SerializedLocation location = null;
         @SerializedName("max_distance")
-        public float maxDistance;
+        public Double maxDistance;
 
         @SerializedName("start_time")
         private String startTime = null;
@@ -33,7 +33,7 @@ public class EventSearch {
 
         }
 
-        public Options (SerializedLocation location, float maxDistance, LocalDateTime startTime, LocalDateTime endTime, List<String> tags, List<String> categories, String text) {
+        public Options (SerializedLocation location, Double maxDistance, LocalDateTime startTime, LocalDateTime endTime, List<String> tags, List<String> categories, String text) {
             this.location = location;
             this.startTime = startTime != null ? startTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
             this.endTime = endTime != null ? endTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;

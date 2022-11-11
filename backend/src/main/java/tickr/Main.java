@@ -84,7 +84,7 @@ public class Main {
             logger.info("Using testing payments API!");
             ApiLocator.addLocator(IPurchaseAPI.class, () -> new NullPurchaseAPI("http://localhost:" + portFinal));
         }
-
+        logger.info("Using live Nominatim geocoding API!");
         ApiLocator.addLocator(ILocationAPI.class, () -> new NominatimAPI(databaseModel));
 
         logger.info("Starting tickr server on http://localhost:{}!", port);

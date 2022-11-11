@@ -13,6 +13,8 @@ public class HibernateModel implements DataModel {
     private final SessionFactory sessionFactory;
     private final StandardServiceRegistry registry;
 
+    private boolean isClosed = false;
+
 
     private HibernateModel (StandardServiceRegistry registry) {
         this.registry = registry;
@@ -39,13 +41,23 @@ public class HibernateModel implements DataModel {
     @Override
     public synchronized ModelSession makeSession() {
         //logger.debug("Making a Hibernate model session!");
+        if (isClosed) {
+            throw new RuntimeException("Attempted to make session of already closed model!");
+        }
+
         return new HibernateSession(sessionFactory.openSession());
     }
 
     @Override
-    public void cleanup () {
+    public synchronized boolean isClosed () {
+        return isClosed;
+    }
+
+    @Override
+    public synchronized void cleanup () {
         logger.info("Cleaning up Hibernate model!");
         sessionFactory.close();
         registry.close();
+        isClosed = true;
     }
 }

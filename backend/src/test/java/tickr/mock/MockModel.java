@@ -19,6 +19,11 @@ public class MockModel implements DataModel {
     }
 
     @Override
+    public boolean isClosed () {
+        return false;
+    }
+
+    @Override
     public void cleanup () {
 
     }

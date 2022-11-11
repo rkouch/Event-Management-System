@@ -11,6 +11,7 @@ import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.location.LocationPoint;
 import tickr.application.apis.location.LocationRequest;
 
+import java.text.DecimalFormat;
 import java.util.UUID;
 
 @Entity
@@ -39,8 +40,8 @@ public class Location {
 
     private String country;
 
-    private String longitude;
-    private String latitude;
+    private Double longitude;
+    private Double latitude;
 
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "location")
     private Event event;
@@ -55,6 +56,8 @@ public class Location {
         this.state = state;
         this.country = country;
         this.suburb = suburb;
+        this.longitude = null;
+        this.latitude = null;
     }
 
     public UUID getId () {
@@ -106,19 +109,19 @@ public class Location {
     }
 
     public String getLongitude () {
-        return longitude;
+        return longitude != null ? new DecimalFormat("#.#######").format(Math.toDegrees(longitude)) : null;
     }
 
     private void setLongitude (String longitude) {
-        this.longitude = longitude;
+        this.longitude = Double.valueOf(longitude);
     }
 
     public String getLatitude () {
-        return latitude;
+        return latitude != null ? new DecimalFormat("#.#######").format(Math.toDegrees(latitude)) : null;
     }
 
     private void setLatitude (String latitude) {
-        this.latitude = latitude;
+        this.latitude = Double.valueOf(latitude);
     }
 
     private Event getEvent () {
@@ -163,6 +166,17 @@ public class Location {
         } else {
             this.longitude = point.getLongitude();
             this.latitude = point.getLatitude();
+        }
+    }
+
+    public double getDistance (LocationPoint point) {
+        if (point == null) {
+            return -1;
+        } else if (latitude == null || longitude == null) {
+            return Double.POSITIVE_INFINITY;
+        } else {
+            var d = point.getDistance(new LocationPoint(latitude, longitude));
+            return d;
         }
     }
 }

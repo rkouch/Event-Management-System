@@ -7,6 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.location.ILocationAPI;
+import tickr.application.apis.location.LocationPoint;
+import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
@@ -592,20 +595,34 @@ public class TickrController {
             options = EventSearch.fromParams(params.get("search_options"));
         }
 
+        if (options != null && ((options.location != null && options.maxDistance == null) || (options.location == null && options.maxDistance != null)
+                || (options.maxDistance != null && options.maxDistance < 0))) {
+            throw new BadRequestException("Invalid location options!");
+        }
+
+        LocationPoint queryLocation = null;
+        if (options != null && options.location != null) {
+            queryLocation = ApiLocator.locateApi(ILocationAPI.class).getLocation(LocationRequest.fromSerialised(options.location));
+        }
+
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
                 .filter(x -> !x.getEventEnd().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
                 .filter(Event::isPublished)
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
+
         if (options != null) {
+            double maxDistance = options.maxDistance != null ? options.maxDistance : -1;
             var options1 = options;
+            LocationPoint finalQueryLocation = queryLocation;
             eventStream = eventStream
                     .filter(e -> e.startsAfter(options1.getStartTime()))
                     .filter(e -> e.endsBefore(options1.getEndTime()))
                     .filter(e -> e.matchesCategories(options1.categories))
                     .filter(e -> e.matchesTags(options1.tags))
-                    .filter(e -> e.matchesDescription(Utils.toWords(options1.text)));
+                    .filter(e -> e.matchesDescription(Utils.toWords(options1.text)))
+                    .filter(e -> e.getLocation().getDistance(finalQueryLocation) <= maxDistance);
         }
 
         var eventList = eventStream.skip(pageStart)

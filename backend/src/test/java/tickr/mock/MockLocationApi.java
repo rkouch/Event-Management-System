@@ -39,6 +39,9 @@ public class MockLocationApi implements ILocationAPI {
             } catch (InterruptedException ignored) {
 
             }
+            if (model.isClosed()) {
+                return;
+            }
             var session = model.makeSession();
             try {
                 callback.accept(session, getLocation(request));
@@ -50,6 +53,7 @@ public class MockLocationApi implements ILocationAPI {
                 Assertions.fail(e);
             }
         });
+        thread.start();
 
         synchronized (threads) {
             threads.add(thread);

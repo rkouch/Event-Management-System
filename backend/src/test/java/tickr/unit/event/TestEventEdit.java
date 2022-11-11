@@ -1,12 +1,5 @@
 package tickr.unit.event;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,11 +14,14 @@ import org.junit.jupiter.api.Test;
 
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.entities.Event;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
@@ -33,6 +29,8 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestEventEdit {
     private DataModel model;
@@ -42,12 +40,14 @@ public class TestEventEdit {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
         
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @AfterAll
@@ -189,8 +189,8 @@ public class TestEventEdit {
         assertEquals(location.postcode, response.location.postcode);
         assertEquals(location.state, response.location.state);
         assertEquals(location.country, response.location.country);
-        assertEquals(location.longitude, response.location.longitude);
-        assertEquals(location.latitude, response.location.latitude);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
         assertEquals("2031-12-03T10:15:30", response.startDate);
         assertEquals("2031-12-04T10:15:30", response.endDate);
         assertEquals("description", response.description);
@@ -276,8 +276,8 @@ public class TestEventEdit {
         assertEquals(updatedLocation.postcode, response.location.postcode);
         assertEquals(updatedLocation.state, response.location.state);
         assertEquals(updatedLocation.country, response.location.country);
-        assertEquals(updatedLocation.longitude, response.location.longitude);
-        assertEquals(updatedLocation.latitude, response.location.latitude);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
         assertEquals("2031-12-04T10:15:30", response.startDate);
         assertEquals("2031-12-05T10:15:30", response.endDate);
         assertEquals("updated description", response.description);

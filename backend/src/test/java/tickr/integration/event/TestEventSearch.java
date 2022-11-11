@@ -5,11 +5,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.mock.MockLocationApi;
 import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -29,6 +32,7 @@ public class TestEventSearch {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -45,6 +49,7 @@ public class TestEventSearch {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test
@@ -87,17 +92,17 @@ public class TestEventSearch {
         assertEquals(200, response.getStatus());
 
         var ids = makeSearch(0, 100,
-                new EventSearch.Options(null, 0, null, null, List.of("test1"), null, null)).eventIds;
+                new EventSearch.Options(null, null, null, null, List.of("test1"), null, null)).eventIds;
         assertEquals(1, ids.size());
         assertEquals(e1, ids.get(0));
 
         ids = makeSearch(0, 100,
-                new EventSearch.Options(null, 0, null, null, null, null, "aPpLeS pears")).eventIds;
+                new EventSearch.Options(null, null, null, null, null, null, "aPpLeS pears")).eventIds;
         assertEquals(1, ids.size());
         assertEquals(e2, ids.get(0));
 
         ids = makeSearch(0, 100,
-                new EventSearch.Options(null, 0, null, null, null, null, "money money money")).eventIds;
+                new EventSearch.Options(null, null, null, null, null, null, "money money money")).eventIds;
         assertEquals(0, ids.size());
     }
 

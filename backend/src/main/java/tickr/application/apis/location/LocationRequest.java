@@ -1,5 +1,7 @@
 package tickr.application.apis.location;
 
+import tickr.application.serialised.SerializedLocation;
+
 public class LocationRequest {
     private int streetNum;
     private String streetName;
@@ -74,5 +76,15 @@ public class LocationRequest {
 
     public String buildSearchString () {
         return String.format("%d %s %s %s %s %s", streetNum, streetName, city, postcode, state, country);
+    }
+
+    public static LocationRequest fromSerialised (SerializedLocation location) {
+        return new LocationRequest()
+                .withStreetNum(location.streetNo)
+                .withStreetName(location.streetName)
+                .withCity(location.suburb)
+                .withPostcode(location.postcode)
+                .withState(location.state)
+                .withCountry(location.country);
     }
 }

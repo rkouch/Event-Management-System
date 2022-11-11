@@ -10,12 +10,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
@@ -27,17 +31,20 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestViewEvent {
     private DataModel model;
     private TickrController controller;
+    private MockLocationApi locationApi;
 
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
-        
+        locationApi = new MockLocationApi(model);
+        ApiLocator.addLocator(ILocationAPI.class, () -> locationApi);
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 
@@ -126,8 +133,8 @@ public class TestViewEvent {
         assertEquals(location.postcode, response.location.postcode);
         assertEquals(location.state, response.location.state);
         assertEquals(location.country, response.location.country);
-        assertEquals(location.longitude, response.location.longitude);
-        assertEquals(location.latitude, response.location.latitude);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
         assertEquals("2031-12-03T10:15:30", response.startDate);
         assertEquals("2031-12-04T10:15:30", response.endDate);
 
@@ -195,5 +202,36 @@ public class TestViewEvent {
                 null, null, null, null, null, null, true));
         var session3 = TestHelper.commitMakeSession(model, session2);
         assertDoesNotThrow(() -> controller.eventView(session3, Map.of("event_id", event_id)));
+    }
+
+    @Test
+    public void testLocation () {
+        var session = model.makeSession();
+        var authToken = controller.userRegister(session,
+                new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var location = new SerializedLocation.Builder()
+                .withStreetNo(1)
+                .withStreetName("High St")
+                .withSuburb("Kensington")
+                .withPostcode("2052")
+                .withState("NSW")
+                .withCountry("Australia")
+                .build();
+
+        var eventId = controller.createEvent(session, new CreateEventReqBuilder().withLocation(location).build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        locationApi.awaitLocations();
+
+
+        var response = controller.eventView(session, Map.of(
+                "event_id", eventId,
+                "auth_token", authToken
+        ));
+
+        assertEquals("-33.9148449", response.location.latitude);
+        assertEquals("151.2254725", response.location.longitude);
     }
 }

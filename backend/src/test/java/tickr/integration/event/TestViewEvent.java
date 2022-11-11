@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import spark.Spark;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
@@ -18,6 +20,7 @@ import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventViewResponse;
+import tickr.mock.MockLocationApi;
 import tickr.util.HTTPHelper;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -35,6 +38,7 @@ public class TestViewEvent {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -47,6 +51,7 @@ public class TestViewEvent {
     public void cleanup () {
         Spark.stop();
         hibernateModel.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
         Spark.awaitStop();
     }
 
@@ -93,8 +98,8 @@ public class TestViewEvent {
         assertEquals(location.postcode, response.location.postcode);
         assertEquals(location.state, response.location.state);
         assertEquals(location.country, response.location.country);
-        assertEquals(location.longitude, response.location.longitude);
-        assertEquals(location.latitude, response.location.latitude);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
         assertEquals("2031-12-03T10:15:30", response.startDate);
         assertEquals("2031-12-04T10:15:30", response.endDate);
 

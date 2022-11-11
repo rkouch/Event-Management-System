@@ -78,6 +78,13 @@ public class TestEventSearch {
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(1), "max_results", Integer.toString(1), "search_options",
                         Base64.getEncoder().encodeToString("testing123".getBytes()))));
+
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(null, 1.0).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), null).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), -1.0).build()));
     }
 
     @Test
@@ -169,7 +176,7 @@ public class TestEventSearch {
                         .withPostcode("2052")
                         .withState("NSW")
                         .withCountry("Australia")
-                        .build(), 10.0f)
+                        .build(), 30.0)
                 .build()).eventIds;
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
@@ -183,12 +190,12 @@ public class TestEventSearch {
                         .withPostcode("2052")
                         .withState("NSW")
                         .withCountry("Australia")
-                        .build(), 260.0f)
+                        .build(), 260.0)
                 .build()).eventIds;
         assertEquals(3, respIds.size());
-        assertEquals(ids.get(2), respIds.get(2));
-        assertEquals(ids.get(0), respIds.get(0));
-        assertEquals(ids.get(1), respIds.get(1));
+        assertEquals(ids.get(2), respIds.get(0));
+        assertEquals(ids.get(0), respIds.get(1));
+        assertEquals(ids.get(1), respIds.get(2));
     }
 
     private List<String> createEventOptions () {
@@ -279,7 +286,7 @@ public class TestEventSearch {
 
     private static class OptionsBuilder {
         private SerializedLocation location = null;
-        private float maxDistance;
+        private Double maxDistance;
 
         private LocalDateTime startTime = null;
         private LocalDateTime endTime = null;
@@ -289,7 +296,7 @@ public class TestEventSearch {
 
         private String text = null;
 
-        public OptionsBuilder addLocation (SerializedLocation location, float maxDistance) {
+        public OptionsBuilder addLocation (SerializedLocation location, Double maxDistance) {
             this.location = location;
             this.maxDistance = maxDistance;
 

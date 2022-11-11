@@ -7,6 +7,7 @@ import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
@@ -14,6 +15,7 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -44,6 +46,7 @@ public class TestTicketReserve {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -82,6 +85,7 @@ public class TestTicketReserve {
         Spark.awaitStop();
 
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

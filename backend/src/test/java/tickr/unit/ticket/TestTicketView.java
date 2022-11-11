@@ -27,6 +27,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
@@ -36,6 +37,7 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.AbstractMockPurchaseAPI;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -66,6 +68,7 @@ public class TestTicketView {
 
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -114,6 +117,7 @@ public class TestTicketView {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 

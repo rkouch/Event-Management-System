@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
@@ -27,6 +29,7 @@ import tickr.application.serialised.responses.EventHostingsResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.UserEventsResponse;
 import tickr.application.serialised.responses.UserIdResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -41,6 +44,7 @@ public class TestUserEvents {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -120,6 +124,7 @@ public class TestUserEvents {
     public void cleanup () {
         Spark.stop();
         hibernateModel.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
         Spark.awaitStop();
     }
 
