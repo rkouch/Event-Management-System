@@ -1,7 +1,8 @@
 package tickr.integration.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,8 +57,8 @@ public class TestEventHostings {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         eventId = response.getBody(CreateEventResponse.class).event_id;

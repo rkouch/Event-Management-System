@@ -3,7 +3,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -74,9 +74,9 @@ public class TestCustomerBookings {
         seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section", 10, 50, true));
         seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section2", 20, 30, true));
 
-        var startTime1 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
-        var startTime2 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
-        var startTime3 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6));
+        var startTime1 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
+        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6));
         var endTime1 = startTime1.plus(Duration.ofDays(1));
         var endTime2 = startTime2.plus(Duration.ofDays(1));
         var endTime3 = startTime3.plus(Duration.ofDays(1));

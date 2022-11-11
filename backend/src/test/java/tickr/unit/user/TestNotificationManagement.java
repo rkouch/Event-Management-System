@@ -21,7 +21,7 @@ import tickr.util.CryptoHelper;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -69,7 +69,7 @@ public class TestNotificationManagement {
         assertThrows(UnauthorizedException.class, () -> controller.userUpdateSettings(finalSession, new NotificationManagement.UpdateRequest(TestHelper.makeFakeJWT(user.getId()),
                 new NotificationManagement.Settings())));
 
-        var expiredToken = new AuthToken(user, LocalDateTime.now().minus(Duration.ofDays(1)), Duration.ofHours(1));
+        var expiredToken = new AuthToken(user, ZonedDateTime.now().minus(Duration.ofDays(1)), Duration.ofHours(1));
         session.save(expiredToken);
         session = TestHelper.commitMakeSession(model, session);
         var expiredStr = expiredToken.makeJWT();
