@@ -97,8 +97,11 @@ create table ticket_reservation (
     #reservation_id varchar(36) not null,
     price float not null,
     expiry_time datetime not null,
+    group_id varchar(36),
+    group_accepted boolean,
     primary key (id),
     foreign key (user_id) references users(id),
+    foreign key (group_id) references `user_groups` (id),
     foreign key (seating_id) references `seating_plan`(id)
     #foreign key (reservation_id) references event_reservation(id)
 );
@@ -120,6 +123,7 @@ create table tickets (
     user_id      varchar(36) not null,
     event_id     varchar(36) not null,
     section_id    varchar(36) not null,
+    group_id     varchar(36),
     seat_no      int,
     first_name varchar(255),
     last_name varchar(255),
@@ -128,7 +132,8 @@ create table tickets (
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (event_id) references `events`(id),
-    foreign key (section_id) references seating_plan(id)
+    foreign key (section_id) references seating_plan(id),
+    foreign key (group_id) references `user_groups` (id)
 );
 
 create table categories (
@@ -212,6 +217,16 @@ create table reset_tokens (
     foreign key (user_id) references users(id)
 );
 
+create table invitation (
+    id  varchar(36) not null,
+    group_id  varchar(36) not null,
+    reserve_id  varchar(36) not null,
+    
+    primary key (id),
+    foreign key (group_id) references `user_groups`(id),
+    foreign key (reserve_id) references ticket_reservation(id)
+);
+
 create table TestTable
 (
     id    varchar(36),
@@ -220,4 +235,5 @@ create table TestTable
     constraint TestTable_pk
         primary key (id)
 );
+
 

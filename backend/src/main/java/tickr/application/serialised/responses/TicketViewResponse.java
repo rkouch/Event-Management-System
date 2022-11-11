@@ -24,7 +24,10 @@ public class TicketViewResponse {
 
     public String email;
 
-    public TicketViewResponse(String eventId, String userId, String section, int seatNum, String firstName, String lastName, String email) {
+    @SerializedName("group_id")
+    public String groupId;
+
+    public TicketViewResponse(String eventId, String userId, String section, int seatNum, String firstName, String lastName, String email, String groupId) {
         this.eventId = eventId;
         this.userId = userId;
         this.seatNum = seatNum;
@@ -32,6 +35,7 @@ public class TicketViewResponse {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.groupId = groupId;
     } 
 
     

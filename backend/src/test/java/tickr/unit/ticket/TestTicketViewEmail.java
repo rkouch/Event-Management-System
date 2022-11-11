@@ -121,6 +121,12 @@ public class TestTicketViewEmail {
         ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
     }
 
+    @AfterEach
+    public void cleanup () {
+        model.cleanup();
+        ApiLocator.clearLocator(IEmailAPI.class);
+    }
+
     @Test 
     public void testTicketEmail() {
         controller.TicketViewSendEmail(session, new TicketViewEmailRequest(authToken, ticketIds.get(0), "test1@example.com"));
