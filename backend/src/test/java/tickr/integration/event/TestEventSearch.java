@@ -87,17 +87,17 @@ public class TestEventSearch {
         assertEquals(200, response.getStatus());
 
         var ids = makeSearch(0, 100,
-                new EventSearch.Options(null, null, null, List.of("test1"), null, null)).eventIds;
+                new EventSearch.Options(null, 0, null, null, List.of("test1"), null, null)).eventIds;
         assertEquals(1, ids.size());
         assertEquals(e1, ids.get(0));
 
         ids = makeSearch(0, 100,
-                new EventSearch.Options(null, null, null, null, null, "aPpLeS pears")).eventIds;
+                new EventSearch.Options(null, 0, null, null, null, null, "aPpLeS pears")).eventIds;
         assertEquals(1, ids.size());
         assertEquals(e2, ids.get(0));
 
         ids = makeSearch(0, 100,
-                new EventSearch.Options(null, null, null, null, null, "money money money")).eventIds;
+                new EventSearch.Options(null, 0, null, null, null, null, "money money money")).eventIds;
         assertEquals(0, ids.size());
     }
 
