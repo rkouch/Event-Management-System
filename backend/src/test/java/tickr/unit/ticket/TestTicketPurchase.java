@@ -32,7 +32,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -52,8 +52,8 @@ public class TestTicketPurchase {
     private List<String> requestIds;
     private float requestPrice;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     @BeforeEach
     public void setup () {
@@ -64,7 +64,7 @@ public class TestTicketPurchase {
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
@@ -232,7 +232,7 @@ public class TestTicketPurchase {
         var reserve1 = session.getById(TicketReservation.class, UUID.fromString(id1))
                 .orElseThrow(AssertionFailedError::new);
 
-        reserve1.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
+        reserve1.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
         session = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
                 "https://example.com/success", "https://example.com/cancel", List.of(new TicketPurchase.TicketDetails(id1)))));

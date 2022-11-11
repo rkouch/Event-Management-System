@@ -17,7 +17,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -75,9 +75,9 @@ public class TestUserLogin {
                 "test@example.com", "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
 
-        var beforeDate = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
+        var beforeDate = ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
         var tokenStr2 = controller.userLogin(session, new UserLoginRequest("test@example.com", "Password123!")).authToken;
-        var afterDate = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofSeconds(1)).truncatedTo(ChronoUnit.SECONDS);
+        var afterDate = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofSeconds(1)).truncatedTo(ChronoUnit.SECONDS);
         session = TestHelper.commitMakeSession(model, session);
 
         assertNotEquals(tokenStr1, tokenStr2);
@@ -85,7 +85,7 @@ public class TestUserLogin {
         var token1 = CryptoHelper.makeJWTParserBuilder().build().parseClaimsJws(tokenStr1);
         var token2 = CryptoHelper.makeJWTParserBuilder().build().parseClaimsJws(tokenStr2);
 
-        var token2Date = LocalDateTime.ofInstant(token2.getBody().getIssuedAt().toInstant(), ZoneId.of("UTC"));
+        var token2Date = ZonedDateTime.ofInstant(token2.getBody().getIssuedAt().toInstant(), ZoneId.of("UTC"));
 
         assertEquals(token1.getBody().getSubject(), token2.getBody().getSubject());
         assertNotEquals(token1.getBody().getId(), token2.getBody().getId());

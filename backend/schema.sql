@@ -67,7 +67,7 @@ create table `user_groups` (
     id          varchar(36) not null,
     leader_id    varchar(36) not null,
     size        int not null,
-    time_created timestamp,
+    time_created datetime,
     ticket_available int,
     primary key (id),
     foreign key (leader_id) references users(id)
@@ -97,8 +97,11 @@ create table ticket_reservation (
     #reservation_id varchar(36) not null,
     price float not null,
     expiry_time datetime not null,
+    group_id varchar(36),
+    group_accepted boolean,
     primary key (id),
     foreign key (user_id) references users(id),
+    foreign key (group_id) references `user_groups` (id),
     foreign key (seating_id) references `seating_plan`(id)
     #foreign key (reservation_id) references event_reservation(id)
 );
@@ -120,6 +123,7 @@ create table tickets (
     user_id      varchar(36) not null,
     event_id     varchar(36) not null,
     section_id    varchar(36) not null,
+    group_id     varchar(36),
     seat_no      int,
     first_name varchar(255),
     last_name varchar(255),
@@ -128,7 +132,8 @@ create table tickets (
     primary key (id),
     foreign key (user_id) references users(id),
     foreign key (event_id) references `events`(id),
-    foreign key (section_id) references seating_plan(id)
+    foreign key (section_id) references seating_plan(id),
+    foreign key (group_id) references `user_groups` (id)
 );
 
 create table categories (
@@ -173,7 +178,7 @@ create table event_comments (
     author_id varchar(36) not null,
     comment_title varchar(255),
     comment_text text not null,
-    comment_time timestamp not null,
+    comment_time datetime not null,
     rating float,
 
     primary key (id),
@@ -186,7 +191,7 @@ create table reactions (
     id varchar(36) not null,
     comment_id varchar(36) not null,
     author_id varchar(36) not null,
-    react_time timestamp not null,
+    react_time datetime not null,
     react_type char(255) not null,
 
     primary key (id),
@@ -206,10 +211,20 @@ create table group_users (
 create table reset_tokens (
     id varchar(36) not null,
     user_id varchar(36) not null,
-    expiry_time timestamp not null,
+    expiry_time datetime not null,
 
     primary key (id),
     foreign key (user_id) references users(id)
+);
+
+create table invitation (
+    id  varchar(36) not null,
+    group_id  varchar(36) not null,
+    reserve_id  varchar(36) not null,
+    
+    primary key (id),
+    foreign key (group_id) references `user_groups`(id),
+    foreign key (reserve_id) references ticket_reservation(id)
 );
 
 create table TestTable
@@ -220,4 +235,5 @@ create table TestTable
     constraint TestTable_pk
         primary key (id)
 );
+
 

@@ -23,8 +23,9 @@ import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 public class TestEventSearch {
@@ -114,8 +115,8 @@ public class TestEventSearch {
 
         for (int i = 0; i < numPages * numPage; i++) {
             eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
-                    .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
-                    .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
+                    .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
+                    .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
                     .build(authToken)).event_id);
             session = TestHelper.commitMakeSession(model, session);
             controller.editEvent(session, new EditEventRequest(eventIds.get(eventIds.size() - 1), authToken, null, null, null, null,
@@ -145,12 +146,12 @@ public class TestEventSearch {
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addStartTime(LocalDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build()).eventIds;
+        respIds = makeSearch(0, 100, new OptionsBuilder().addStartTime(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build()).eventIds;
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addEndTime(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build()).eventIds;
+        respIds = makeSearch(0, 100, new OptionsBuilder().addEndTime(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build()).eventIds;
         assertEquals(2, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(0), respIds.get(1));
@@ -203,8 +204,8 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestA")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4)))
                 .withCategories(Set.of("food", "music", "health"))
                 .withTags(Set.of("test1", "test2", "test3"))
                 .withDescription("Testing karaoke burgers hospital")
@@ -224,8 +225,8 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestB")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6)))
                 .withCategories(Set.of("hobbies", "business", "free"))
                 .withTags(Set.of("test4", "test2", "test5"))
                 .withDescription("money capitalism free sewing")
@@ -245,8 +246,8 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestC")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)))
                 .withCategories(Set.of("food", "education"))
                 .withTags(Set.of("test2", "test5", "test6"))
                 .withDescription("money burgers school")
@@ -288,8 +289,8 @@ public class TestEventSearch {
         private SerializedLocation location = null;
         private Double maxDistance;
 
-        private LocalDateTime startTime = null;
-        private LocalDateTime endTime = null;
+        private ZonedDateTime startTime = null;
+        private ZonedDateTime endTime = null;
 
         private List<String> tags = null;
         private List<String> categories = null;
@@ -303,13 +304,13 @@ public class TestEventSearch {
             return this;
         }
 
-        public OptionsBuilder addStartTime (LocalDateTime startTime) {
+        public OptionsBuilder addStartTime (ZonedDateTime startTime) {
             this.startTime = startTime;
 
             return this;
         }
 
-        public OptionsBuilder addEndTime (LocalDateTime endTime) {
+        public OptionsBuilder addEndTime (ZonedDateTime endTime) {
             this.endTime = endTime;
 
             return this;

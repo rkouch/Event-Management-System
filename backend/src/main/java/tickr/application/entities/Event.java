@@ -1,6 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.EditEventRequest;
@@ -18,8 +20,9 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.util.Utils;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -74,11 +77,13 @@ public class Event {
     @Column(name = "event_name")
     private String eventName;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "event_start")
-    private LocalDateTime eventStart;
+    private ZonedDateTime eventStart;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "event_end")
-    private LocalDateTime eventEnd;
+    private ZonedDateTime eventEnd;
 
     @Column(name = "event_description")
     private String eventDescription;
@@ -96,7 +101,7 @@ public class Event {
 
     public Event() {}
 
-    public Event(String eventName, User host, LocalDateTime eventStart, LocalDateTime eventEnd,
+    public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
             String eventDescription, Location location, int seatAvailability, String eventPicture) {
         this.location = location;
         this.eventName = eventName;
@@ -182,19 +187,19 @@ public class Event {
         this.eventName = eventName;
     }
 
-    public LocalDateTime getEventStart () {
+    public ZonedDateTime getEventStart () {
         return eventStart;
     }
     
-    private void setEventStart (LocalDateTime eventStart) {
+    private void setEventStart (ZonedDateTime eventStart) {
         this.eventStart = eventStart;
     }
 
-    public LocalDateTime getEventEnd () {
+    public ZonedDateTime getEventEnd () {
         return eventEnd;
     }
 
-    private void setEventEnd (LocalDateTime eventEnd) {
+    private void setEventEnd (ZonedDateTime eventEnd) {
         this.eventEnd = eventEnd;
     }
 
@@ -283,9 +288,9 @@ public class Event {
         List<String> set = new ArrayList<>();
         Set<Ticket> tmpTickets = this.tickets;
         List<Ticket> tickets = new ArrayList<>(tmpTickets);
-        Collections.sort(tickets, new Comparator<Ticket>() {
+        tickets.sort(new Comparator<>() {
             @Override
-            public int compare(Ticket t1, Ticket t2) {
+            public int compare (Ticket t1, Ticket t2) {
                 if (t1.getSection().getSection().compareTo(t2.getSection().getSection()) == 0) {
                     Integer i1 = t1.getSeatNumber();
                     Integer i2 = t2.getSeatNumber();
@@ -314,21 +319,21 @@ public class Event {
             this.eventPicture = picture;
         }
         if (startDate != null) {
-            LocalDateTime start_date;
+            ZonedDateTime start_date;
             try {
-                start_date = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
+                start_date = ZonedDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
                 this.eventStart = start_date;
             } catch (DateTimeParseException e) {
-                throw new ForbiddenException("Invalid date time string!");
+                throw new ForbiddenException("Invalid date time string!", e);
             }
         }
         if (endDate != null) {
-            LocalDateTime end_date;
+            ZonedDateTime end_date;
             try {
-                end_date = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+                end_date = ZonedDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
                 this.eventEnd = end_date;
             } catch (DateTimeParseException e) {
-                throw new ForbiddenException("Invalid date time string!");
+                throw new ForbiddenException("Invalid date time string!", e);
             }
         }
         if (description != null) {
@@ -409,7 +414,7 @@ public class Event {
         this.published = published;
     }
 
-    public List<TicketReservation> makeReservations (ModelSession session, User user, LocalDateTime requestedTime, String section,
+    public List<TicketReservation> makeReservations (ModelSession session, User user, ZonedDateTime requestedTime, String section,
                                                      int quantity, List<Integer> seatNums) {
         if (!published) {
             throw new ForbiddenException("Unable to reserve tickets from unpublished event!");
@@ -473,7 +478,7 @@ public class Event {
             throw new ForbiddenException("You have already made a review for this event!");
         }
 
-        if (getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC")))) {
+        if (getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot create review of event that hasn't happened!");
         }
 
@@ -506,11 +511,11 @@ public class Event {
                 .anyMatch(tags::contains);
     }
 
-    public boolean startsAfter (LocalDateTime startTime) {
+    public boolean startsAfter (ZonedDateTime startTime) {
         return startTime == null || getEventStart().isAfter(startTime) || getEventStart().isEqual(startTime);
     }
 
-    public boolean endsBefore (LocalDateTime endTime) {
+    public boolean endsBefore (ZonedDateTime endTime) {
         return endTime == null || getEventEnd().isBefore(endTime) || getEventEnd().isEqual(endTime);
     }
 

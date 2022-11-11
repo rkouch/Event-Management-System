@@ -22,7 +22,7 @@ import tickr.server.Server;
 import tickr.util.HTTPHelper;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -38,8 +38,8 @@ public class TestTicketReserve {
 
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
 
@@ -57,7 +57,7 @@ public class TestTicketReserve {
         assertEquals(200, response.getStatus());
         authToken = response.getBody(AuthTokenResponse.class).authToken;
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(

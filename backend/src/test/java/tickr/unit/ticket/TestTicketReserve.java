@@ -26,7 +26,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -39,8 +39,8 @@ public class TestTicketReserve {
     private String authToken;
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
 
@@ -50,7 +50,7 @@ public class TestTicketReserve {
         controller = new TickrController();
         ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
@@ -109,9 +109,9 @@ public class TestTicketReserve {
         assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
                 new TicketReserve.Request(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
-                new TicketReserve.Request(authToken, eventId, LocalDateTime.now(), ticketDetails)));
+                new TicketReserve.Request(authToken, eventId, ZonedDateTime.now(), ticketDetails)));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
-                new TicketReserve.Request(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
+                new TicketReserve.Request(authToken, eventId, ZonedDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserveOld(session,
                 new TicketReserve.Request(authToken, eventId, startTime, List.of(new TicketReserve.TicketDetails("testing")))));
@@ -150,9 +150,9 @@ public class TestTicketReserve {
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, UUID.randomUUID().toString(), startTime, ticketDetails)));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId, LocalDateTime.now(), ticketDetails)));
+                new TicketReserve.Request(authToken, eventId, ZonedDateTime.now(), ticketDetails)));
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId, LocalDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
+                new TicketReserve.Request(authToken, eventId, ZonedDateTime.now().plus(Duration.ofDays(365)), ticketDetails)));
 
         assertThrows(ForbiddenException.class, () -> controller.ticketReserve(session,
                 new TicketReserve.Request(authToken, eventId, startTime,
@@ -351,8 +351,12 @@ public class TestTicketReserve {
         session = model.makeSession();
         var reservation = session.getById(TicketReservation.class, UUID.fromString(id1))
                         .orElseThrow(AssertionFailedError::new);
-        reservation.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
+        reservation.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS).minusMinutes(5).minusSeconds(1));
         session = TestHelper.commitMakeSession(model, session);
+
+
+        var eventReserveResponse = controller.eventReservedSeats(session, Map.of("auth_token", authToken, "event_id", eventId));
+        assertEquals(0, eventReserveResponse.reserved.size());
 
         assertDoesNotThrow(() -> controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime,
                 List.of(new TicketReserve.TicketDetails("test_section", 1, List.of(3))))));

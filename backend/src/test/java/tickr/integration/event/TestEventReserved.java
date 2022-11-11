@@ -3,7 +3,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -80,7 +80,7 @@ public class TestEventReserved {
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionB", 20, 30, true));
 
-        var startTime1 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        var startTime1 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         var endTime1 = startTime1.plus(Duration.ofDays(1));
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()

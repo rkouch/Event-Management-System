@@ -15,17 +15,6 @@ import tickr.application.entities.*;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.*;
-import tickr.application.serialised.responses.AuthTokenResponse;
-import tickr.application.serialised.responses.CreateEventResponse;
-import tickr.application.serialised.responses.EventAttendeesResponse;
-import tickr.application.serialised.responses.EventViewResponse;
-import tickr.application.serialised.responses.RequestChangePasswordResponse;
-import tickr.application.serialised.responses.TestResponses;
-import tickr.application.serialised.responses.TicketBookingsResponse;
-import tickr.application.serialised.responses.TicketViewEmailResponse;
-import tickr.application.serialised.responses.TicketViewResponse;
-import tickr.application.serialised.responses.UserIdResponse;
-import tickr.application.serialised.responses.ViewProfileResponse;
 import tickr.application.serialised.responses.EventReservedSeatsResponse.Reserved;
 import tickr.application.serialised.responses.*;
 import tickr.persistence.ModelSession;
@@ -37,10 +26,7 @@ import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
 import tickr.util.Utils;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -282,21 +268,21 @@ public class TickrController {
             throw new BadRequestException("Invalid location details!");
         }
 
-        LocalDateTime startDate;
-        LocalDateTime endDate;
+        ZonedDateTime startDate;
+        ZonedDateTime endDate;
 
         try {
-            startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
-            endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
+            startDate = ZonedDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
+            endDate = ZonedDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
-            throw new ForbiddenException("Invalid date time string!");
+            throw new ForbiddenException("Invalid date time string!", e);
         }
 
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("Event start time is later than event end time!");
         }
 
-        if (checkDates && startDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+        if (checkDates && startDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot create event in the past!");
         }
 
@@ -549,7 +535,7 @@ public class TickrController {
         SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
-        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().format(DateTimeFormatter.ISO_INSTANT), event.getEventEnd().format(DateTimeFormatter.ISO_INSTANT), event.getEventDescription(), seatingResponse,
                                     admins, categories, tags, event.isPublished(), event.getSeatAvailability(), event.getSeatCapacity());
     }
 
@@ -607,7 +593,7 @@ public class TickrController {
 
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
-                .filter(x -> !x.getEventEnd().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(x -> !x.getEventEnd().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .filter(Event::isPublished)
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
@@ -935,15 +921,15 @@ public class TickrController {
             throw new BadRequestException("Invalid paging values!");
         }
 
-        LocalDateTime beforeDate;
+        ZonedDateTime beforeDate;
 
         try {
-            beforeDate = LocalDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
             throw new BadRequestException("Invalid date time string!");
         }
 
-        if (beforeDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+        if (beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot find events in the past!");
         }
 
@@ -1058,7 +1044,7 @@ public class TickrController {
 
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
-                .filter(e -> e.getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1088,7 +1074,7 @@ public class TickrController {
 
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
-                .filter(e -> e.getEventStart().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1142,17 +1128,160 @@ public class TickrController {
             throw new BadRequestException("Missing comment ID!");
         }
         User user = authenticateToken(session, request.authToken);
+
         Comment review = session.getById(Comment.class, UUID.fromString(request.commentId))
                 .orElseThrow(() -> new ForbiddenException("Invalid comment ID!"));
+
         if (user != review.getAuthor()) {
             throw new ForbiddenException("User is not author of this review!");
         }
+
         if (review.getParent() == null) {
             for (Comment reply : review.getChildren()) {
                 session.remove(reply);
             }
         }
+
         session.remove(review);
+    }   
+
+    public GroupCreateResponse groupCreate (ModelSession session, GroupCreateRequest request) {
+        if (request.reservedIds == null) {
+            throw new BadRequestException("Missing reserved ids!");
+        }
+        if (request.hostReserveId == null) {
+            throw new BadRequestException("Missing host reserve id!");
+        }
+        User user = authenticateToken(session, request.authToken);
+
+        if (user.isGroupAlreadyCreated(request.reservedIds)) {
+            throw new ForbiddenException("Group has already been created for reserve IDs!");
+        }
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.hostReserveId))
+        .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
+
+        Group group = new Group(user, ZonedDateTime.now(ZoneId.of("UTC")), 1, request.getTicketReservations(session, reserve));
+
+        
+        session.save(group);
+        user.addGroup(group);
+        user.addOwnedGroup(group);
+        group.addUser(user);
+        group.addGroupToTicketReservations();
+        
+        return new GroupCreateResponse(group.getId().toString());
+    }
+
+    public GroupIdsResponse getGroupIds (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth token!!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+        User user = authenticateToken(session, params.get("auth_token"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var numResults = new AtomicInteger();
+        var groupIds = user.getGroups().stream()
+                .peek(i -> numResults.incrementAndGet())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Group::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new GroupIdsResponse(groupIds, numResults.get());
+    }
+
+    public GroupInviteResponse groupInvite(ModelSession session, GroupInviteRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.reserveId == null) {
+            throw new BadRequestException("Invalid reserve ID!");
+        }
+        if (request.email == null || !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid Email!");
+        }
+
+        User user = authenticateToken(session, request.authToken);
+
+        User inviteUser = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new BadRequestException("User with email does not exist!"));
+        if (user.equals(inviteUser)) {
+            throw new BadRequestException("Host cannot send invite to themself!");
+        }
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new BadRequestException("Invalid group ID!"));
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.reserveId))
+                .orElseThrow(() -> new BadRequestException("Invalid reserve ID!"));
+
+        reserve.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
+
+        Invitation invitation;
+        if (reserve.getInvitation() == null) {
+            invitation = new Invitation(group, reserve);
+            session.save(invitation);
+            group.addInvitation(invitation);
+            reserve.setInvitation(invitation);
+        } else {
+            invitation = session.getByUnique(Invitation.class, "ticketReservation", reserve)
+                    .orElseThrow(() -> new BadRequestException("Invitation does not exist for this reserve ID!"));
+        }
+
+        // logger.info("{}", invitation.getId().toString());
+
+        var inviteUrl = String.format("http://localhost:3000/ticket/purchase/group/%s", invitation.getId().toString());
+        var message = String.format("Please click below to view your group invitation <a href=\"%s\">here</a>.\n", inviteUrl);
+        ApiLocator.locateApi(IEmailAPI.class).sendEmail(request.email, "User group invitation", message);
+
+        return new GroupInviteResponse(true);
+    }
+
+    public GroupAcceptResponse groupAccept(ModelSession session, GroupAcceptRequest request) {
+        if (request.inviteId == null) {
+            throw new BadRequestException("Invalid invite ID!");
+        }
+        User user = authenticateToken(session, request.authToken);
+        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.inviteId))
+                .orElseThrow(() -> new BadRequestException("Invitation does not exist for this invite ID!"));
+
+        invitation.acceptInvitation(user);
+        session.remove(invitation);
+        return new GroupAcceptResponse(invitation.getTicketReservation().getId().toString());
+    }
+    
+    public void groupDeny(ModelSession session, GroupDenyRequest request) {
+        if (request.invideId == null) {
+            throw new BadRequestException("Invalid invite ID!");
+        }
+        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.invideId))
+                .orElseThrow(() -> new BadRequestException("Invitation does not exist for this invite ID!"));
+
+        invitation.denyInvitation();
+        session.remove(invitation);
+    }
+
+    public GroupDetailsResponse groupDetails(ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth token!!");
+        }
+        if (!params.containsKey("group_id")) {
+            throw new BadRequestException("Missing group ID!");
+        }
+        User host = authenticateToken(session, params.get("auth_token"));
+        Group group = session.getById(Group.class, UUID.fromString(params.get("group_id")))
+                .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
+
+        return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getUserDetails(), group.getAvailableReserves(host));
     }
 
     public void clearDatabase (ModelSession session, Object request) {

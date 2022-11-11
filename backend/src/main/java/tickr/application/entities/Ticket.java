@@ -2,11 +2,13 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.responses.TicketViewResponse;
+import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -45,6 +47,10 @@ public class Ticket {
     private String lastName;
 
     private String email;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     public UUID getId () {
         return id;
@@ -116,11 +122,26 @@ public class Ticket {
     }
 
     public TicketViewResponse getTicketViewResponse () {
-        return new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
-                                        this.firstName, this.lastName, this.email);
+        return group == null || !group.getLeader().equals(this.getUser())
+        ? new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
+                this.firstName, this.lastName, this.email, null) 
+        : new TicketViewResponse(this.event.getId().toString(), this.user.getId().toString(), this.section.getSection(), this.seatNumber,
+                this.firstName, this.lastName, this.email, group.getId().toString());
     }
 
     public boolean isOwnedBy (User user) {
         return user != null && this.user.getId().equals(user.getId());
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
+    }
+
+    public Users createUsersDetails() {
+        return new Users(user.getId().toString(), email, section.getSection(), seatNumber, true);
     }
 }

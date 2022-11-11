@@ -77,8 +77,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30",
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.eventView(finalSession, Map.of("event_i", event_id)));
@@ -114,8 +114,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30",
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
 
         /*controller.editEvent(session, new EditEventRequest(authTokenString, event_id, null, null, null, null,
                 null, null, null, null, null, null, true));*/
@@ -135,8 +135,8 @@ public class TestViewEvent {
         assertEquals(location.country, response.location.country);
         assertNull(response.location.longitude);
         assertNull(response.location.latitude);
-        assertEquals("2031-12-03T10:15:30", response.startDate);
-        assertEquals("2031-12-04T10:15:30", response.endDate);
+        assertEquals("2031-12-03T10:15:30Z", response.startDate);
+        assertEquals("2031-12-04T10:15:30Z", response.endDate);
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
         assertEquals(seats.get(0).availability, response.seatingDetails.get(0).availableSeats);
@@ -193,8 +193,8 @@ public class TestViewEvent {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                , "2031-12-03T10:15:30",
-                "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                , "2031-12-03T10:15:30Z",
+                "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var session1 = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.eventView(session1, Map.of("event_id", event_id)));
         var session2 = TestHelper.rollbackMakeSession(model, session1);

@@ -2,11 +2,13 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.server.exceptions.ForbiddenException;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.Set;
 import java.util.UUID;
@@ -33,8 +35,9 @@ public class Reaction {
     @JoinColumn(name = "author_id")
     private User author;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "react_time")
-    private LocalDateTime reactTime;
+    private ZonedDateTime reactTime;
 
     @Column(name = "react_type")
     private String reactType;
@@ -47,7 +50,7 @@ public class Reaction {
 
         this.comment = comment;
         this.author = author;
-        this.reactTime = LocalDateTime.now(ZoneId.of("UTC"));
+        this.reactTime = ZonedDateTime.now(ZoneId.of("UTC"));
         this.reactType = reactType;
     }
 
@@ -75,11 +78,11 @@ public class Reaction {
         this.author = author;
     }
 
-    private LocalDateTime getReactTime () {
+    private ZonedDateTime getReactTime () {
         return reactTime;
     }
 
-    private void setReactTime (LocalDateTime reactTime) {
+    private void setReactTime (ZonedDateTime reactTime) {
         this.reactTime = reactTime;
     }
 
