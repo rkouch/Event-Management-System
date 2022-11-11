@@ -232,13 +232,11 @@ public class TestGroupDetails {
         assertEquals(hostId, response.hostId);
 
         for (Users u : users) {
-            if (u.userId != null && !u.userId.equals(hostId)) {
-                assertNotNull(u.userId);
-                assertNotNull(u.email);
-                assertEquals(true, u.accepted);;
-                assertNotNull(u.section);
-                assertNotNull(u.seatNumber);
-            }
+            assertNotNull(u.userId);
+            assertNotNull(u.email);
+            assertEquals(true, u.accepted);;
+            assertNotNull(u.section);
+            assertNotNull(u.seatNumber);
         }
     }
 
