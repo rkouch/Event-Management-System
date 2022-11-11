@@ -30,6 +30,7 @@
         <mapping class="tickr.application.entities.AuthToken"/>
         <mapping class="tickr.application.entities.Category"/>
         <mapping class="tickr.application.entities.Comment"/>
+        <mapping class="tickr.application.entities.DocumentTerm"/>
         <mapping class="tickr.application.entities.Event"/>
         <!--<mapping class="tickr.application.entities.EventAdmin"/>-->
         <mapping class="tickr.application.entities.Group"/>
@@ -38,6 +39,7 @@
         <mapping class="tickr.application.entities.Reaction"/>
         <mapping class="tickr.application.entities.SeatingPlan"/>
         <mapping class="tickr.application.entities.Tag"/>
+        <mapping class="tickr.application.entities.TfIdf"/>
         <mapping class="tickr.application.entities.Ticket"/>
         <mapping class="tickr.application.entities.TicketReservation"/>
         <mapping class="tickr.application.entities.User"/>
