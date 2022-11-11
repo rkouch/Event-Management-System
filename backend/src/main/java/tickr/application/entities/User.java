@@ -17,7 +17,7 @@ import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,7 +119,7 @@ public class User {
      * @return the resulting auth token
      */
     public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
-        var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
+        var token = new AuthToken(this, ZonedDateTime.now(ZoneId.of("UTC")), expiryDuration);
         session.save(token);
         getTokens().add(token);
 

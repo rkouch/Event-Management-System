@@ -2,17 +2,21 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.LineItem;
 import tickr.application.serialised.combined.TicketReserve;
+import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -38,8 +42,9 @@ public class TicketReservation {
     @Column(name = "seat_num")
     private int seatNum;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "expiry_time")
-    private LocalDateTime expiryTime;
+    private ZonedDateTime expiryTime;
 
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "ticketReservation", cascade = CascadeType.REMOVE)
     private PurchaseItem purchaseItem;
@@ -63,7 +68,7 @@ public class TicketReservation {
         this.section = section;
         this.seatNum = seatNum;
         this.price = price;
-        this.expiryTime = LocalDateTime.now(ZoneId.of("UTC"))
+        this.expiryTime = ZonedDateTime.now(ZoneId.of("UTC"))
                 .plus(EXPIRY_DURATION);
     }
 
@@ -75,12 +80,12 @@ public class TicketReservation {
         return price;
     }
 
-    public void setExpiry (LocalDateTime expiryTime) {
+    public void setExpiry (ZonedDateTime expiryTime) {
         this.expiryTime = expiryTime;
     }
 
     public boolean hasExpired () {
-        return LocalDateTime.now(ZoneId.of("UTC"))
+        return ZonedDateTime.now(ZoneId.of("UTC"))
                 .isAfter(expiryTime);
     }
 
@@ -169,5 +174,16 @@ public class TicketReservation {
         setUser(user);
         setInvitation(null);
         setGroupAccepted(true);
+    }
+
+    public Users createUsersDetails() {
+        // invited but no response / accepted invitation
+        if (invitation != null && !groupAccepted) {
+            return new Users(section.getSection(), seatNum, false);
+        } else if (invitation == null && groupAccepted) {
+            return new Users(user.getId().toString(), user.getEmail(), section.getSection(), seatNum, true);
+        } else {
+            return null;
+        } 
     }
 }

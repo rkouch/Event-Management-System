@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,7 +33,7 @@ public class Group {
     private int size;
 
     @Column(name = "time_created")
-    private LocalDateTime timeCreated;
+    private ZonedDateTime timeCreated;
 
     @Column(name = "ticket_available")
     private int ticketsAvailable;
@@ -52,7 +53,7 @@ public class Group {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "group")
     private Set<Ticket> tickets; 
 
-    public Group(User leader, LocalDateTime timeCreated, int size, Set<TicketReservation> ticketReservations) {
+    public Group(User leader, ZonedDateTime timeCreated, int size, Set<TicketReservation> ticketReservations) {
         this.leader = leader;
         this.timeCreated = timeCreated;
         this.size = size;
@@ -87,11 +88,11 @@ public class Group {
         this.size = size;
     }
 
-    public LocalDateTime getTimeCreated () {
+    private ZonedDateTime getTimeCreated () {
         return timeCreated;
     }
 
-    private void setTimeCreated (LocalDateTime timeCreated) {
+    private void setTimeCreated (ZonedDateTime timeCreated) {
         this.timeCreated = timeCreated;
     }
 
@@ -171,14 +172,11 @@ public class Group {
     public List<Users> getUserDetails() {
         List<Users> users = new ArrayList<>();
         for (Ticket t : tickets) {
-            users.add(new Users(t.getUser().getId().toString(), t.getEmail(), t.getSection().getSection(), t.getSeatNumber(), true));
+            users.add(t.createUsersDetails());
         }
         for (TicketReservation r : ticketReservations) {
-            // invited but no response / accepted invitation
-            if (r.getInvitation() != null && !r.isGroupAccepted()) {
-                users.add(new Users(r.getSection().getSection(), r.getSeatNum(), false));
-            } else if (r.getInvitation() == null && r.isGroupAccepted()) {
-                users.add(new Users(r.getUser().getId().toString(), r.getUser().getEmail(), r.getSection().getSection(), r .getSeatNum(), true));
+            if (r.createUsersDetails() != null) {
+                users.add(r.createUsersDetails());
             }
         }
         return users;

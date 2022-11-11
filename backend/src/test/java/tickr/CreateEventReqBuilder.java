@@ -5,8 +5,9 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.util.FileHelper;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,8 +19,8 @@ public class CreateEventReqBuilder {
     private String eventName = "testing";
     private String picture = null;
     private SerializedLocation location = new SerializedLocation.Builder().build();
-    private LocalDateTime startDate = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
-    private LocalDateTime endDate = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)).plus(Duration.ofHours(1));
+    private ZonedDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+    private ZonedDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)).plus(Duration.ofHours(1));
     private String description = "";
     private List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
     private Set<String> admins = new HashSet<>();
@@ -38,12 +39,12 @@ public class CreateEventReqBuilder {
         this.location = location;
         return this;
     }
-    public CreateEventReqBuilder withStartDate (LocalDateTime startDate) {
-        this.startDate = startDate;
+    public CreateEventReqBuilder withStartDate (ZonedDateTime startDate) {
+        this.startDate = startDate.withZoneSameInstant(ZoneId.of("UTC"));
         return this;
     }
-    public CreateEventReqBuilder withEndDate (LocalDateTime endDate) {
-        this.endDate = endDate;
+    public CreateEventReqBuilder withEndDate (ZonedDateTime endDate) {
+        this.endDate = endDate.withZoneSameInstant(ZoneId.of("UTC"));
         return this;
     }
     public CreateEventReqBuilder withDescription (String description) {
@@ -68,8 +69,8 @@ public class CreateEventReqBuilder {
     }
 
     public CreateEventRequest build (String authToken) {
-        return new CreateEventRequest(authToken, eventName, picture, location, startDate.format(DateTimeFormatter.ISO_DATE_TIME),
-                endDate.format(DateTimeFormatter.ISO_DATE_TIME), description, seatingDetails, admins, categories, tags);
+        return new CreateEventRequest(authToken, eventName, picture, location, startDate.format(DateTimeFormatter.ISO_INSTANT),
+                endDate.format(DateTimeFormatter.ISO_INSTANT), description, seatingDetails, admins, categories, tags);
     }
 
     public String getEventName() {
@@ -90,16 +91,16 @@ public class CreateEventReqBuilder {
     public void setLocation(SerializedLocation location) {
         this.location = location;
     }
-    public LocalDateTime getStartDate() {
+    public ZonedDateTime getStartDate() {
         return startDate;
     }
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(ZonedDateTime startDate) {
         this.startDate = startDate;
     }
-    public LocalDateTime getEndDate() {
+    public ZonedDateTime getEndDate() {
         return endDate;
     }
-    public void setEndDate(LocalDateTime endDate) {
+    public void setEndDate(ZonedDateTime endDate) {
         this.endDate = endDate;
     }
     public String getDescription() {

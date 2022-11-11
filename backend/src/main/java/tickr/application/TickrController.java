@@ -23,10 +23,7 @@ import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
 import tickr.util.Utils;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -268,21 +265,21 @@ public class TickrController {
             throw new BadRequestException("Invalid location details!");
         }
 
-        LocalDateTime startDate;
-        LocalDateTime endDate;
+        ZonedDateTime startDate;
+        ZonedDateTime endDate;
 
         try {
-            startDate = LocalDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
-            endDate = LocalDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
+            startDate = ZonedDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
+            endDate = ZonedDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
-            throw new ForbiddenException("Invalid date time string!");
+            throw new ForbiddenException("Invalid date time string!", e);
         }
 
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("Event start time is later than event end time!");
         }
 
-        if (checkDates && startDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+        if (checkDates && startDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot create event in the past!");
         }
 
@@ -534,7 +531,7 @@ public class TickrController {
         SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
-        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().toString(), event.getEventEnd().toString(), event.getEventDescription(), seatingResponse,
+        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().format(DateTimeFormatter.ISO_INSTANT), event.getEventEnd().format(DateTimeFormatter.ISO_INSTANT), event.getEventDescription(), seatingResponse,
                                     admins, categories, tags, event.isPublished(), event.getSeatAvailability(), event.getSeatCapacity());
     }
 
@@ -582,7 +579,7 @@ public class TickrController {
 
         var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
-                .filter(x -> !x.getEventEnd().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(x -> !x.getEventEnd().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .filter(Event::isPublished)
                 .peek(x -> numItems.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart));
@@ -906,15 +903,15 @@ public class TickrController {
             throw new BadRequestException("Invalid paging values!");
         }
 
-        LocalDateTime beforeDate;
+        ZonedDateTime beforeDate;
 
         try {
-            beforeDate = LocalDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
             throw new BadRequestException("Invalid date time string!");
         }
 
-        if (beforeDate.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+        if (beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot find events in the past!");
         }
 
@@ -1029,7 +1026,7 @@ public class TickrController {
 
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
-                .filter(e -> e.getEventStart().isAfter(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1059,7 +1056,7 @@ public class TickrController {
 
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
-                .filter(e -> e.getEventStart().isBefore(LocalDateTime.now(ZoneId.of("UTC"))))
+                .filter(e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1146,7 +1143,7 @@ public class TickrController {
         TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.hostReserveId))
         .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
 
-        Group group = new Group(user, LocalDateTime.now(ZoneId.of("UTC")), 1, request.getTicketReservations(session, reserve));
+        Group group = new Group(user, ZonedDateTime.now(ZoneId.of("UTC")), 1, request.getTicketReservations(session, reserve));
 
         
         session.save(group);
@@ -1209,7 +1206,7 @@ public class TickrController {
         TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.reserveId))
                 .orElseThrow(() -> new BadRequestException("Invalid reserve ID!"));
 
-        reserve.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
+        reserve.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
 
         Invitation invitation;
         if (reserve.getInvitation() == null) {

@@ -41,6 +41,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +64,8 @@ public class TestGroupAccept {
     private String inviteId1;
     private String inviteId2;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<String> requestIds;
     private float requestPrice;
@@ -105,7 +106,7 @@ public class TestGroupAccept {
 
         session = TestHelper.commitMakeSession(model, session);
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
         
         eventId = controller.createEvent(session, new CreateEventReqBuilder()

@@ -3,6 +3,7 @@ package tickr.application.serialised.requests;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class GroupCreateRequest {
                     .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
             if (reserveId.equals(reserve)) {
                 reserveId.setGroupAccepted(true);
-                reserveId.setExpiry(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
+                reserveId.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
             }
             set.add(reserveId);
         }

@@ -2,11 +2,13 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.responses.TicketViewResponse;
+import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -139,5 +141,7 @@ public class Ticket {
         this.group = group;
     }
 
-    
+    public Users createUsersDetails() {
+        return new Users(user.getId().toString(), email, section.getSection(), seatNumber, true);
+    }
 }

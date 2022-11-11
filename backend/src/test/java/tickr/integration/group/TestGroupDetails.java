@@ -38,6 +38,7 @@ import tickr.util.HTTPHelper;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -72,8 +73,8 @@ public class TestGroupDetails {
     private List<String> reserveIdList;
     private float requestPrice;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private String groupId;
 
@@ -116,7 +117,7 @@ public class TestGroupDetails {
         assertEquals(200, response.getStatus());
         authToken5 = response.getBody(AuthTokenResponse.class).authToken;
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
