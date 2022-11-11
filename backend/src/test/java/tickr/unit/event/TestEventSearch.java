@@ -141,35 +141,48 @@ public class TestEventSearch {
     public void testOptions () {
         var ids = createEventOptions();
 
-        var respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).build()).eventIds;
+        var response = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).build());
+        var respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addStartTime(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addStartTime(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addEndTime(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addEndTime(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(0), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addTags(List.of("test4", "test6")).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addTags(List.of("test4", "test6")).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addText("karaoke tEsTb").build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addText("karaoke tEsTb").build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build());
+        respIds = response.eventIds;
+        assertEquals(0, response.numResults);
         assertEquals(0, respIds.size());
 
-        respIds = makeSearch(0, 100, new OptionsBuilder()
+
+        response = makeSearch(0, 100, new OptionsBuilder()
                 .addLocation(new SerializedLocation.Builder()
                         .withStreetNo(1)
                         .withStreetName("High St")
@@ -178,12 +191,14 @@ public class TestEventSearch {
                         .withState("NSW")
                         .withCountry("Australia")
                         .build(), 30.0)
-                .build()).eventIds;
+                .build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder()
+        response = makeSearch(0, 100, new OptionsBuilder()
                 .addLocation(new SerializedLocation.Builder()
                         .withStreetNo(1)
                         .withStreetName("High St")
@@ -192,7 +207,9 @@ public class TestEventSearch {
                         .withState("NSW")
                         .withCountry("Australia")
                         .build(), 260.0)
-                .build()).eventIds;
+                .build());
+        respIds = response.eventIds;
+        assertEquals(3, response.numResults);
         assertEquals(3, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(0), respIds.get(1));

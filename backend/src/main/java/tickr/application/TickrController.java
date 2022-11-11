@@ -591,12 +591,9 @@ public class TickrController {
             queryLocation = ApiLocator.locateApi(ILocationAPI.class).getLocation(LocationRequest.fromSerialised(options.location));
         }
 
-        var numItems = new AtomicInteger();
         var eventStream = session.getAllStream(Event.class)
                 .filter(x -> !x.getEventEnd().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))))
-                .filter(Event::isPublished)
-                .peek(x -> numItems.incrementAndGet())
-                .sorted(Comparator.comparing(Event::getEventStart));
+                .filter(Event::isPublished);
 
         if (options != null) {
             double maxDistance = options.maxDistance != null ? options.maxDistance : -1;
@@ -611,7 +608,11 @@ public class TickrController {
                     .filter(e -> e.getLocation().getDistance(finalQueryLocation) <= maxDistance);
         }
 
-        var eventList = eventStream.skip(pageStart)
+        var numItems = new AtomicInteger();
+        var eventList = eventStream
+                .peek(x -> numItems.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
                 .limit(maxResults)
                 .map(Event::getId)
                 .map(UUID::toString)
