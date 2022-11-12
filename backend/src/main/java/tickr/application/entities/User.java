@@ -95,6 +95,9 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<UserInteraction> interactions;
+
     public User () {
 
     }
@@ -337,6 +340,10 @@ public class User {
 
     public NotificationManagement.Settings getSettings () {
         return new NotificationManagement.Settings(doReminders());
+    }
+
+    public Set<UserInteraction> getInteractions () {
+        return interactions;
     }
 
     public void setSettings (NotificationManagement.Settings settings) {

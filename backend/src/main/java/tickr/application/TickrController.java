@@ -12,6 +12,7 @@ import tickr.application.apis.location.LocationPoint;
 import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
+import tickr.application.recommendations.InteractionType;
 import tickr.application.recommendations.RecommenderEngine;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
@@ -518,6 +519,10 @@ public class TickrController {
             throw new ForbiddenException("Unable to view event!");
         }
 
+        if (user != null && !event.getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, event, InteractionType.VIEW);
+        }
+
         List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
 
         List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
@@ -716,7 +721,9 @@ public class TickrController {
 
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.info("Ticket purchase {} success!", reserveId);
-        for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
+        var purchaseItems = session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId));
+        RecommenderEngine.recordInteraction(session, purchaseItems.get(0).getUser(), purchaseItems.get(0).getEvent(), InteractionType.TICKET_PURCHASE);
+        for (var i : purchaseItems) {
             session.save(i.convert(session));
             //session.remove(i);
         }
@@ -817,6 +824,7 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
 
         var comment = event.addReview(session, user, request.title, request.text, request.rating);
+        RecommenderEngine.recordRating(session, user, event, request.rating);
         //session.save(comment);
 
         return new ReviewCreate.Response(comment.getId().toString());
@@ -875,6 +883,10 @@ public class TickrController {
 
         var reply = comment.addReply(user, request.reply);
         session.save(reply);
+
+        if (!comment.getEvent().getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, comment.getEvent(), InteractionType.COMMENT);
+        }
 
         return new ReplyCreate.Response(reply.getId().toString());
     }
@@ -1103,6 +1115,10 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
 
         comment.react(session, user, request.reactType);
+
+        if (!comment.getEvent().getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, comment.getEvent(), InteractionType.REACT);
+        }
     }
 
     public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
@@ -1317,16 +1333,59 @@ public class TickrController {
             throw new BadRequestException("Invalid paging values!");
         }
 
+        var returnNum = new AtomicInteger();
         var recommendEvents = session.getAllStream(Event.class)
                 .filter(e -> !e.equals(event))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
                 .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateSimilarity(session, event, e)))
+                .peek(p -> returnNum.getAndIncrement())
                 .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
                 .skip(pageStart)
                 .limit(maxResults)
                 .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
                 .collect(Collectors.toList());
 
-        return new RecommenderResponse(recommendEvents, session.getAll(Event.class).size() - 1);
+        return new RecommenderResponse(recommendEvents, returnNum.get());
+    }
+
+    public RecommenderResponse recommendUserEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new UnauthorizedException("Missing auth token!");
+        } else if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var user = authenticateToken(session, params.get("auth_token"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var profileVector = RecommenderEngine.buildUserProfile(session, user);
+        var eventNum = new AtomicInteger();
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.getHost().equals(user))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateUserScore(session, e, profileVector)))
+                .peek(p -> eventNum.getAndIncrement())
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, eventNum.get());
     }
 
     public void clearDatabase (ModelSession session, Object request) {
