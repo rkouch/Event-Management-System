@@ -43,7 +43,7 @@ import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 import tickr.util.HTTPHelper;
-public class TestCustomerBookings {
+public class TestCustomerBookingsPast {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
     private MockHttpPurchaseAPI purchaseAPI;
@@ -77,14 +77,14 @@ public class TestCustomerBookings {
         seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section", 10, 50, true));
         seatingDetails.add(new CreateEventRequest.SeatingDetails("test_section2", 20, 30, true));
 
-        var startTime1 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
-        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2));
-        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
-        var endTime1 = startTime1.plus(Duration.ofDays(1));
-        var endTime2 = startTime2.plus(Duration.ofDays(1));
-        var endTime3 = startTime3.plus(Duration.ofDays(1));
+        var startTime1 = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(2));
+        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(3));
+        var endTime1 = startTime1.plus(Duration.ofHours(1));
+        var endTime2 = startTime2.plus(Duration.ofHours(1));
+        var endTime3 = startTime3.plus(Duration.ofHours(1));
 
-        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+        response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime1.minusMinutes(2))
@@ -96,7 +96,7 @@ public class TestCustomerBookings {
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId1, authToken, null, null, null, null, null, null, null, null, null, null, true));
         assertEquals(200, response.getStatus());
 
-        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+        response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime2.minusMinutes(2))
@@ -108,7 +108,7 @@ public class TestCustomerBookings {
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true));
         assertEquals(200, response.getStatus());
 
-        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
+        response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime3.minusMinutes(2))
@@ -211,7 +211,7 @@ public class TestCustomerBookings {
     public void testCustomerBookings() {
         int pageStart = 0;
         int maxResults = 10;
-        var response = httpHelper.get("/api/user/bookings", Map.of(
+        var response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(maxResults)
@@ -219,9 +219,9 @@ public class TestCustomerBookings {
         assertEquals(200, response.getStatus()); 
         var bookings = response.getBody(CustomerEventsResponse.class);
         assertEquals(3, bookings.eventIds.size());
-        assertEquals(eventId1, bookings.eventIds.get(0));
+        assertEquals(eventId3, bookings.eventIds.get(0));
         assertEquals(eventId2, bookings.eventIds.get(1));
-        assertEquals(eventId3, bookings.eventIds.get(2));
+        assertEquals(eventId1, bookings.eventIds.get(2));
         assertEquals(3, bookings.num_results);
         // var event1Ids = bookings.get(0).ticketIds; 
         // var event2Ids = bookings.get(1).ticketIds; 
@@ -230,7 +230,7 @@ public class TestCustomerBookings {
         // assertEquals(3, event2Ids.size());
         // assertEquals(4, event3Ids.size());
 
-        response = httpHelper.get("/api/user/bookings", Map.of(
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(2)
@@ -239,55 +239,62 @@ public class TestCustomerBookings {
         bookings = response.getBody(CustomerEventsResponse.class);
         assertEquals(2, bookings.eventIds.size());
         assertEquals(3, bookings.num_results);
-        assertEquals(bookings.eventIds.get(0), eventId1);
+        assertEquals(bookings.eventIds.get(0), eventId3);
         assertEquals(bookings.eventIds.get(1), eventId2);
     }
 
     @Test 
-    public void testCustomerBookingsBefore () {
+    public void testCustomerBookingsAfter () {
         int pageStart = 0;
         int maxResults = 10;
-        var response = httpHelper.get("/api/user/bookings", Map.of(
+        var response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(maxResults),
-            "before", ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)).toString()
+            "after", ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(3)).toString()
         ));
         assertEquals(200, response.getStatus()); 
         var bookings = response.getBody(CustomerEventsResponse.class);
         assertEquals(2, bookings.eventIds.size());
-        assertEquals(eventId1, bookings.eventIds.get(0));
-        assertEquals(eventId2, bookings.eventIds.get(1));
+        assertEquals(bookings.eventIds.get(0), eventId2);
+        assertEquals(bookings.eventIds.get(1), eventId1);
         assertEquals(2, bookings.num_results);
     }
 
     @Test 
     public void testExceptions() {
-        var response = httpHelper.get("/api/user/bookings", Map.of(
+        var response = httpHelper.get("/api/user/bookings/past", Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(10)
         ));
         assertEquals(400, response.getStatus()); 
-        response = httpHelper.get("/api/user/bookings", Map.of(
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "max_results", Integer.toString(10)
         ));
         assertEquals(400, response.getStatus()); 
-        response = httpHelper.get("/api/user/bookings", Map.of(
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(0)
         ));
         assertEquals(400, response.getStatus()); 
-        response = httpHelper.get("/api/user/bookings", Map.of(
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(-1), 
             "max_results", Integer.toString(10)
         ));
         assertEquals(400, response.getStatus()); 
-        response = httpHelper.get("/api/user/bookings", Map.of(
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(-1)
+        ));
+        assertEquals(400, response.getStatus()); 
+        response = httpHelper.get("/api/user/bookings/past", Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(0), 
+            "max_results", Integer.toString(10),
+            "after", " "
         ));
         assertEquals(400, response.getStatus()); 
     }

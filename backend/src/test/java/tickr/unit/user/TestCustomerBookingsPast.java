@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class TestCustomerBookings {
+public class TestCustomerBookingsPast {
     private DataModel model;
     private TickrController controller;
     private ModelSession session;
@@ -79,14 +79,14 @@ public class TestCustomerBookings {
 
         session = TestHelper.commitMakeSession(model, session);
 
-        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
-        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2));
-        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(2));
+        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(3));
         endTime = startTime.plus(Duration.ofHours(1));
         var endTime2 = startTime2.plus(Duration.ofHours(1));
         var endTime3 = startTime3.plus(Duration.ofHours(1));
         
-        eventId = controller.createEvent(session, new CreateEventReqBuilder()
+        eventId = controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event1")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime.minusMinutes(2))
@@ -97,7 +97,7 @@ public class TestCustomerBookings {
 
         session = TestHelper.commitMakeSession(model, session);
         
-        eventId2 = controller.createEvent(session, new CreateEventReqBuilder()
+        eventId2 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event2")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime2.minusMinutes(2))
@@ -108,7 +108,7 @@ public class TestCustomerBookings {
 
         session = TestHelper.commitMakeSession(model, session);
         
-        eventId3 = controller.createEvent(session, new CreateEventReqBuilder()
+        eventId3 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event3")
                 .withSeatingDetails(seatingDetails)
                 .withStartDate(startTime3.minusMinutes(2))
@@ -171,78 +171,78 @@ public class TestCustomerBookings {
     }
 
     @Test 
-    public void testCustomerBookings () {
+    public void testPastCustomerBookings () {
         int pageStart = 0;
         int maxResults = 10;
-        var bookings = controller.customerBookings(session, Map.of(
+        var bookings = controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(maxResults)
         ));
         assertEquals(3, bookings.eventIds.size());
-        assertEquals(bookings.eventIds.get(0), eventId);
+        assertEquals(bookings.eventIds.get(0), eventId3);
         assertEquals(bookings.eventIds.get(1), eventId2);
-        assertEquals(bookings.eventIds.get(2), eventId3);
+        assertEquals(bookings.eventIds.get(2), eventId);
         assertEquals(3, bookings.num_results);
-        // var event1Ids = bookings.get(0).ticketIds; 
-        // var event2Ids = bookings.get(1).ticketIds; 
-        // var event3Ids = bookings.get(2).ticketIds; 
-        // assertEquals(2, event1Ids.size());
-        // assertEquals(3, event2Ids.size());
-        // assertEquals(4, event3Ids.size());
 
-        bookings = controller.customerBookings(session, Map.of(
+        bookings = controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(2)
         ));
         assertEquals(3, bookings.num_results);
         assertEquals(2, bookings.eventIds.size());
-        assertEquals(bookings.eventIds.get(0), eventId);
+        assertEquals(bookings.eventIds.get(0), eventId3);
         assertEquals(bookings.eventIds.get(1), eventId2);
     }
 
     @Test 
-    public void testCustomerBookingsBefore () {
+    public void testPastCustomerBookingsAfter () {
         int pageStart = 0;
         int maxResults = 10;
-        var bookings = controller.customerBookings(session, Map.of(
+        var bookings = controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(maxResults),
-            "before", ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)).toString()
+            "after", ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(3)).toString()
         ));
         assertEquals(2, bookings.eventIds.size());
+        assertEquals(bookings.eventIds.get(0), eventId2);
+        assertEquals(bookings.eventIds.get(1), eventId);
         assertEquals(2, bookings.num_results);
-        assertEquals(bookings.eventIds.get(0), eventId);
-        assertEquals(bookings.eventIds.get(1), eventId2);
     }
 
     @Test 
     public void testExceptions() {
         int pageStart = 0;
         int maxResults = 10;
-        assertThrows(BadRequestException.class, () -> controller.customerBookings(session, Map.of(
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(maxResults)
         )));
-        assertThrows(BadRequestException.class, () -> controller.customerBookings(session, Map.of(
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "max_results", Integer.toString(maxResults)
         )));
-        assertThrows(BadRequestException.class, () -> controller.customerBookings(session, Map.of(
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart)
         )));
-        assertThrows(BadRequestException.class, () -> controller.customerBookings(session, Map.of(
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(-1), 
             "max_results", Integer.toString(maxResults)
         )));
-        assertThrows(BadRequestException.class, () -> controller.customerBookings(session, Map.of(
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
             "auth_token", authToken, 
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(-1)
+        )));
+        assertThrows(BadRequestException.class, () -> controller.customerBookingsPast(session, Map.of(
+            "auth_token", authToken, 
+            "page_start", Integer.toString(pageStart), 
+            "max_results", Integer.toString(maxResults),
+            "after", " "
         )));
     }
 }

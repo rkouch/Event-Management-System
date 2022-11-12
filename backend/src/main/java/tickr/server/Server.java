@@ -89,13 +89,16 @@ public class Server {
         post("/api/event/review/reply", TickrController::replyCreate, ReplyCreate.Request.class);
         get("/api/event/reviews/replies", TickrController::repliesView);
         get("/api/event/hosting", TickrController::eventHostings);
+        get("/api/event/hosting/past", TickrController::eventHostingsPast);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
         get("/api/event/reserved", TickrController::eventReservedSeats);
         delete("/api/ticket/reserve/cancel", TickrController::reservationCancel, ReserveCancelRequest.class);
         delete("/api/event/review/delete", TickrController::reviewDelete, ReviewDeleteRequest.class);
 
         get("/api/home", TickrController::userEvents);
+        get("/api/home/past", TickrController::userEventsPast);
         get("/api/user/bookings", TickrController::customerBookings);
+        get("/api/user/bookings/past", TickrController::customerBookingsPast);
 
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
