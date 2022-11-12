@@ -111,6 +111,7 @@ public class TestReserveDetails {
         assertEquals(1, response.seatNum);
         assertEquals("test_section", response.section);
         assertEquals(1, response.price);
+        assertEquals(eventId, response.eventId);
 
         response = controller.getReserveDetails(session, Map.of("reserve_id", requestIds.get(1)));
         session = TestHelper.commitMakeSession(model, session);
