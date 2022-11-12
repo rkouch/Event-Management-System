@@ -108,6 +108,7 @@ public class Server {
         get("/api/group/details", TickrController::groupDetails);
 
         get("/api/recommendations/event", TickrController::recommendEventEvent);
+        get("/api/user/recommendations/home", TickrController::recommendUserEvent);
 
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
