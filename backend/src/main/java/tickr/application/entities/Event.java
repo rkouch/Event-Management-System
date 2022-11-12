@@ -74,6 +74,12 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<SeatingPlan> seatingPlans;
 
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
+    @JoinTable(name = "notification_Members",
+            joinColumns = {@JoinColumn(name = "event_id")},
+            inverseJoinColumns = {@JoinColumn(name = "user_id")})
+    private Set<User> notificationMembers = new HashSet<>();
+
     @Column(name = "event_name")
     private String eventName;
 
@@ -266,6 +272,10 @@ public class Event {
 
     public void setSeatingPlans(Set<SeatingPlan> seatingPlans) {
         this.seatingPlans = seatingPlans;
+    }
+
+    public Set<User> getNotificationMembers() {
+        return notificationMembers;
     }
 
     private boolean userHasTicket (User user) {
@@ -550,6 +560,18 @@ public class Event {
             if (!seen.contains(i.getUser().getId())) {
                 EmailHelper.sendAnnouncement(user, i.getUser(), this, announcement);
                 seen.add(i.getUser().getId());
+            }
+        }
+    }
+
+    public void editNotificationMembers(ModelSession session, User user, Boolean notification) {
+        if (notification) {
+            if (!notificationMembers.contains(user)) {
+                notificationMembers.add(user);
+            }
+        } else {
+            if (notificationMembers.contains(user)) {
+                notificationMembers.remove(user);
             }
         }
     }
