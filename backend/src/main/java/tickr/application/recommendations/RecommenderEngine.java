@@ -62,6 +62,17 @@ public class RecommenderEngine {
     }
 
     public static double calculateUserScore (ModelSession session, Event event, EventVector userProfile) {
+        return calculateUserScoreVector(session, event, userProfile).dotProduct(WEIGHT_VECTOR);
+    }
+
+    public static double calculateUserEventScore (ModelSession session, Event testEvent, Event currEvent, EventVector userProfile) {
+        var eventEventVec = buildSimilarityVector(session, testEvent, currEvent);
+        var userEventVec = calculateUserScoreVector(session, testEvent, userProfile);
+
+        return eventEventVec.add(userEventVec).multiply(0.5).dotProduct(WEIGHT_VECTOR);
+    }
+
+    private static Vector calculateUserScoreVector (ModelSession session, Event event, EventVector userProfile) {
         int numEvents = session.getAll(Event.class).size(); // TODO
         var tagIdf = getTagIdf(session, numEvents);
         var categoryIdf = getCategoryIdf(session, numEvents);
@@ -69,7 +80,7 @@ public class RecommenderEngine {
         var userVector = userProfile.applyIdfs(tagIdf, categoryIdf);
         var eventVector = event.getEventVector(numEvents).applyIdfs(tagIdf, categoryIdf);
 
-        return userProfile.combine(eventVector, 0.0).dotProduct(WEIGHT_VECTOR);
+        return userVector.combine(eventVector, 0.0);
     }
 
 

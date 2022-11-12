@@ -1388,6 +1388,49 @@ public class TickrController {
         return new RecommenderResponse(recommendEvents, eventNum.get());
     }
 
+    public RecommenderResponse recommendEventUserEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new UnauthorizedException("Missing auth token!");
+        } else if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        } else if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var user = authenticateToken(session, params.get("auth_token"));
+        var event = session.getById(Event.class, parseUUID(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var profileVector = RecommenderEngine.buildUserProfile(session, user);
+        var eventNum = new AtomicInteger();
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.getHost().equals(user))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateUserEventScore(session, e, event, profileVector)))
+                .peek(p -> eventNum.getAndIncrement())
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, eventNum.get());
+    }
+
     public void clearDatabase (ModelSession session, Object request) {
         logger.info("Clearing database!");
         session.clear(AuthToken.class);
