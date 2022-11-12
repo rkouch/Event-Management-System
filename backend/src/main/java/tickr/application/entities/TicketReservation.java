@@ -207,6 +207,6 @@ public class TicketReservation {
     }
 
     public ReserveDetailsResponse getReserveDetailsResponse() {
-        return new ReserveDetailsResponse(section.getSection(), seatNum, price);
+        return new ReserveDetailsResponse(section.getSection(), seatNum, price, section.getEvent().getId().toString());
     }
 }

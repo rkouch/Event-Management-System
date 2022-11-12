@@ -10,9 +10,13 @@ public class ReserveDetailsResponse {
 
     public float price;
 
-    public ReserveDetailsResponse(String section, int seatNum, float price) {
+    @SerializedName("event_id")
+    public String eventId;
+
+    public ReserveDetailsResponse(String section, int seatNum, float price, String eventId) {
         this.section = section;
         this.seatNum = seatNum;
         this.price = price;
+        this.eventId = eventId;
     }
 }
