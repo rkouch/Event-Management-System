@@ -8,7 +8,6 @@ import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
 import tickr.application.serialised.combined.NotificationManagement;
 import tickr.application.serialised.responses.ViewProfileResponse;
-import tickr.application.serialised.responses.CustomerEventsResponse.Bookings;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
@@ -421,35 +420,35 @@ public class User {
         return getHostingEvents().stream();
     }
 
-    public List<Bookings> getBookings () {
-        List<Ticket> tickets = new ArrayList<>(this.tickets); 
-        Collections.sort(tickets, new Comparator<Ticket> () {
-            @Override
-            public int compare(Ticket t1, Ticket t2) {
-                if (t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart()) == 0) {
-                    return t1.getEvent().getId().toString().compareTo(t2.getEvent().getId().toString());
-                }
-                return t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart());
-            }
-        });
-        List<Bookings> bookings = new ArrayList<>();
+    // public List<Bookings> getBookings () {
+    //     List<Ticket> tickets = new ArrayList<>(this.tickets); 
+    //     Collections.sort(tickets, new Comparator<Ticket> () {
+    //         @Override
+    //         public int compare(Ticket t1, Ticket t2) {
+    //             if (t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart()) == 0) {
+    //                 return t1.getEvent().getId().toString().compareTo(t2.getEvent().getId().toString());
+    //             }
+    //             return t1.getEvent().getEventStart().compareTo(t2.getEvent().getEventStart());
+    //         }
+    //     });
+    //     List<Bookings> bookings = new ArrayList<>();
 
-        String prevEventId = tickets.get(0).getEvent().getId().toString();
-        Bookings booking = new Bookings(prevEventId);
-        for (Ticket ticket : tickets) {
-            String currEventId = ticket.getEvent().getId().toString();
-            if (!currEventId.equals(prevEventId)) {
-                prevEventId = currEventId;
-                bookings.add(booking);
-                booking = new Bookings(ticket.getEvent().getId().toString());
-                booking.addTicketId(ticket.getId().toString());
-            } else {
-                booking.addTicketId(ticket.getId().toString());
-            }
-        }
-        bookings.add(booking);
-        return bookings;
-    }
+    //     String prevEventId = tickets.get(0).getEvent().getId().toString();
+    //     Bookings booking = new Bookings(prevEventId);
+    //     for (Ticket ticket : tickets) {
+    //         String currEventId = ticket.getEvent().getId().toString();
+    //         if (!currEventId.equals(prevEventId)) {
+    //             prevEventId = currEventId;
+    //             bookings.add(booking);
+    //             booking = new Bookings(ticket.getEvent().getId().toString());
+    //             booking.addTicketId(ticket.getId().toString());
+    //         } else {
+    //             booking.addTicketId(ticket.getId().toString());
+    //         }
+    //     }
+    //     bookings.add(booking);
+    //     return bookings;
+    // }
     
     public void sendEmail (String subject, String message) {
         ApiLocator.locateApi(IEmailAPI.class).sendEmail(email, subject, message);
