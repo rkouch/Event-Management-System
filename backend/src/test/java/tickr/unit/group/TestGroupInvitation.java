@@ -23,6 +23,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.combined.TicketReserve.ReserveDetails;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.GroupAcceptRequest;
 import tickr.application.serialised.requests.GroupCreateRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
@@ -60,6 +61,7 @@ public class TestGroupInvitation {
     private String eventId;
     private String authToken; 
     private String authToken2;
+    private String authToken3;
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;
 
@@ -93,6 +95,10 @@ public class TestGroupInvitation {
         
         authToken2 = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
+                "Password123!", "2022-04-14")).authToken;
+
+        authToken3 = controller.userRegister(session,
+        new UserRegisterRequest("test", "first", "last", "test3@example.com",
                 "Password123!", "2022-04-14")).authToken;
 
         session = TestHelper.commitMakeSession(model, session);
@@ -178,8 +184,6 @@ public class TestGroupInvitation {
         assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
                 new GroupInviteRequest(authToken, UUID.randomUUID().toString(), reserveIdList.get(0), "test2@example.com")));
         assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
-                new GroupInviteRequest(authToken, groupId, UUID.randomUUID().toString(), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
                 new GroupInviteRequest(authToken, groupId, null, "test2@example.com")));
         assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
                 new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), null)));
@@ -191,5 +195,22 @@ public class TestGroupInvitation {
                 new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test1@example.com")));
         assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
                 new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "invalidemail@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.groupInvite(session,   
+                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "invalidemail@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
+                new GroupInviteRequest(authToken, groupId, UUID.randomUUID().toString(), "test2@example.com")));
+
+        controller.groupInvite(session, new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test2@example.com"));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
+                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test3@example.com")));
+
+        var inviteId = emailAPI.getSentMessages().get(0).getBody().split("/group/")[1].split("\"")[0];
+        controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertThrows(BadRequestException.class, () -> controller.groupInvite(session, 
+                new GroupInviteRequest(authToken, groupId, reserveIdList.get(0), "test3@example.com")));
     }
 }

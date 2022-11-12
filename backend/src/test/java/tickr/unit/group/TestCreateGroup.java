@@ -141,6 +141,7 @@ public class TestCreateGroup {
         assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, List.of(UUID.randomUUID().toString()), reserveIdList.get(0))));
         assertThrows(BadRequestException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, null, reserveIdList.get(0))));
         assertThrows(BadRequestException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList, null)));
+        assertThrows(ForbiddenException.class, () -> controller.groupCreate(session, new GroupCreateRequest(authToken, reserveIdList, UUID.randomUUID().toString())));
     }
 
     @Test 

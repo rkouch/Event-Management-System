@@ -33,7 +33,6 @@ import tickr.application.serialised.requests.GroupInviteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.application.serialised.responses.GroupCreateResponse;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockLocationApi;

@@ -1,7 +1,8 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
+import tickr.application.serialised.responses.GroupDetailsResponse.PendingInvite;
 import tickr.server.exceptions.BadRequestException;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -170,19 +171,40 @@ public class Group {
         ticket.setGroup(this);
     }
 
-    public List<Users> getUserDetails() {
-        List<Users> users = new ArrayList<>();
+    // public List<Users> getUserDetails() {
+    //     List<Users> users = new ArrayList<>();
+    //     for (Ticket t : tickets) {
+    //         users.add(t.createUsersDetails());
+    //     }
+    //     for (TicketReservation r : ticketReservations) {
+    //         if (r.createUsersDetails() != null) {
+    //             users.add(r.createUsersDetails());
+    //         }
+    //     }
+    //     return users;
+    // }
+
+    public List<GroupMember> getGroupMemberDetails() {
+        List<GroupMember> list = new ArrayList<>();
         for (Ticket t : tickets) {
-            users.add(t.createUsersDetails());
+            list.add(t.createGroupMemberDetails());
         }
-        for (TicketReservation r : ticketReservations) {
-            if (r.createUsersDetails() != null) {
-                users.add(r.createUsersDetails());
+        for (TicketReservation t : ticketReservations) {
+            if (t.createGroupMemberDetails() != null) {
+                list.add(t.createGroupMemberDetails());
             }
         }
-        return users;
+        return list;
     }
     
+    public List<PendingInvite> getPendingInviteDetails() {
+        List<PendingInvite> list = new ArrayList<>();
+        for (Invitation i : invitations) {
+            list.add(i.createPendingInviteDetails());
+        }
+        return list;
+    }
+
     public List<String> getAvailableReserves(User host) {
         return  host.equals(leader) 
         ? ticketReservations.stream()

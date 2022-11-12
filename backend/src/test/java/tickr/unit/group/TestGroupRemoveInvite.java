@@ -28,6 +28,7 @@ import tickr.application.serialised.requests.GroupAcceptRequest;
 import tickr.application.serialised.requests.GroupCreateRequest;
 import tickr.application.serialised.requests.GroupDenyRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
+import tickr.application.serialised.requests.GroupRemoveInviteRequest;
 import tickr.application.serialised.requests.GroupRemoveMemberRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
@@ -52,8 +53,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-public class TestGroupRemoveMember {
+public class TestGroupRemoveInvite {
     private DataModel model;
     private TickrController controller;
     private ModelSession session;
@@ -172,15 +172,6 @@ public class TestGroupRemoveMember {
 
         hostId = controller.authenticateToken(session, authToken).getId().toString();
         session = TestHelper.commitMakeSession(model, session);
-
-        controller.groupAccept(session, new GroupAcceptRequest(authToken2, inviteId1));
-        session = TestHelper.commitMakeSession(model, session);
-        controller.groupAccept(session, new GroupAcceptRequest(authToken3, inviteId2));
-        session = TestHelper.commitMakeSession(model, session);
-        controller.groupAccept(session, new GroupAcceptRequest(authToken4, inviteId3));
-        session = TestHelper.commitMakeSession(model, session);
-        controller.groupAccept(session, new GroupAcceptRequest(authToken5, inviteId4));
-        session = TestHelper.commitMakeSession(model, session);
     }
 
     @AfterEach
@@ -191,61 +182,33 @@ public class TestGroupRemoveMember {
     }
 
     @Test 
-    public void testGroupRemoveMember() {
-        controller.groupRemoveMember(session, new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com"));
+    public void testGroupRemoveInvite () {
+        assertEquals(4, session.getAll(Invitation.class).size());
+        controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId1, groupId));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(3, session.getAll(Invitation.class).size());
+        controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId2, groupId));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(2, session.getAll(Invitation.class).size());
+
+        var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var groupDetails = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
-        session = TestHelper.commitMakeSession(model, session);
-
-        var members = groupDetails.groupMembers;
-        var invites = groupDetails.pendingInvites;
-
-        assertEquals(4, members.size());
-        assertEquals(0, invites.size());
-        assertEquals(1, groupDetails.availableReserves.size());
-        
-        controller.groupRemoveMember(session, new GroupRemoveMemberRequest(authToken, groupId, "test3@example.com"));
-        session = TestHelper.commitMakeSession(model, session);
-        controller.groupRemoveMember(session, new GroupRemoveMemberRequest(authToken, groupId, "test4@example.com"));
-        session = TestHelper.commitMakeSession(model, session);
-        controller.groupRemoveMember(session, new GroupRemoveMemberRequest(authToken, groupId, "test5@example.com"));
-        session = TestHelper.commitMakeSession(model, session);
-
-        groupDetails = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
-        session = TestHelper.commitMakeSession(model, session);
-
-        members = groupDetails.groupMembers;
-        invites = groupDetails.pendingInvites;
-
-        assertEquals(1, members.size());
-        assertEquals(0, invites.size());
-        assertEquals(4, groupDetails.availableReserves.size());
+        assertEquals(2, response.pendingInvites.size());
     }
 
     @Test 
-    public void testExceptions() {
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(null, groupId, "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, null, "test2@example.com")));
-        assertThrows(ForbiddenException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, UUID.randomUUID().toString(), "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, groupId, null)));
-        assertThrows(UnauthorizedException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest("authToken", groupId, "test2@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, groupId, "test1")));
-        assertThrows(ForbiddenException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, groupId, "invalid@example.com")));
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken2, groupId, "test2@example.com")));
+    public void testExceptions () {
+        assertThrows(UnauthorizedException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(TestHelper.makeFakeJWT(), inviteId1, groupId)));
+        assertThrows(BadRequestException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(null, inviteId1, groupId)));
+        assertThrows(BadRequestException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, null, groupId)));
+        assertThrows(BadRequestException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId1, null)));
+        assertThrows(ForbiddenException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId1, UUID.randomUUID().toString())));
+        assertThrows(BadRequestException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken2, inviteId1, groupId)));
 
-        controller.groupRemoveMember(session, new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com"));
+        controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId1, groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        assertThrows(BadRequestException.class, () -> controller.groupRemoveMember(session, 
-                new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com")));
+        assertThrows(BadRequestException.class, () -> controller.groupRemoveInvite(session, new GroupRemoveInviteRequest(authToken, inviteId1, groupId)));
     }
 }

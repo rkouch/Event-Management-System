@@ -30,7 +30,6 @@ import tickr.application.serialised.responses.GroupIdsResponse;
 import tickr.application.serialised.responses.TicketBookingsResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockHttpPurchaseAPI;
 import tickr.mock.MockLocationApi;

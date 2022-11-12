@@ -18,6 +18,7 @@ import tickr.application.serialised.requests.GroupAcceptRequest;
 import tickr.application.serialised.requests.GroupCreateRequest;
 import tickr.application.serialised.requests.GroupDenyRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
+import tickr.application.serialised.requests.GroupRemoveInviteRequest;
 import tickr.application.serialised.requests.GroupRemoveMemberRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
@@ -49,7 +50,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-public class TestGroupRemoveMember {
+
+public class TestGroupRemoveInvite {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
 
@@ -169,15 +171,6 @@ public class TestGroupRemoveMember {
         inviteId2 = emailAPI.getSentMessages().get(1).getBody().split("/group/")[1].split("\"")[0];
         inviteId3 = emailAPI.getSentMessages().get(2).getBody().split("/group/")[1].split("\"")[0];
         inviteId4 = emailAPI.getSentMessages().get(3).getBody().split("/group/")[1].split("\"")[0];
-
-        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken2, inviteId1));
-        assertEquals(200, response.getStatus());
-        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken3, inviteId2));
-        assertEquals(200, response.getStatus());
-        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken4, inviteId3));
-        assertEquals(200, response.getStatus());
-        response = httpHelper.post("/api/group/accept", new GroupAcceptRequest(authToken5, inviteId4));
-        assertEquals(200, response.getStatus());
     }
 
 
@@ -192,70 +185,41 @@ public class TestGroupRemoveMember {
     }
 
     @Test 
-    public void testGroupRemoveMember() {
-        var response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com"));
+    public void testGroupRemoveInvite () {
+        var response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
         assertEquals(200, response.getStatus());
-
-        response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
-        assertEquals(200, response.getStatus());
-
-        // var body = response.getBody(GroupDetailsResponse.class);
-        // var users = body.users;
-        // assertEquals(4, users.size());
-        // assertEquals(1, body.availableReserves.size());
-
-        var body = response.getBody(GroupDetailsResponse.class);
-        var members = body.groupMembers;
-        var invites = body.pendingInvites;
-
-        assertEquals(4, members.size());
-        assertEquals(0, invites.size());
-        assertEquals(1, body.availableReserves.size());
+        assertEquals(4, response.getBody(GroupDetailsResponse.class).pendingInvites.size());
         
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test3@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId1, groupId));
         assertEquals(200, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test4@example.com"));
-        assertEquals(200, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test5@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId2, groupId));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
         assertEquals(200, response.getStatus());
 
-        body = response.getBody(GroupDetailsResponse.class);
-        members = body.groupMembers;
-        invites = body.pendingInvites;
-
-        assertEquals(1, members.size());
-        assertEquals(0, invites.size());
-        assertEquals(4, body.availableReserves.size());
+        assertEquals(2, response.getBody(GroupDetailsResponse.class).pendingInvites.size());
     }
 
     @Test 
     public void testExceptions() {
-        var response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(null, groupId, "test2@example.com"));
+        var response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(null, inviteId1, groupId));
         assertEquals(400, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest("authToken", groupId, "test2@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, null, groupId));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId1, null));
+        assertEquals(400, response.getStatus());
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(TestHelper.makeFakeJWT(), inviteId1, groupId));
         assertEquals(401, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, null, "test2@example.com"));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, UUID.randomUUID().toString(), "test2@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId1, UUID.randomUUID().toString()));
         assertEquals(403, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, null));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test2"));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "invalid@example.com"));
-        assertEquals(403, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken2, groupId, "test2@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken2, inviteId1, groupId));
         assertEquals(400, response.getStatus());
 
-
-
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com"));
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId1, groupId));
         assertEquals(200, response.getStatus());
-        response = httpHelper.delete("/api/group/remove", new GroupRemoveMemberRequest(authToken, groupId, "test2@example.com"));
+
+        response = httpHelper.delete("/api/group/invite/remove", new GroupRemoveInviteRequest(authToken, inviteId1, groupId));
         assertEquals(400, response.getStatus());
-        
     }
 }

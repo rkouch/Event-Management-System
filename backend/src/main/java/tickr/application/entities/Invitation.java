@@ -6,6 +6,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.LineItem;
 import tickr.application.serialised.combined.TicketReserve;
+import tickr.application.serialised.responses.GroupDetailsResponse.PendingInvite;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
@@ -30,10 +31,14 @@ public class Invitation {
     @JoinColumn(name = "reserve_id")
     private TicketReservation ticketReservation;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    public Invitation(Group group, TicketReservation ticketReservation) {
+    public Invitation(Group group, TicketReservation ticketReservation, User user) {
         this.group = group;
         this.ticketReservation = ticketReservation;
+        this.user = user;
     }
 
     public Invitation() {}
@@ -65,13 +70,29 @@ public class Invitation {
     public void acceptInvitation(User user) {
         group.acceptInvitation(this, user);
         ticketReservation.acceptInvitation(user);
-        user.addReservation(ticketReservation);
-        user.addGroup(group);
     }
 
     public void denyInvitation() {
         group.removeInvitation(this);
-        ticketReservation.setInvitation(null);
-        ticketReservation.setGroupAccepted(false);
+        user.removeInvitation(this);
+        ticketReservation.denyInvitation();
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void handleInvitation(Group group, TicketReservation reserve, User user) {
+        group.addInvitation(this);
+        reserve.setInvitation(this);
+        user.addInvitation(this);
+    }
+
+    public PendingInvite createPendingInviteDetails() {
+        return new PendingInvite(user.getEmail(), ticketReservation.getSection().getSection(), ticketReservation.getSeatNum(), id.toString());
     }
 }

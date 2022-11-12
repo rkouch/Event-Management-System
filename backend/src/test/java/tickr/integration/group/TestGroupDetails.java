@@ -28,7 +28,8 @@ import tickr.application.serialised.responses.GroupIdsResponse;
 import tickr.application.serialised.responses.TicketBookingsResponse;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
+import tickr.application.serialised.responses.GroupDetailsResponse.PendingInvite;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockHttpPurchaseAPI;
 import tickr.mock.MockLocationApi;
@@ -58,6 +59,8 @@ public class TestGroupDetails {
     private MockEmailAPI emailAPI;
 
     private String hostId;
+    private String hostEmail = "test1@example.com";
+
     private String authToken;
     private String authToken2;
     private String authToken3;
@@ -187,36 +190,22 @@ public class TestGroupDetails {
     public void testNoAcceptDetails() {
         var response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
         assertEquals(200, response.getStatus());
+
         var body = response.getBody(GroupDetailsResponse.class);
-        var users = body.users;
-        assertEquals(5, users.size());
+        var members = body.groupMembers;
+        var invites = body.pendingInvites;
+
+        assertEquals(1, members.size());
+        assertEquals(4, invites.size());
         assertEquals(0, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
+        assertEquals(hostEmail, members.get(0).email);
 
-        for (Users u : users) {
-            if (u.userId != null && !u.userId.equals(hostId)) {
-                assertEquals(null, u.userId);
-                assertEquals(null, u.email);
-                assertEquals(false, u.accepted);
-            }
-        }
-
-        response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken2, "group_id", groupId));
-        assertEquals(200, response.getStatus());
-
-        body = response.getBody(GroupDetailsResponse.class);
-        users = response.getBody(GroupDetailsResponse.class).users;
-        assertEquals(5, users.size());
-        assertEquals(null, body.availableReserves);
-        assertEquals(hostId, body.hostId);
-        for (Users u : users) {
-            if (u.userId != null && !u.userId.equals(hostId)) {
-                assertEquals(null, u.userId);
-                assertEquals(null, u.email);
-                assertEquals(false, u.accepted);
-                assertNotNull(u.section);
-                assertNotNull(u.seatNumber);
-            }
+        for (PendingInvite i : invites) {
+            assertNotNull(i.email);
+            assertNotNull(i.inviteId);
+            assertNotNull(i.seatNum);
+            assertNotNull(i.section);
         }
     }
 
@@ -235,17 +224,19 @@ public class TestGroupDetails {
         assertEquals(200, response.getStatus());
 
         var body = response.getBody(GroupDetailsResponse.class);
-        var users = body.users;
-        assertEquals(5, users.size());
+        var members = body.groupMembers;
+        var invites = body.pendingInvites;
+
+        assertEquals(5, members.size());
+        assertEquals(0, invites.size());
         assertEquals(0, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
 
-        for (Users u : users) {
-            assertNotNull(u.userId);
-            assertNotNull(u.email);
-            assertEquals(true, u.accepted);;
-            assertNotNull(u.section);
-            assertNotNull(u.seatNumber);
+        for (GroupMember m : members) {
+            assertNotNull(m.email);
+            assertNotNull(m.section);
+            assertNotNull(m.seatNum);   
+            assertEquals(false, m.purchased);         
         }
     }
 
@@ -257,17 +248,17 @@ public class TestGroupDetails {
         assertEquals(200, response.getStatus());
         response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId3));
         assertEquals(200, response.getStatus());
-        response = httpHelper.post("/api/group/deny", new GroupDenyRequest(inviteId4));
-        assertEquals(200, response.getStatus());
 
         response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
         assertEquals(200, response.getStatus());
 
         var body = response.getBody(GroupDetailsResponse.class);
-        var users = body.users;
+        var members = body.groupMembers;
+        var invites = body.pendingInvites;
 
-        assertEquals(3, users.size());
-        assertEquals(2, body.availableReserves.size());
+        assertEquals(3, members.size());
+        assertEquals(1, invites.size());
+        assertEquals(1, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
     }
 
@@ -286,9 +277,11 @@ public class TestGroupDetails {
         assertEquals(200, response.getStatus());
 
         var body = response.getBody(GroupDetailsResponse.class);
-        var users = body.users;
+        var members = body.groupMembers;
+        var invites = body.pendingInvites;
 
-        assertEquals(1, users.size());
+        assertEquals(1, members.size());
+        assertEquals(0, invites.size());
         assertEquals(4, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
     }
@@ -326,15 +319,33 @@ public class TestGroupDetails {
         result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
         assertEquals("https://example.com/success", result);
 
+        reqIds = List.of(reserveIdList.get(0)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 1000);
+        response = httpHelper.post("/api/ticket/purchase",
+                new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", reqIds));
+        assertEquals(200, response.getStatus());
+
+        redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
+        assertTrue(purchaseAPI.isUrlValid(redirectUrl));
+
+        result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
+
         response = httpHelper.get("/api/group/details", Map.of("auth_token", authToken, "group_id", groupId));
         assertEquals(200, response.getStatus());
 
         var body = response.getBody(GroupDetailsResponse.class);
-        var users = body.users;
+        var members = body.groupMembers;
+        var invites = body.pendingInvites;
 
-        assertEquals(4, users.size());
+        assertEquals(3, members.size());
+        assertEquals(1, invites.size());
         assertEquals(1, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
+
+        for (GroupMember m : members) {
+            assertEquals(true, m.purchased);
+        }
     }
 
     @Test 
