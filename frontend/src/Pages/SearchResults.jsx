@@ -139,6 +139,7 @@ export default function SearchResults({}) {
 
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/event/search?${searchParams}`)
+      console.log(response)
       if (pageStart === 0) {
         setResults(response.event_ids)
         setResultsNum(response.event_ids.length)
@@ -247,7 +248,6 @@ export default function SearchResults({}) {
       locationFilter_t = true
     } else {
       setLocationFilter(false)
-
     }
 
     const streetAddress = address.value.split(' ')
@@ -256,6 +256,7 @@ export default function SearchResults({}) {
       steet_name: (address.value.legnth !== 0) ? streetAddress[1] + ' ' + streetAddress[2] : null,
       suburb: (suburb.value.length !==  0) ? suburb.value : null,
       postcode: (postcode.value.legnth !== 0) ? postcode.value : null,
+      state: (state.value.length !== 0) ? state.value : null,
       country: (country.value.length !== 0) ? country.value : null
     }
 
@@ -292,7 +293,7 @@ export default function SearchResults({}) {
 
     const search_filters = {
       location : locationFilter_t ? locationBody : null,
-      max_distance: locationFilter_t ? distance: null,
+      max_distance: locationFilter_t ? parseFloat(distance).toFixed(2) : null,
       start_time: dateFilter_t ? start_date_t : null,
       end_time: dateFilter_t ? end_date_t : null,
       tags: tags,
@@ -386,7 +387,7 @@ export default function SearchResults({}) {
                   <Collapse in={showFilters}>
                     <Box sx={{ p:4, backgroundColor: '#F6F6F6', borderRadius: 3}}>
                       <Grid container columns={24} spacing={1}>
-                        <Grid item xs={8}>
+                        <Grid item xs={9}>
                           <Typography sx={{fontFamily: 'Segoe UI', color: locationFilter ? '#333333' : '#AAAAAA', fontSize: 20, fontWeight: 'bold'}}>Location Filter</Typography>
                           <Grid container spacing={1}>
                             <Grid item xs={8}>
@@ -478,7 +479,7 @@ export default function SearchResults({}) {
                             </Grid>
                           </Grid>
                         </Grid>
-                        <Divider orientation='vertical' flexItem sx={{pl: 1, pr: 1}}></Divider>
+                        <Divider orientation='vertical' flexItem sx={{pr: 1}}></Divider>
                         <Grid item xs={7}>
                           <Typography sx={{fontFamily: 'Segoe UI', color: dateFilter ? '#333333' : '#AAAAAA', fontSize: 20, fontWeight: 'bold'}}>Date Filter</Typography>
                           <Grid container spacing={1}>
@@ -489,6 +490,7 @@ export default function SearchResults({}) {
                                   <Tooltip title="Start Date">
                                     <ContrastInputWrapper>
                                       <DatePicker
+                                        sx={{".MuiOutlinedInput-notchedOutline" : {borderColor: 'rgba(0,0,0,0)'}}}
                                         value={startDate.value}
                                         onChange={handleStartChange}
                                         inputFormat="DD/MM/YYYY"
@@ -563,8 +565,8 @@ export default function SearchResults({}) {
                             </Select>
                           </FormControl>
                         </Grid>
-                        <Divider orientation='vertical' flexItem sx={{pl: 1, pr: 1}}></Divider>
-                        <Grid item xs={8}>
+                        <Divider orientation='vertical' flexItem sx={{pr: 1}}></Divider>
+                        <Grid item xs={7}>
                           <Box>
                             <Typography sx={{fontFamily: 'Segoe UI', color: tagsFilter ? '#333333' : '#AAAAAA', fontSize: 20, fontWeight: 'bold'}}>Tags Filter</Typography>
                             <TagsBar tags={tags} setTags={setTags} editable={true}></TagsBar>
@@ -572,9 +574,11 @@ export default function SearchResults({}) {
                         </Grid>
                       </Grid>
                       <br/>
-                      <Box sx={{display: 'flex', width: '100%', justifyContent: 'space-between'}}>
-                        <TextButton2 onClick={handleClearFilters}>Clear Filters</TextButton2>
-                        <TextButton3 onClick={handleApplyFilters}>Apply Filters</TextButton3>
+                      <Box sx={{display: 'flex', width: '100%', justifyContent: 'flex-end'}}>
+                        <Box sx={{display:'flex', alignItems: 'center',  gap: 1, justifyContent: 'space-between'}}>
+                          <TextButton2 sx={{fontSize: 20, width: 150, fontSize: 20, height: 30, textDecoration: 'underline'}} onClick={handleClearFilters}>Clear Filters</TextButton2>
+                          <TkrButton sx={{textTransform: 'none', width: 150, fontSize: 20, height: 30,}} onClick={handleApplyFilters}>Apply Filters</TkrButton> 
+                        </Box>
                       </Box>
                     </Box>
                   </Collapse>
@@ -583,13 +587,6 @@ export default function SearchResults({}) {
                   <EventCardsPaper events={results} moreEvents={moreResults} handleMoreEvents={handleMoreEvents}/>
                 </Grid>
               </Grid>
-              
-              <br/>
-              <br/>
-              <br/>
-              <br/>
-              <br/>
-              <br/>
             </Box>     
           </Box>
         </ScrollableBox>

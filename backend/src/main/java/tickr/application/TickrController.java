@@ -939,7 +939,7 @@ public class TickrController {
         var numResults = new AtomicInteger();
 
         var eventIds = events.stream()
-                .filter(e -> e.getEventStart().isBefore(beforeDate))
+                .filter(e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .filter(e -> e.isPublished())
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))

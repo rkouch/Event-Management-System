@@ -27,6 +27,7 @@ import TestCreatEvent from './Test/TestCreateEvent';
 import TestViewEvent from './Test/TestViewEvent';
 import CancelReservations from './Pages/CancelReservations';
 import SearchResults from './Pages/SearchResults';
+import AcceptInvite from './Pages/AcceptInvite';
 
 
 function App() {  
@@ -109,7 +110,15 @@ function App() {
     {
       path: '/search/:search_string',
       element: <SearchResults/>
-    }
+    },
+    {
+      path: '/ticket/purchase/group/:invite_id',
+      element: <AcceptInvite/>
+    },
+    {
+      path: "/invite/login/:invite_id",
+      element: <Login customNavigateTo={true}/>
+    },
   ])
 
   return (

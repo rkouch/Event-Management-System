@@ -1,4 +1,4 @@
-import { Collapse, FormControl, FormHelperText, Divider, Grid, IconButton, Tooltip, Typography, Button, styled, alpha } from "@mui/material";
+import { Collapse, FormControl, FormHelperText, Divider, Grid, IconButton, Tooltip, Typography, Button, styled, alpha, Alert } from "@mui/material";
 import { Box } from "@mui/system";
 import React from "react";
 import { CentredBox } from "../Styles/HelperStyles";
@@ -9,8 +9,9 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { checkValidEmail, setFieldInState, hasNumber } from "../Helpers";
+import { checkValidEmail, setFieldInState, hasNumber, getToken, apiFetch } from "../Helpers";
 import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
+import { useParams } from "react-router-dom";
 
 const steps = ['Select assigned ticket', 'Invite group members']
 
@@ -26,9 +27,10 @@ const ExpandMore = styled((props) => {
 }));
 
 
-export default function GroupTickets({reservedTickets, setGroupTicketBuy, createGroup}) {
+export default function GroupTickets({reservedTickets, setGroupTicketBuy, createGroup, setGroupLeaderTicket}) {
+  const params = useParams()
+
   // States
-  
   const [info, setInfo] = React.useState(true)
   const [activeStep, setActiveStep] = React.useState(0);
   const [showSelect, setShowSelect] = React.useState(true)
@@ -36,6 +38,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
   const [selectTicket, setSelectTicket] = React.useState('')
   const [invites, setInvites] = React.useState([])
   const [groupId, setGroupId] = React.useState('')
+  const [groupCreated, setGroupCreated] = React.useState(false)
 
   const [firstName, setFirstName] = React.useState({
     label: 'first name',
@@ -61,7 +64,6 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
     setFieldInState('error', false, firstName, setFirstName)
     setFieldInState('errorMsg', '', firstName, setFirstName)
 
-    // Check valid first name
     setFieldInState('value', e.target.value, firstName, setFirstName)
   }
 
@@ -70,16 +72,14 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
     setFieldInState('error', false, lastName, setLastName)
     setFieldInState('errorMsg', '', lastName, setLastName)
 
-    // Check valid last name
     setFieldInState('value', e.target.value, lastName, setLastName)
   }
 
   const handleEmailChange = (e) => {
     // Clear error
     setFieldInState('error', false, email, setEmail)
-    setFieldInState('errorMsg', '', email, setFirstName)
+    setFieldInState('errorMsg', '', email, setEmail)
 
-    // check valid email
     setFieldInState('value', e.target.value, email, setEmail)
   }
 
@@ -99,9 +99,19 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
         return
       }
     }
-
+    
   }
   const cancelTicketBuy = () => {
+    // Reset field
+    setGroupCreated(false)
+    setSelectTicket('')
+    setFieldInState('value', '', firstName, setFirstName)
+    setFieldInState('value', '', lastName, setLastName)
+    setFieldInState('value', '', email, setEmail)
+    setShowSelect(true)
+    setShowInvite(false)
+    setGroupId('')
+    setInfo(true)
     setGroupTicketBuy(false)
   }
 
@@ -118,10 +128,86 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
   }
 
   const handleSelectTicket = (reserve_id) => {
-    setInfo(false)
-    setShowInvite(true)
     setSelectTicket(reserve_id)
+
+    // Find ticket and set leader ticket to display in cart
+    reservedTickets.forEach(function(reserve) {
+      if (reserve.reserve_id === reserve_id) {
+        setGroupLeaderTicket(reserve)
+        console.log(reserve)
+      }
+    })
+  }
+
+  const handleCreateGroup = async () => {
+    // Verify input details
+    if (!checkValidEmail(email.value)){
+      setFieldInState('error', true, email, setEmail)
+      setFieldInState('errorMsg', 'Invalid email.', email, setEmail)
+      return
+    }
+
+    if (firstName.value.length <= 0 || hasNumber(firstName.value)) {
+      setFieldInState('error', true, firstName, setFirstName)
+      setFieldInState('errorMsg', `Invalid first name.`, firstName, setFirstName)
+      return
+    }
+
+    if (lastName.value.length <= 0 || hasNumber(lastName.value)) {
+      setFieldInState('error', true, lastName, setLastName)
+      setFieldInState('errorMsg', `Invalid last name.`, lastName, setLastName)
+      return
+    }
+
+    try {
+
+      const reserveIds = []
+      reservedTickets.forEach(function (reserve) {
+        reserveIds.push(reserve.reserve_id)
+      })
+      
+      const body = {
+        auth_token: getToken(),
+        reserved_ids: reserveIds,
+        host_reserve_id: selectTicket,
+      }
+
+      const response = await apiFetch('POST', '/api/group/create', body)
+      setGroupId(response.group_id)
+      console.log(`Group ID: ${response.group_id}`)
+      
+    } catch (e) {
+      console.log(e)
+    }
+    setShowInvite(true)
     setInvites([])
+    setInfo(false)
+    setGroupCreated(true)
+    setShowSelect(false)
+  }
+
+  // Group leader purchases their ticket
+  const handleCheckout = async () => {
+    const ticketDetails = [{
+      first_name: firstName.value,
+      last_name: lastName.value,
+      email: email.value,
+      request_id: selectTicket
+    }]
+
+    const body = {
+      auth_token: getToken(),
+      ticket_details: ticketDetails,
+      success_url: `http://localhost:3000/view_tickets/${params.event_id}`,
+      cancel_url: `http://localhost:3000/cancel_reservation`
+    }
+
+    try {
+      const response = await apiFetch('POST', '/api/ticket/purchase', body)
+      window.location.replace(response.redirect_url)
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -167,20 +253,15 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
               fontSize: 20,
               textAlign: 'start',
               width: '100%',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              color: (groupCreated) ? '#EEEEEE' : '#333333'
             }}
           >
             1. Select your ticket
-          </Typography>  
-          <ExpandMore
-            expand={showSelect}
-            onClick={handleShowSelect}
-          >
-            <ExpandMoreIcon/>
-          </ExpandMore>
+          </Typography> 
         </Box>
         <Collapse in={showSelect}>
-          <CentredBox sx={{gap: 5}}>
+          <CentredBox sx={{gap: 5, flexWrap: 'wrap'}}>
             {reservedTickets.map((reserve, key) => {
               return (
                 <TicketOption 
@@ -208,9 +289,8 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
                       fullWidth
                       placeholder="First Name"
                       onChange={handleFirstNameChange}
-                      defaultValue={firstName.value}
+                      value={firstName.value}
                       error={firstName.error}
-                      onBlur={() => {handleOnBlur('first_name', firstName, setFirstName)}}
                     >
                     </ContrastInput>
                   </ContrastInputWrapper>
@@ -226,7 +306,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
                       onChange={handleLastNameChange}
                       value={lastName.value}
                       error={lastName.error}
-                      onBlur={() => {handleOnBlur('last_name', lastName, setLastName)}}
+                      
                     />
                   </ContrastInputWrapper>
                   <FormHelperText>{lastName.errorMsg}</FormHelperText>
@@ -241,12 +321,19 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
                       onChange={handleEmailChange}
                       value={email.value}
                       error={email.error}
-                      onBlur={() => {handleOnBlur('email', email, setEmail)}}
                     >
                     </ContrastInput>
                   </ContrastInputWrapper>
                   <FormHelperText>{email.errorMsg}</FormHelperText>
                 </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <CentredBox sx={{flexDirection: 'column'}}>
+                  <TkrButton disabled={(selectTicket === '')} sx={{textTransform: 'none', width: 90, height: 40}} onClick={handleCreateGroup}>Proceed</TkrButton>
+                  <Collapse sx={{pt: 1}} in={(firstName.error || lastName.error || email.error)}>
+                    <Alert severity="error">{firstName.error ? firstName.errorMsg : ''}{lastName.error ? lastName.errorMsg : ''}{email.error ? email.errorMsg : ''}</Alert>
+                  </Collapse>
+                </CentredBox>
               </Grid>
             </Grid>
           </CentredBox>
@@ -261,7 +348,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
               textAlign: 'start',
               width: '100%',
               fontWeight: 'bold',
-              color: (selectTicket === '') ? '#EEEEEE' : '#333333'
+              color: (!groupCreated) ? '#EEEEEE' : '#333333'
             }}
           >
             2. Invite Group members
@@ -269,7 +356,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
           <ExpandMore
             expand={showInvite}
             onClick={handleShowInvite}
-            disabled={(selectTicket === '')}
+            disabled={(!groupCreated)}
           >
             <ExpandMoreIcon/>
           </ExpandMore>
@@ -284,16 +371,8 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
               } 
             })}
           </CentredBox>
-          <CentredBox>
-            <TkrButton
-              onClick={() => {console.log(invites)}}
-            >
-              Send Invites
-            </TkrButton>
-          </CentredBox>
         </Collapse>
       </Box>
-      
       <Grid container spacing={2}>
         <Grid item xs={1}>
         </Grid>
@@ -305,6 +384,13 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
           </Box>
         </Grid>
       </Grid>
+      {showInvite
+        ? <CentredBox>
+            <TkrButton onClick={handleCheckout}>Checkout</TkrButton>
+          </CentredBox>
+        : <></>
+
+      }
     </CentredBox>
   )
 }

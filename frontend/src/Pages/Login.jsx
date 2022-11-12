@@ -26,11 +26,13 @@ import '../App.css';
 import { apiFetch, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
 
 
-export default function Login({}) {
+export default function Login({customNavigateTo=false}) {
+  const params = useParams()
+
   const [email, setEmail] = React.useState({
     email: '',
     error: false,
@@ -79,7 +81,11 @@ export default function Login({}) {
     try {
       const response = await apiFetch('POST', '/api/user/login', body)
       setToken(response.auth_token)
-      navigate("/")
+      if (customNavigateTo) {
+        navigate(`/ticket/purchase/group/${params.invite_id}`)
+      } else {
+        navigate("/")
+      }
     } catch (errorResponse) {
       console.log(errorResponse.reason)
       console.log(error)
@@ -101,7 +107,7 @@ export default function Login({}) {
               fontSize: '30px',
             }}
           >
-            Login
+            Login 
           </H3>
           <Divider/>
           <br/>

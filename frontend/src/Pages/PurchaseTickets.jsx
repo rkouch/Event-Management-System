@@ -69,8 +69,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   const [error2, setError2] = React.useState(false)
   const [errorMsg2, setErrorMsg2] = React.useState('')
 
+  // States for collapsable sections
   const [ticketSelect, setTicketSelect] = React.useState(true)
   const [detailsInput, setDetailsInput] = React.useState(false)
+
   const [customNames, setCustomNames] = React.useState(false)
   const [areTicketsReserved, setAreTicketsReserved] = React.useState(false)
 
@@ -87,7 +89,34 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   })
 
   const [groupTicketBuy, setGroupTicketBuy] = React.useState(false)
+  const [groupLeaderTicket, setGroupLeaderTicket] = React.useState({
+    section: '',
+    seat_number: '',
+    price: ''
+  })
+  const [groupCart, setGroupCart] = React.useState(0)
 
+  // If group ticket purchase, update cart to reflect this
+  React.useEffect(() => {
+    var selectable_t = false
+    var sectionPrice = 0
+    selectedSeats.forEach(function(section) {
+      if (section.section === groupLeaderTicket.section) {
+        selectable_t = section.selectable
+      }
+    })
+    setGroupLeaderTicket({...groupLeaderTicket, selectable: selectable_t})
+    // setGroupCart(groupLeaderTicket.price)
+    if (!groupTicketBuy) {
+      const init = {
+        section: '',
+        seat_number: '',
+        price: ''
+      }
+      setGroupLeaderTicket(init)
+
+    }
+  }, [groupTicketBuy])
 
   // Get section details and available seats
   const getSectionDetails = async () => {
@@ -510,7 +539,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                                 </TextButton2>
                               : <></>
                             }
-                            
                           </Box>
                         </Grid>
                       </Grid>
@@ -536,7 +564,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                                 sx={{width: '100%'}}
                                   onClick={handleReserve}
                                 >
-                                  Confirm Seats
+                                  Confirm Tickets
                                 </TkrButton>
                               : <FormControl sx={{width: '100%'}}>
                                   <TkrButton
@@ -617,11 +645,14 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                               <Grid xs={8} item>
                               </Grid>
                               <Grid xs item>
-                                <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
-                                  <TextButton2 startIcon={<GroupsIcon/>} onClick={openGroupTicketBuy}>
-                                    Buying as a group?
-                                  </TextButton2> 
-                                </Box>
+                                {(reservedTickets.length > 1)
+                                  ? <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                                      <TextButton2 startIcon={<GroupsIcon/>} onClick={openGroupTicketBuy}>
+                                        Buying as a group?
+                                      </TextButton2> 
+                                    </Box>
+                                  : <></>
+                                }
                               </Grid>
                             </Grid>
                             <br/>
@@ -643,7 +674,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         </Collapse>
                         {/* Group ticket buying menu */}
                         <Collapse in={groupTicketBuy}>
-                          <GroupTickets reservedTickets={reservedTickets} setGroupTicketBuy={setGroupTicketBuy}/>
+                          <GroupTickets reservedTickets={reservedTickets} setGroupTicketBuy={setGroupTicketBuy} setGroupLeaderTicket={setGroupLeaderTicket}/>
                         </Collapse>
                       </Collapse>
                     </Box>
@@ -683,64 +714,109 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                             </Typography>
                             <Divider/>
                             <br/>
-                            <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
-                              {selectedSeats.map((section, key) => {
-                                return (
-                                  <Grid item key={key} sx={{width: '100%'}}>
+                            {!groupTicketBuy
+                              ? <Box>
+                                  <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
+                                    {selectedSeats.map((section, key) => {
+                                      return (
+                                        <Grid item key={key} sx={{width: '100%'}}>
+                                          <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
+                                            <Grid item xs={9}>
+                                              <Typography sx={{fontSize: 20}}>
+                                                {section.quantity} x {section.section} - ${section.ticket_price}
+                                              </Typography>
+                                              {section.selectable
+                                                ? <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+                                                    {section.seatsSelected.map((seat, key) => {
+                                                      if (key !== section.seatsSelected.length - 1) {
+                                                        return (
+                                                          <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                                            {seat},
+                                                          </Typography>
+                                                        )
+                                                      } else {
+                                                        return (
+                                                          <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                                            {seat}
+                                                          </Typography>
+                                                        )
+                                                      }
+                                                    })}
+                                                    
+                                                  </Box>
+                                                : <>
+                                                  </>
+                                              }
+                                            </Grid>
+                                            <Grid item xs={3}>
+                                              <Typography sx={{fontSize: 20, textAlign: 'right'}}>
+                                                ${(section.ticket_price*section.quantity)}
+                                              </Typography>
+                                            </Grid>
+                                          </Grid>
+                                          <br/>
+                                        </Grid>
+                                      )
+                                    })}
+                                  </Grid>
+                                  <br/>
+                                  <Divider/>
+                                  <br/>
+                                  <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
+                                    <Grid item xs={9}>
+                                      <Typography sx={{fontSize: 20}}>
+                                        Total: 
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                      <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                        ${orderTotal} 
+                                      </Typography>
+                                    </Grid>
+                                  </Grid>
+                                </Box>
+                              : <Box>
+                                  <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
                                     <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
                                       <Grid item xs={9}>
                                         <Typography sx={{fontSize: 20}}>
-                                          {section.quantity} x {section.section} - ${section.ticket_price}
+                                          1 x {groupLeaderTicket.section} - ${groupLeaderTicket.price}
                                         </Typography>
-                                        {section.selectable
-                                          ? <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
-                                              {section.seatsSelected.map((seat, key) => {
-                                                if (key !== section.seatsSelected.length - 1) {
-                                                  return (
-                                                    <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
-                                                      {seat},
-                                                    </Typography>
-                                                  )
-                                                } else {
-                                                  return (
-                                                    <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
-                                                      {seat}
-                                                    </Typography>
-                                                  )
-                                                }
-                                              })}
-                                              
-                                            </Box>
-                                          : <>
-                                            </>
-                                        }
+                                        <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+                                          <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                            {groupLeaderTicket.section[0]}{groupLeaderTicket.seat_number}
+                                          </Typography>
+                                        </Box>
                                       </Grid>
                                       <Grid item xs={3}>
                                         <Typography sx={{fontSize: 20, textAlign: 'right'}}>
-                                          ${(section.ticket_price*section.quantity)}
+                                          {/* ${(section.ticket_price*section.quantity)} */}
                                         </Typography>
                                       </Grid>
                                     </Grid>
-                                    <br/>
                                   </Grid>
-                                )
-                              })}
-                            </Grid>
-                            <br/>
-                            <Divider/>
-                            <br/>
-                            <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
-                              <Grid item xs={9}>
-                                <Typography sx={{fontSize: 20}}>
-                                  Total: 
-                                </Typography>
-                              </Grid>
-                              <Grid item xs={3}>
-                                <Typography sx={{fontSize: 25, textAlign: 'right'}}>
-                                  ${orderTotal} 
-                                </Typography>
-                              </Grid>
-                            </Grid>
+                                  <br/>
+                                  <Divider/>
+                                  <br/>
+                                  <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
+                                    <Grid item xs={9}>
+                                      <Typography sx={{fontSize: 20}}>
+                                        Total: 
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                      {(groupTicketBuy)
+                                        ? <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                            ${groupLeaderTicket.price}
+                                          </Typography>
+                                        : <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                            ${orderTotal}
+                                          </Typography>
+                                      }
+                                    </Grid>
+                                  </Grid>
+                                </Box>
+                            }
                           </Box>
                       }
                     </Box>

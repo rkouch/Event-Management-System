@@ -310,3 +310,11 @@ export const clearReservedTicketsLocal = () => {
 export const hasNumber = (string) => {
   return /\d/.test(string);
 }
+
+export const attachFields = (object1, object2) => {
+  // attach additional params
+  Object.keys(object2).forEach(function (param) {
+    object1[param] = object2[param]
+  }) 
+  return object1
+}

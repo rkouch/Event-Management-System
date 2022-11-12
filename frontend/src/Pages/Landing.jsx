@@ -96,8 +96,8 @@ export default function Landing({}) {
                 Welcome to Tickr
               </Typography>
               <UpcomingEvents/>
-              <UserBookings/>
-              <UserHosting/>
+              {/* <UserBookings/> */}
+              {/* <UserHosting/> */}
               <br/>
               <br/>
           </Box>

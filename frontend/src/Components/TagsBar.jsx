@@ -5,7 +5,7 @@ import { CentredBox } from "../Styles/HelperStyles";
 import ShadowInput from "./ShadowInput";
 import Chip from '@mui/material/Chip';
 import { borderRadius, styled, alpha } from '@mui/system';
-import { ContrastInput, ContrastInputWrapper } from "../Styles/InputStyles";
+import { ContrastInput, ContrastInputNoOutline, ContrastInputWrapper } from "../Styles/InputStyles";
 import { setFieldInState, stringToColor } from "../Helpers";
 import { Typography } from "@mui/material";
 import TagIcon from '@mui/icons-material/Tag';
@@ -39,7 +39,7 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
         ? <>
             <CentredBox sx={{width: '100%', alignItems: 'center', gap: '10px', justifyContent:"space-between"}}>
               <ContrastInputWrapper sx={{width: 300}}>
-                <ContrastInput
+                <ContrastInputNoOutline
                   value={newTag}
                   placeholder="Tag"
                   sx={{height: 40}}

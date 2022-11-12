@@ -22,6 +22,8 @@ import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import MobileStepper from '@mui/material/MobileStepper';
 import { useTheme } from '@mui/material/styles';
+import { useRef } from 'react';
+import EventsBar from './EventsBar';
 
 const Section = styled(Box)({
   marginLeft: '1.5%',
@@ -38,8 +40,11 @@ const SectionHeading = styled(Box)({
   marginBottom: '10px'
 })
 
+const EVENT_CARD_WIDTH = 250
+
 export default function UserHosting({}) {
   const theme = useTheme();
+  const ref = useRef(null)
   const [upcomingValue, setUpcomingValue] = React.useState('1');
   
   const upcomingChange = (event, newValue) => {
@@ -156,9 +161,13 @@ export default function UserHosting({}) {
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/home?${searchParams}`, null)
 
+      // If we are starting from the first entry
       if (pageStart === 0) {
         setEvents(response.eventIds)
+
         // Create event groups
+        
+
         const groups_t = []
         var group_s = []
         var group_i = 0
@@ -221,7 +230,7 @@ export default function UserHosting({}) {
   return (
     <>
       {!(yearEvents === 0)
-        ? <Section>
+        ? <Section ref={ref}>
             <TabContext value={upcomingValue}>
               <SectionHeading>
                 Events
@@ -256,156 +265,15 @@ export default function UserHosting({}) {
               </SectionHeading>
               {/* Week Pannel */}
               <TabPanel value="1" sx={{padding: 0}}>
-                <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                  <Box>
-                    <SwipeableViews
-                      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={activeStepWeek}
-                      onChangeIndex={(e) => {handleStepChange(e, 'week')}}
-                      enableMouseEvents
-                    >
-                      {weekGroups.map((events, key) => (
-                        <div key={key}>
-                          {Math.abs(activeStepWeek - key) <= 2 ? (
-                            <EventCardsBar event_ids={events}/>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SwipeableViews>
-                  </Box>
-                  <MobileStepper
-                    sx={{color: 'red'}}
-                    steps={maxStepsWeek}
-                    position="static"
-                    activeStep={activeStepWeek}
-                    nextButton={
-                      <Button
-                        size="small"
-                        onClick={(e) => {handleNext('week')}}
-                        disabled={activeStepWeek === maxStepsWeek - 1}
-                      >
-                        Next
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowLeft />
-                        ) : (
-                          <KeyboardArrowRight />
-                        )}
-                      </Button>
-                    }
-                    backButton={
-                      <Button size="small" onClick={(e) => {handleBack('week')}} disabled={activeStepWeek === 0}>
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowRight />
-                        ) : (
-                          <KeyboardArrowLeft />
-                        )}
-                        Back
-                      </Button>
-                    }
-                  />
-                </Box>
+                <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfWeek}} responseField={'eventIds'}/>
               </TabPanel>
               {/* Month Pannel */}
               <TabPanel value="2" sx={{padding: 0}}>
-              <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                  <Box>
-                    <SwipeableViews
-                      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={activeStepMonth}
-                      onChangeIndex={(e) => {handleStepChange(e, 'month')}}
-                      enableMouseEvents
-                    >
-                      {monthGroups.map((events, key) => (
-                        <div key={key}>
-                          {Math.abs(activeStepMonth - key) <= 2 ? (
-                            <EventCardsBar event_ids={events}/>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SwipeableViews>
-                  </Box>
-                  <MobileStepper
-                    sx={{color: 'red'}}
-                    steps={maxStepsMonth}
-                    position="static"
-                    activeStep={activeStepMonth}
-                    nextButton={
-                      <Button
-                        size="small"
-                        onClick={(e) => {handleNext('month')}}
-                        disabled={activeStepMonth === maxStepsMonth - 1}
-                      >
-                        Next
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowLeft />
-                        ) : (
-                          <KeyboardArrowRight />
-                        )}
-                      </Button>
-                    }
-                    backButton={
-                      <Button size="small" onClick={(e) => {handleBack('month')}} disabled={activeStepMonth === 0}>
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowRight />
-                        ) : (
-                          <KeyboardArrowLeft />
-                        )}
-                        Back
-                      </Button>
-                    }
-                  />
-                </Box>
+                <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfMonth}} responseField={'eventIds'}/>
               </TabPanel>
               {/* Year Pannel */}
               <TabPanel value="3" sx={{padding: 0}}>
-              <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                  <Box>
-                    <SwipeableViews
-                      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={activeStepYear}
-                      onChangeIndex={(e) => {handleStepChange(e, 'year')}}
-                      enableMouseEvents
-                    >
-                      {yearGroups.map((events, key) => (
-                        <div key={key}>
-                          {Math.abs(activeStepYear - key) <= 2 ? (
-                            <EventCardsBar event_ids={events}/>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SwipeableViews>
-                  </Box>
-                  <MobileStepper
-                    sx={{color: 'red'}}
-                    steps={maxStepsYear}
-                    position="static"
-                    activeStep={activeStepYear}
-                    nextButton={
-                      <Button
-                        size="small"
-                        onClick={(e) => {handleNext('year')}}
-                        disabled={activeStepYear === maxStepsYear - 1}
-                      >
-                        Next
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowLeft />
-                        ) : (
-                          <KeyboardArrowRight />
-                        )}
-                      </Button>
-                    }
-                    backButton={
-                      <Button size="small" onClick={(e) => {handleBack('year')}} disabled={activeStepYear === 0}>
-                        {theme.direction === 'rtl' ? (
-                          <KeyboardArrowRight />
-                        ) : (
-                          <KeyboardArrowLeft />
-                        )}
-                        Back
-                      </Button>
-                    }
-                  />
-                </Box>
+                <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfYear}} responseField={'eventIds'}/>
               </TabPanel>
             </TabContext>
           </Section>

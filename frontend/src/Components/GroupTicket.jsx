@@ -23,7 +23,7 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
     }
     // Check if user exists
     try {     
-      const response = await apiFetch('GET', `/api/user/search?email=${email}`, null)
+      const verifyUser = await apiFetch('GET', `/api/user/search?email=${email}`, null)
     } catch (error) {
       console.log(error)
       setError(true)
@@ -31,15 +31,28 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
       return
     }
 
-    setInviteSent(true)
+    
+    // Send invite
+    try {
+      const body = {
+        auth_token: getToken(),
+        group_id: groupId,
+        email: email,
+        reserve_id: ticket.reserve_id
+      }
 
-    // Add email to invites list, check if reserve already has invites s
+      const response = await apiFetch ('POST', '/api/group/invite', body)
+      setInviteSent(true)
+    } catch (e) {
+      console.log(e)
+    }
+
+    // Add email to invites list, check if reserve already has invitess
     const invites_t = invites
     invites_t.push({
       email: email,
       reserve_id: ticket.reserve_id
     })
-    console.log(invites_t)
     setInvites(invites_t)
   }
 
@@ -49,7 +62,21 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
     setHelperMsg('')
   }
 
-  const handleRemoveInvite = (e) => {
+  const handleRemoveInvite = async (e) => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        group_id: groupId,
+        email: email,
+      }
+
+      const response = await apiFetch('DELETE', '/api/group/remove', body)
+
+      const response_t = await apiFetch('DELETE', '/api/group/invite/remove', body)
+
+    } catch (e) {
+      console.log(e)
+    }
     const invites_t = invites
     for (const i in invites_t) {
       const invite = invites[i]

@@ -36,8 +36,8 @@ export const Backdrop = styled(Box)({
   margin: 'auto',
   minHeight: '100vh',
   height: '100%',
-  padding: '10px'
-  // position: 'fixed',
+  padding: '10px',
+  position: 'fixed',
 })
 
 export const BackdropNoBG = styled(Box)({
