@@ -6,7 +6,7 @@ public class GroupCancelRequest {
     @SerializedName("auth_token")
     public String authToken;
 
-    @SerializedName("gorup_id")
+    @SerializedName("group_id")
     public String groupId;
 
     public GroupCancelRequest(String authToken, String groupId) {
