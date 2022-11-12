@@ -27,6 +27,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "events")
@@ -552,5 +554,13 @@ public class Event {
                 seen.add(i.getUser().getId());
             }
         }
+    }
+
+    public Map<String, Long> getWordCounts () {
+        var nameMap = Utils.toWordsMap(eventName);
+        var descMap = Utils.toWordsMap(eventDescription);
+
+        return Stream.concat(nameMap.entrySet().stream(), descMap.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingLong(Map.Entry::getValue)));
     }
 }

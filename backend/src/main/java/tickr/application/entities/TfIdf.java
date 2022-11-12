@@ -21,14 +21,15 @@ public class TfIdf {
 
     }
 
-    public TfIdf (DocumentTerm term, Event event, double termFreq) {
+    public TfIdf (DocumentTerm term, Event event, int termCount) {
         this.termId = new TermId(term, event);
-        this.termFreq = termFreq;
+        this.termFreq = 1 + Math.log10(termCount);
         this.documentCount = term.getTermCount();
     }
 
-    public double getTfIdf () {
-        return 0;
+    public double getTfIdf (int documentNum) {
+        documentCount = termId.getTerm().getTermCount();
+        return termFreq * Math.log10((double)documentNum / (documentCount));
     }
 
     public DocumentTerm getTerm () {

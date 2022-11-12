@@ -27,4 +27,8 @@ public class DocumentTerm {
     public int getTermCount () {
         return termCount;
     }
+
+    public void incrementCount () {
+        termCount++;
+    }
 }

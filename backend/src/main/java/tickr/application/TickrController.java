@@ -1287,21 +1287,42 @@ public class TickrController {
 
     public void clearDatabase (ModelSession session, Object request) {
         logger.info("Clearing database!");
-        clearType(session, AuthToken.class);
-        clearType(session, Category.class);
-        clearType(session, Comment.class);
-        clearType(session, Event.class);
-        clearType(session, Group.class);
-        clearType(session, Location.class);
-        clearType(session, PurchaseItem.class);
-        clearType(session, Reaction.class);
-        clearType(session, ResetToken.class);
-        clearType(session, SeatingPlan.class);
-        clearType(session, Tag.class);
-        clearType(session, TestEntity.class);
-        clearType(session, Ticket.class);
-        clearType(session, TicketReservation.class);
-        clearType(session, User.class);
+        session.clear(AuthToken.class);
+        //clearType(session, AuthToken.class);
+        session.clear(Category.class);
+        //clearType(session, Category.class);
+        session.clear(Comment.class);
+        //clearType(session, Comment.class);
+        session.clear(Event.class);
+        //clearType(session, Event.class);
+        session.clear(Group.class);
+        //clearType(session, Group.class);
+        session.clear(Location.class);
+        //clearType(session, Location.class);
+        session.clear(PurchaseItem.class);
+        //clearType(session, PurchaseItem.class);
+        session.clear(Reaction.class);
+        //clearType(session, Reaction.class);
+        session.clear(ResetToken.class);
+        //clearType(session, ResetToken.class);
+        session.clear(SeatingPlan.class);
+        //clearType(session, SeatingPlan.class);
+        session.clear(Tag.class);
+        //clearType(session, Tag.class);
+        session.clear(TestEntity.class);
+        //clearType(session, TestEntity.class);
+        session.clear(Ticket.class);
+        //clearType(session, Ticket.class);
+        session.clear(TicketReservation.class);
+        //clearType(session, TicketReservation.class);
+        session.clear(User.class);
+        //clearType(session, User.class);
+        session.clear(Invitation.class);
+        //clearType(session, Invitation.class);
+        session.clear(DocumentTerm.class);
+        //clearType(session, DocumentTerm.class);
+        session.clear(TfIdf.class);
+        //clearType(session, TfIdf.class);
     }
 
     private <T> void clearType (ModelSession session, Class<T> tClass) {

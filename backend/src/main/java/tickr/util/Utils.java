@@ -1,9 +1,8 @@
 package tickr.util;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -23,6 +22,18 @@ public class Utils {
             return new HashSet<>();
         }
         return Arrays.stream(text.replaceAll("\\p{P}", "").toLowerCase(Locale.ROOT)
-                .split("\\s")).collect(Collectors.toSet());
+                .split("\\s"))
+                .filter(Predicate.not(String::isBlank))
+                .collect(Collectors.toSet());
+    }
+
+    public static Map<String, Long> toWordsMap (String text) {
+        if (text == null) {
+            return new HashMap<>();
+        }
+
+        return Arrays.stream(text.replaceAll("\\p{P}", "").toLowerCase(Locale.ROOT).split("\\s"))
+                .filter(Predicate.not(String::isBlank))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 }

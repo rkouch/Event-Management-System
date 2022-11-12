@@ -3,6 +3,7 @@ package tickr.persistence;
 import jakarta.persistence.RollbackException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,8 +60,14 @@ public class HibernateSession implements ModelSession {
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
         Root<T> criteriaRoot = criteriaQuery.from(entityClass);
 
+        var cols = col.split("\\.");
+        var path = criteriaRoot.get(cols[0]);
+        for (int i = 1; i < cols.length; i++) {
+           path = path.get(cols[i]);
+        }
+
         criteriaQuery.select(criteriaRoot) // Set root to be of the entity's table
-                .where(criteriaBuilder.equal(criteriaRoot.get(col), data)); // Select only those which are equal to data
+                .where(criteriaBuilder.equal(path, data)); // Select only those which are equal to data
 
         // Build query
         Query<T> query = session.createQuery(criteriaQuery);

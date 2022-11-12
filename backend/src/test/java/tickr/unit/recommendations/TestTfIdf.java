@@ -1,5 +1,7 @@
 package tickr.unit.recommendations;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class TestTfIdf {
+    static Logger logger = LogManager.getLogger();
     private DataModel model;
     private TickrController controller;
     private ModelSession session;
@@ -86,16 +89,18 @@ public class TestTfIdf {
             var term = i.getTerm().getTerm();
             assertTrue(termCounts.containsKey(term));
 
-            assertEquals(calculateTfIdf(termCounts.get(term), 1, 1), i.getTfIdf());
+            assertEquals(calculateTfIdf(termCounts.get(term), 1, 1), i.getTfIdf(1));
+            logger.info("1 doc tfidf of {}: {}", term, i.getTfIdf(1));
         }
 
     }
 
     @Test
     public void testTwoEvents () {
+        logger.info("Start of twoEvents!");
         var eventId1 = controller.createEvent(session, new CreateEventReqBuilder()
                 .withEventName("Test event")
-                .withDescription("apple apple cookie bear")
+                .withDescription("apple apple cookie cookie bear")
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
@@ -104,10 +109,13 @@ public class TestTfIdf {
                 .withDescription("apple bread")
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        logger.info("After event creation!");
         RecommenderEngine.forceRecalculate(session);
         session = TestHelper.commitMakeSession(model, session);
+        logger.info("After recalculation!");
         var totalWords1 = 6;
         var totalWords2 = 4;
+
 
         var documentFreqs = Map.of(
                 "test", 2,
@@ -123,7 +131,7 @@ public class TestTfIdf {
                 "test", 1,
                 "event", 1,
                 "apple", 2,
-                "cookie", 1,
+                "cookie", 2,
                 "bear", 1
         );
 
@@ -140,27 +148,33 @@ public class TestTfIdf {
             assertTrue(documentFreqs.containsKey(i.getTerm()));
             assertEquals(documentFreqs.get(i.getTerm()), i.getTermCount());
         }
+        logger.info("After term assert!");
 
-        var tfIdfs1 = session.getAllWith(TfIdf.class, "termId.event", UUID.fromString(eventId1));
+        var tfIdfs1 = session.getAllWith(TfIdf.class, "termId.event.id", UUID.fromString(eventId1));
         assertEquals(termCounts1.size(), tfIdfs1.size());
         for (var i : tfIdfs1) {
             var term = i.getTerm().getTerm();
             assertTrue(termCounts1.containsKey(term));
 
-            assertEquals(calculateTfIdf(termCounts1.get(term), documentFreqs.get(term), 2), i.getTfIdf());
+            assertEquals(calculateTfIdf(termCounts1.get(term), documentFreqs.get(term), 2), i.getTfIdf(2));
+            logger.info("2 doc e1 tfidf of {}: {}", term, i.getTfIdf(2));
         }
+        logger.info("After tfIdf1!");
 
-        var tfIdfs2 = session.getAllWith(TfIdf.class, "termId.event", UUID.fromString(eventId2));
+        var tfIdfs2 = session.getAllWith(TfIdf.class, "termId.event.id", UUID.fromString(eventId2));
         assertEquals(termCounts2.size(), tfIdfs2.size());
         for (var i : tfIdfs2) {
             var term = i.getTerm().getTerm();
             assertTrue(termCounts2.containsKey(term));
 
-            assertEquals(calculateTfIdf(termCounts2.get(term), documentFreqs.get(term), 2), i.getTfIdf());
+            assertEquals(calculateTfIdf(termCounts2.get(term), documentFreqs.get(term), 2), i.getTfIdf(2));
+            logger.info("2 doc e2 tfidf of {}: {}", term, i.getTfIdf(2));
         }
+        session = TestHelper.commitMakeSession(model, session);
+        logger.info("After tfidf2!");
     }
 
     private double calculateTfIdf (int eventTermCount, int documentCount, int numDocuments) {
-        return (1 + Math.log10(eventTermCount)) * Math.log10((double)documentCount / (numDocuments + 1));
+        return (1 + Math.log10(eventTermCount)) * Math.log10((double)numDocuments  / (documentCount));
     }
 }
