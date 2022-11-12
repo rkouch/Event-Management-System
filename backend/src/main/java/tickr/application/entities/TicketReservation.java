@@ -9,7 +9,8 @@ import org.hibernate.type.SqlTypes;
 import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.LineItem;
 import tickr.application.serialised.combined.TicketReserve;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.application.serialised.responses.ReserveDetailsResponse;
+import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
 
@@ -176,14 +177,36 @@ public class TicketReservation {
         setGroupAccepted(true);
     }
 
-    public Users createUsersDetails() {
-        // invited but no response / accepted invitation
-        if (invitation != null && !groupAccepted) {
-            return new Users(section.getSection(), seatNum, false);
-        } else if (invitation == null && groupAccepted) {
-            return new Users(user.getId().toString(), user.getEmail(), section.getSection(), seatNum, true);
+    public void denyInvitation() {
+        setInvitation(null);
+        setGroupAccepted(false);
+    }
+
+    // public Users createUsersDetails() {
+    //     // invited but no response / accepted invitation
+    //     if (invitation != null && !groupAccepted) {
+    //         return new Users(section.getSection(), seatNum, false);
+    //     } else if (invitation == null && groupAccepted) {
+    //         return new Users(user.getId().toString(), user.getEmail(), section.getSection(), seatNum, true);
+    //     } else {
+    //         return null;
+    //     } 
+    // }
+
+    public void removeUserFromGroup(User leader) {
+        this.groupAccepted = false;
+        this.user = leader;
+    }
+
+    public GroupMember createGroupMemberDetails() {
+        if (invitation == null && groupAccepted) {
+            return new GroupMember(user.getEmail(), section.getSection(), seatNum, false);
         } else {
             return null;
-        } 
+        }
+    }
+
+    public ReserveDetailsResponse getReserveDetailsResponse() {
+        return new ReserveDetailsResponse(section.getSection(), seatNum, price);
     }
 }

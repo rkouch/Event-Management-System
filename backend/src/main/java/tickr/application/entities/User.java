@@ -95,6 +95,9 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<Invitation> invitations;
+
     public User () {
 
     }
@@ -463,5 +466,19 @@ public class User {
 
     public void addReservation(TicketReservation t) {
         reservations.add(t);
+    }
+
+    public void addInvitation(Invitation i) {
+        invitations.add(i);
+    }
+
+    public void removeInvitation(Invitation i) {
+        invitations.remove(i);
+    }
+
+    public void userAcceptInvitation(Group group, TicketReservation reserve, Invitation invitation) {
+        addReservation(reserve);
+        addGroup(group);
+        removeInvitation(invitation);
     }
 }
