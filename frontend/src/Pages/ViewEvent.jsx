@@ -26,6 +26,9 @@ import { ContrastInputNoOutline, ContrastInputWrapper, HoverChipSelected, TkrBut
 import EventReview from "../Components/EventReview";
 import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
+import Spotify from "../Components/Spotify";
+import SpotifyPlayer from "../Components/SpotifyPlayer";
+import CategorySelector from "../Components/CategorySelector";
 
 export const EventForm = styled("div")({
   display: "flex",
@@ -69,6 +72,7 @@ export default function ViewEvent({}) {
     end_date: dayjs().toISOString(),
     description: "",
     tags: [],
+    categories: [],
     admins: [],
     picture: "",
     host_id: ''
@@ -273,7 +277,9 @@ export default function ViewEvent({}) {
                                       </Tooltip>
                                     </CentredBox>
                                   : <CentredBox>
-                                      <Chip sx={{color: alpha('#6A7B8A', 0.7)}} label="Not Published"/>
+                                      <Tooltip title="Edit event to publish event.">
+                                        <Chip sx={{color: alpha('#6A7B8A', 0.7)}} label="Not Published"/>
+                                      </Tooltip>
                                     </CentredBox>
                                 }
                               </Box>
@@ -303,7 +309,7 @@ export default function ViewEvent({}) {
                         <Grid item xs={11}>
                           <Typography
                             sx={{
-                              fontSize: 17,
+                              fontSize: 20,
                               color: "#AE759F",
                             }}
                           >
@@ -320,7 +326,7 @@ export default function ViewEvent({}) {
                           </CentredBox>
                         </Grid>
                         <Grid item xs={11}>
-                          <Typography>
+                          <Typography sx={{fontSize: 18}}>
                             {event.location.street_no} {event.location.street_name}, {event.location.suburb}, {event.location.postcode}, {event.location.state}, {event.location.country}
                           </Typography>
                         </Grid>
@@ -330,13 +336,14 @@ export default function ViewEvent({}) {
                       <br/>
                       <Typography
                         sx={{
-                          color: "#999999"
+                          color: "#999999",
+                          fontSize: 20
                         }}
                       >
                         About this event
                       </Typography>
                       <Divider/>
-                      <Typography sx={{pt: 2}}>
+                      <Typography sx={{pt: 2, fontSize: 18}}>
                         {event.description}
                       </Typography>
                     </Grid>
@@ -345,12 +352,13 @@ export default function ViewEvent({}) {
                       <Box>
                         <Typography
                           sx={{
-                            color: "#999999"
+                            color: "#999999",
+                            textDecoration: 'underline',
+                            fontSize: 20
                           }}
                         >
                           Host and event Admins
                         </Typography>
-                        <Divider sx={{width: "170px"}}/>
                         <AvatarGroup max={5} sx={{flexDirection: 'row', pt:2}}>
                           {event.admins.map((value, key) => {
                             return (
@@ -364,11 +372,33 @@ export default function ViewEvent({}) {
                     </Grid>
                     <Grid item xs={12}>
                       <br/>
+                      {(event.categories.length > 0)
+                        ? <Box>
+                            <Typography
+                              sx={{
+                                color: "#999999",
+                                textDecoration: 'underline',
+                                fontSize: 20
+                              }}
+                            >
+                              Categories
+                            </Typography>
+                            <Typography sx={{fontSize: 18}}>
+                              {event.categories.join(', ')}
+                            </Typography>
+                          </Box>
+                        : <></>
+                      }         
+                    </Grid>
+                    <Grid item xs={12}>
+                      <br/>
                       {(event.tags.length > 0)
                         ? <Box>
                             <Typography
                               sx={{
-                                fontWeight: 'bold'
+                                color: "#999999",
+                                textDecoration: 'underline',
+                                fontSize: 20
                               }}
                             >
                               Tags
@@ -509,6 +539,10 @@ export default function ViewEvent({}) {
                     : <></>
 
                   }
+                  {/* <Spotify link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/> */}
+                  {/* <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
+                    <SpotifyPlayer link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/>
+                  </Box> */}
                 </Grid>
               </Grid>
             </EventForm>

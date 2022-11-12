@@ -8,12 +8,11 @@ import { apiFetch, checkValidEmail, getToken } from "../Helpers";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 
-export default function GroupTicket({ticket, setInvites, invites, groupId}) {
+export default function GroupTicket({ticket, groupId}) {
   const [email, setEmail] = React.useState('')
   const [error, setError] = React.useState(false)
   const [helperMsg, setHelperMsg] = React.useState('')
   const [inviteSent, setInviteSent] = React.useState(false)
-
 
   const handleInvite = async () => {
     if (!checkValidEmail(email)) {
@@ -47,13 +46,6 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
       console.log(e)
     }
 
-    // Add email to invites list, check if reserve already has invitess
-    const invites_t = invites
-    invites_t.push({
-      email: email,
-      reserve_id: ticket.reserve_id
-    })
-    setInvites(invites_t)
   }
 
   const handleChange = (e) => {
@@ -63,29 +55,61 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
   }
 
   const handleRemoveInvite = async (e) => {
+    // Get groups tickets 
+    var groupDetails = ''
     try {
-      const body = {
+      const groupDetailbody = {
         auth_token: getToken(),
-        group_id: groupId,
-        email: email,
+        group_id: groupId
       }
-
-      const response = await apiFetch('DELETE', '/api/group/remove', body)
-
-      const response_t = await apiFetch('DELETE', '/api/group/invite/remove', body)
-
+  
+      const searchGDPParams = new URLSearchParams(groupDetailbody)
+      groupDetails = await apiFetch('GET', `/api/group/details?${searchGDPParams}`, null)  
     } catch (e) {
       console.log(e)
+      return
     }
-    const invites_t = invites
-    for (const i in invites_t) {
-      const invite = invites[i]
-      if (invite.reserve_id === ticket.reserve_id) {
-        invites_t.splice(i, 1)
+    
+    // removal flag
+    var removed = false
+
+    // Search if member is in group
+    const groupMembers = groupDetails.group_members
+    groupMembers.forEach(async function (member) {
+      if (member.email === email) {
+        try {
+          const memberRemove = {
+            auth_token: getToken(),
+            group_id: groupId,
+            email: email
+          }
+          const memberRemoveResponse = await apiFetch('DELETE', '/api/group/remove', memberRemove)
+          removed = true
+        } catch (e) {
+          console.log(e)
+        }
       }
+    })
+
+    // If not in group members, check within pending invites
+    const pendingInvites = groupDetails.pending_invites
+    if (!removed) {
+      pendingInvites.forEach(async function (invite) {
+        if (invite.email === email) {
+          try {
+            const inviteRemove = {
+              auth_token: getToken(),
+              invite_id: invite.invite_id,
+              group_id: groupId
+            }
+            const inviteRemoveResponse = await apiFetch('DELETE', '/api/group/invite/remove', inviteRemove)
+            removed = true
+          } catch (e) {
+            console.log(e)
+          }
+        }
+      })
     }
-    console.log(invites_t)
-    setInvites(invites_t)
     setEmail('')
     setInviteSent(false)
   }
@@ -104,7 +128,7 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
         <Grid item xs={7}>
           <Box>
             <ContrastInputWrapper>
-              <ContrastInput
+              <ContrastInputNoOutline
                 fullWidth
                 endAdornment={
                   <>
@@ -114,12 +138,16 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
                             <DeleteOutlineIcon/>
                           </IconButton>
                         </Tooltip>
-                      : <IconButton
-                          disabled={email.length <= 0}
-                          onClick={handleInvite}
-                        >
-                          <AddIcon/>
-                        </IconButton>
+                      : <Tooltip title="Send Invite">
+                          <span>
+                            <IconButton
+                              disabled={email.length <= 0}
+                              onClick={handleInvite}
+                            >
+                              <AddIcon/>
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                     }
                   </>
                 }
@@ -129,7 +157,7 @@ export default function GroupTicket({ticket, setInvites, invites, groupId}) {
                 disabled={inviteSent}
                 value={email}
               >
-              </ContrastInput>
+              </ContrastInputNoOutline>
             </ContrastInputWrapper>
           </Box>
         </Grid>

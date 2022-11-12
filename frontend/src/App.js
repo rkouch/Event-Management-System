@@ -28,6 +28,7 @@ import TestViewEvent from './Test/TestViewEvent';
 import CancelReservations from './Pages/CancelReservations';
 import SearchResults from './Pages/SearchResults';
 import AcceptInvite from './Pages/AcceptInvite';
+import ManageGroup from './Pages/ManageGroup';
 
 
 function App() {  
@@ -119,6 +120,10 @@ function App() {
       path: "/invite/login/:invite_id",
       element: <Login customNavigateTo={true}/>
     },
+    {
+      path: '/group/manage/:group_id',
+      element: <ManageGroup/>
+    }
   ])
 
   return (

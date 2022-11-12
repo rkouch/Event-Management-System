@@ -68,7 +68,7 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
 
 
   return (
-    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6', borderRadius: 3, justifyContent: center ? 'center' : 'flex-start'}}>
+    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6', borderRadius: 3, justifyContent: (center || event_ids.length === 0)  ? 'center' : 'flex-start'}}>
       {(event_ids.length > 0)
         ? <CardsBar>
             {eventIds.map((value, key) => {
@@ -84,9 +84,12 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
             })}
           </CardsBar>
         : <CardsBar sx={{alignItems: 'center'}}>
-            <Typography sx={{fontSize: 45, color: '#CCCCCC'}}>
-              No Events
-            </Typography>
+            <Box sx={{width: '100%'}}>
+              <Typography sx={{fontSize: 45, color: '#CCCCCC', textAlign: 'center'}}>
+                No Events
+              </Typography>
+            </Box>
+            
           </CardsBar>
       }
       

@@ -391,6 +391,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     }
   }, [reservedTickets])
 
+  // Purchase ticket
   const handlePayment = async () => {
     var errorStatus = false
     // If custom names, check all fields are filled
@@ -681,7 +682,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                   </Box>
                 </Grid>
                 <Divider orientation="vertical" flexItem></Divider>
-                <Grid item xs={4}>
+                <Grid item xs>
                   <Box sx={{height: "100%"}}>
                     <CentredBox sx={{flexDirection: 'column', widht: '100%'}}>
                       {(event.picture !== '')

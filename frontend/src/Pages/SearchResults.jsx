@@ -17,6 +17,7 @@ import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 
 import ShadowInput from "../Components/ShadowInput";
@@ -25,6 +26,7 @@ import HeaderSearch from '../Components/HeaderSearch'
 import Header from '../Components/Header'
 import TagsBar from '../Components/TagsBar'
 import { BackdropNoBG_VH, CentredBox, ScrollableBox, ExpandMore } from '../Styles/HelperStyles'
+import CategorySelector from '../Components/CategorySelector'
 
 const categories = [
   'Food',
@@ -544,25 +546,7 @@ export default function SearchResults({}) {
                           <br/>
                           <FormControl fullWidth>
                             <Typography sx={{fontFamily: 'Segoe UI', color: categoriesFilter ? '#333333' : '#AAAAAA', fontSize: 20, fontWeight: 'bold'}}>Categories Filter</Typography>
-                            <Select
-                              multiple
-                              value={selectCategories}
-                              onChange={handleCategoriesChange}
-                              input={
-                                <ContrastInputNoOutline sx={{backgroundColor: alpha('#6A7B8A', 0.3)}} multiline rows={4} label='Catergory'/>
-                              }
-                              MenuProps={MenuProps}
-                            >
-                              {categories.map((category) => (
-                                <MenuItem
-                                  key={category}
-                                  value={category}
-                                  style={getStyles(category, selectCategories, theme)}
-                                >
-                                  {category}
-                                </MenuItem>
-                              ))}
-                            </Select>
+                            <CategorySelector setSelectCategories={setSelectCategories} selectCategories={selectCategories}/>
                           </FormControl>
                         </Grid>
                         <Divider orientation='vertical' flexItem sx={{pr: 1}}></Divider>
@@ -576,7 +560,7 @@ export default function SearchResults({}) {
                       <br/>
                       <Box sx={{display: 'flex', width: '100%', justifyContent: 'flex-end'}}>
                         <Box sx={{display:'flex', alignItems: 'center',  gap: 1, justifyContent: 'space-between'}}>
-                          <TextButton2 sx={{fontSize: 20, width: 150, fontSize: 20, height: 30, textDecoration: 'underline'}} onClick={handleClearFilters}>Clear Filters</TextButton2>
+                          <TextButton2 sx={{fontSize: 20, width: 150, fontSize: 20, height: 30, textDecoration: 'underline', '&:hover': {textDecoration: 'underline'}}} onClick={handleClearFilters}>Clear Filters</TextButton2>
                           <TkrButton sx={{textTransform: 'none', width: 150, fontSize: 20, height: 30,}} onClick={handleApplyFilters}>Apply Filters</TkrButton> 
                         </Box>
                       </Box>

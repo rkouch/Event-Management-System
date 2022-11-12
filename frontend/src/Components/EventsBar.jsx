@@ -74,13 +74,17 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
     const body = attachFields(body_t, additionalParams)
 
     // call endpoint to get events
-    const searchParams = new URLSearchParams(body)
-    const response = await apiFetch('GET', `${endpoint}?${searchParams}`)
-    
-    // Set events
-    const maxResults = response.num_results
-    console.log(response)
-    setEvents([...response[responseField]])
+    try {
+      const searchParams = new URLSearchParams(body)
+      const response = await apiFetch('GET', `${endpoint}?${searchParams}`)
+      
+      // Set events
+      const maxResults = response.num_results
+      console.log(response)
+      setEvents([...response[responseField]])
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   // Init fetch of events to know number of results to set up pages
@@ -198,7 +202,10 @@ function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage
     }
     if (activePage === pageNum) {
       console.log('fetching events')
-      getEvents(pageStart, setEventIds)
+      if (pageStart !== undefined) {
+        getEvents(pageStart, setEventIds)
+      }
+      
     }
   }, [activePage, cardsPerPage])
 

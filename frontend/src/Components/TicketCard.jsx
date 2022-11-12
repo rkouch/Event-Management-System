@@ -7,8 +7,12 @@ import { apiFetch, checkValidEmail, getEventData, getToken, getUserData } from '
 import EmailIcon from '@mui/icons-material/Email'
 import { ContrastInputNoOutline, ContrastInputWrapper } from '../Styles/InputStyles'
 import SendIcon from '@mui/icons-material/Send';
+import GroupsIcon from '@mui/icons-material/Groups';
+import { useNavigate } from 'react-router-dom'
 
 export default function TicketCard({event, ticket_id, ticketOwner}) {
+  const navigate = useNavigate
+
   const [ticketDetails, setTicketDetails] = React.useState(null)
   const [sectionSeating, setSectionSeating] = React.useState(false)
   const [userData, setUserData] = React.useState(null)
@@ -84,6 +88,10 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
     }
   }
 
+  const handleManageGroup = () => {
+    window.location.replace(`/group/manage/${ticketDetails.group_id}`)
+  }
+
   return (
     <Box sx={{boxShadow: 5, backgroundColor: '#FFFFFFF', m: 1, p: 3, borderRadius: 1}}>
       {(ticketDetails === null)
@@ -127,27 +135,42 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
             <br/>
             <Box sx={{backgroundColor: '#EEEEEE', display: 'flex', borderRadius: 2, p: 2}}>
               <Box sx={{width: '100%'}}>
-                {(sectionSeating)
-                  ? <Typography
-                      sx={{
-                        fontSize: 30,
-                        fontWeight: 'bold',
-                        textAlign: 'center'
-                      }}
-                    >
-                      {sectionName}{ticketDetails.seat_num}
-                    </Typography>
-                  : <Typography
-                      sx={{
-                        fontSize: 30,
-                        fontWeight: 'bold',
-                        textAlign: 'center'
-                      }}
-                    >
-                      {sectionName} x 1
-                    </Typography>
-                }
                 <Grid container>
+                  <Grid item xs={1}></Grid>
+                  <Grid item xs={10}>
+                    {(sectionSeating)
+                      ? <Typography
+                          sx={{
+                            fontSize: 30,
+                            fontWeight: 'bold',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {sectionName}{ticketDetails.seat_num}
+                        </Typography>
+                      : <Typography
+                          sx={{
+                            fontSize: 30,
+                            fontWeight: 'bold',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {sectionName} x 1
+                        </Typography>
+                    }
+                  </Grid>
+                  <Grid item xs={1}>
+                    <CentredBox sx={{height: '100%', alignItems: 'center'}}>
+                      {(ticketDetails.group_id !== undefined)
+                        ? <Tooltip title="Manage group ticket">
+                            <IconButton onClick={handleManageGroup}>
+                              <GroupsIcon/>
+                            </IconButton>
+                          </Tooltip>
+                        : <></>
+                      }
+                    </CentredBox>
+                  </Grid>
                   <Grid item xs={1} sx={{height: '100%'}}></Grid>
                   <Grid item xs={10}>
                     <CentredBox sx={{gap: 1, height: '100%'}}>
@@ -171,14 +194,16 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
                     </CentredBox>
                   </Grid>
                   <Grid item xs={1}>
-                    {ticketOwner
-                      ? <Tooltip title="Send to Email">
-                          <IconButton onClick={handleToggle}>
-                            <EmailIcon fontSize='small'/>
-                          </IconButton>
-                        </Tooltip>
-                      : <></>
-                    }
+                    <CentredBox>
+                      {ticketOwner
+                        ? <Tooltip title="Send to Email">
+                            <IconButton onClick={handleToggle}>
+                              <EmailIcon fontSize='small'/>
+                            </IconButton>
+                          </Tooltip>
+                        : <></>
+                      }
+                    </CentredBox>   
                   </Grid>
                 </Grid>
                 <Collapse in={openInput}>

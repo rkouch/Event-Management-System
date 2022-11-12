@@ -102,7 +102,12 @@ export const ContrastInputNoOutline = styled(OutlinedInput)(({ theme }) => ({
   "&.Mui-focused": {
     backgroundColor: alpha('#6A7B8A', 0.5),
   },
-  borderRadius: '5px'
+  borderRadius: '5px',
+  "&.MuiInputBase-root.Mui-disabled": {
+    "& > fieldset": {
+        borderColor: "rgba(0,0,0,0)"
+    }
+  }
 }))
 
 export const ReplyInput = styled(OutlinedInput)(({ theme }) => ({

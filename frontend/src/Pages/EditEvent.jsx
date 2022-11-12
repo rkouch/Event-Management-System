@@ -15,7 +15,7 @@ import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
+import { Avatar, Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -32,11 +32,14 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import UserAvatar from "../Components/UserAvatar";
+import SpotifyLogo from "../Images/SpotifyLogo.svg"
 
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
+import { ContrastInput, ContrastInputNoOutline, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
+import CategorySelector from "../Components/CategorySelector";
+import SpotifyPlayer from "../Components/SpotifyPlayer";
 
 
 export const EventForm = styled("div")({
@@ -149,7 +152,13 @@ export default function EditEvent({}) {
 
   const [openDeleteMenu, setOpenDeleteMenu] = React.useState(false)
 
+  const [categories, setCategories] = React.useState(false)
+
   const [newAdmins, setNewAdmins] = React.useState([])
+
+  const [spotifyPlaylist, setSpotifyPlaylist] = React.useState('')
+  const [spotifyError, setSpotifyError] = React.useState('')
+  const [validURL, setValidURL] = React.useState(false)
 
   const [event, setEvent] = React.useState({
     event_name: "",
@@ -195,7 +204,8 @@ export default function EditEvent({}) {
       setFieldInState('end', end_date_t.utc().local().format(), end, setEndValue)
       setEventPicture(event.picture)
       setPublished(event.published)
-
+      setCategories(event.categories)
+      setSpotifyPlaylist('')
       const currentSeatingDetails = []
       for (const i in event.seating_details) {
         const section = event.seating_details[i]
@@ -317,6 +327,25 @@ export default function EditEvent({}) {
       setAdminLoading(false)
     }
   };
+
+  // Handles spotify playlist input
+  const handleSpotifyChange = (e) => {
+    // empty string provided
+    if (e.target.value.length === 0) {
+      setSpotifyPlaylist('')
+      setSpotifyError('')
+      return
+    }
+    const link = e.target.value
+    try {
+      // Check for valid url
+      const url = new URL(link)
+      setSpotifyPlaylist(e.target.value)
+      setSpotifyError('')
+    } catch (e) {
+      setSpotifyError('Invalid playlist URL.')
+    }
+  }
 
   const removeAdmin = (index) => {
     const admin_list = [...adminList];
@@ -477,10 +506,11 @@ export default function EditEvent({}) {
       end_date: end_date_t,
       description: description.value,
       seating_details: seatingList,
-      categories: [],
-      tags: [],
+      categories: categories,
+      tags: tags,
       admins: adminList,
       published:published,
+      spotify_playlist: validURL ? spotifyPlaylist : ''
     };
 
     try {
@@ -1124,8 +1154,37 @@ export default function EditEvent({}) {
                     }
                     <br/>
                     <Box>
+                      <h3> Categories </h3>
+                      <CategorySelector editable={true} setSelectCategories={setCategories} selectCategories={categories}/>
+                    </Box>
+                    <Box>
                       <h3> Tags </h3>
                       <TagsBar tags={tags} setTags={setTags} editable={true}/>
+                    </Box>
+                    <Box>
+                      <h3> Spotify playlist </h3>
+                      <FormControl sx={{width: "100%"}}>
+                        <ContrastInputWrapper>
+                          <ContrastInputNoOutline 
+                            fullWidth
+                            startAdornment={
+                              <InputAdornment position="start">
+                                <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(0,0,0,0)'}} alt='SpotifyLogo' src={SpotifyLogo}/>
+                              </InputAdornment>
+                            }
+                            onChange={handleSpotifyChange}
+                          />
+                        </ContrastInputWrapper>
+                        <FormHelperText>{spotifyError}</FormHelperText>
+                      </FormControl>
+                      
+                      {(spotifyPlaylist !== '')
+                        ? <Box sx={{width: '100%', height: 500, borderRadius: 8, pt: 2}}>
+                            <SpotifyPlayer link={spotifyPlaylist} setValidURL={setValidURL} editable={true}/>
+                          </Box>
+                        : <></>
+                      }
+                      
                     </Box>
                   </Grid>
                 </Grid>
