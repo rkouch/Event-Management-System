@@ -300,7 +300,7 @@ public class TestCreateEvent {
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", seats, admins, null, tags)));
         var newSession3 = TestHelper.commitMakeSession(model, newSession2);
-        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        assertDoesNotThrow(() -> controller.createEvent(newSession3, new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", seats, admins, categories, null)));
         TestHelper.commitMakeSession(model, newSession3);
