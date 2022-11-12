@@ -923,14 +923,17 @@ public class TickrController {
         }
 
         ZonedDateTime beforeDate;
-
-        try {
-            beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Invalid date time string!");
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
         }
 
-        if (beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
+        if (beforeDate != null && beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot find events in the past!");
         }
 
@@ -939,7 +942,54 @@ public class TickrController {
         var numResults = new AtomicInteger();
 
         var eventIds = events.stream()
-                .filter(e -> e.getEventStart().isBefore(beforeDate))
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .filter(e -> e.isPublished())
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        
+        return new UserEventsResponse(eventIds, numResults.get());
+    }
+
+    public UserEventsResponse userEventsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        List<Event> events = session.getAll(Event.class);
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+
+        var eventIds = events.stream()
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
                 .filter(e -> e.isPublished())
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
@@ -988,8 +1038,67 @@ public class TickrController {
         User user = authenticateToken(session, params.get("auth_token"));
         // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
 
+        ZonedDateTime beforeDate;
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
+        }
+
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        return new EventHostingsResponse(eventIds, numResults.get());
+    }
+
+    public EventHostingsResponse eventHostingsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        User user = authenticateToken(session, params.get("auth_token"));
+        // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1016,14 +1125,83 @@ public class TickrController {
         if (pageStart < 0 || maxResults <= 0) {
             throw new BadRequestException("Invalid paging values!");
         }
-        var bookings = user.getBookings();
+
+        ZonedDateTime beforeDate;
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
+        }
+
         var numResults = new AtomicInteger();
-        var paginatedBookings = bookings.stream()
+        var eventIds = user.getTickets().stream()
+                .map(Ticket::getEvent)
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .distinct()
                 .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
                 .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
                 .collect(Collectors.toList());
-        return new CustomerEventsResponse(paginatedBookings, numResults.get());
+
+        
+        return new CustomerEventsResponse(eventIds, numResults.get());
+    }
+
+    public CustomerEventsResponse customerBookingsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = authenticateToken(session, params.get("auth_token"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getTickets().stream()
+                .map(Ticket::getEvent)
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .distinct()
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        
+        return new CustomerEventsResponse(eventIds, numResults.get());
     }
 
     public EventHostingFutureResponse eventHostingFuture (ModelSession session, Map<String, String> params) {
