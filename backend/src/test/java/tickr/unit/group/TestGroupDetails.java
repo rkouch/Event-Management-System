@@ -30,7 +30,8 @@ import tickr.application.serialised.requests.GroupDenyRequest;
 import tickr.application.serialised.requests.GroupInviteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
+import tickr.application.serialised.responses.GroupDetailsResponse.PendingInvite;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockLocationApi;
@@ -66,6 +67,8 @@ public class TestGroupDetails {
     private String authToken3;
     private String authToken4;
     private String authToken5;
+
+    private String hostEmail = "test1@example.com";
 
     private String inviteId1;
     private String inviteId2;
@@ -184,33 +187,20 @@ public class TestGroupDetails {
         var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var users = response.users;
-        assertEquals(5, users.size());
-        assertEquals(List.of(), response.availableReserves);
+        var members = response.groupMembers;
+        var invites = response.pendingInvites;
+        
+        assertEquals(1, members.size());
+        assertEquals(4, invites.size());
+        assertEquals(0, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
-        for (Users u : users) {
-            if (u.userId != null && !u.userId.equals(hostId)) {
-                assertEquals(null, u.userId);
-                assertEquals(null, u.email);
-                assertEquals(false, u.accepted);
-            }
-        }
+        assertEquals(hostEmail, members.get(0).email);
 
-        response = controller.groupDetails(session, Map.of("auth_token", authToken2, "group_id", groupId));
-        session = TestHelper.commitMakeSession(model, session);
-
-        users = response.users;
-        assertEquals(5, users.size());
-        assertEquals(hostId, response.hostId);
-        assertEquals(null, response.availableReserves);
-        for (Users u : users) {
-            if (u.userId != null && !u.userId.equals(hostId)) {
-                assertEquals(null, u.userId);
-                assertEquals(null, u.email);
-                assertEquals(false, u.accepted);
-                assertNotNull(u.section);
-                assertNotNull(u.seatNumber);
-            }
+        for (PendingInvite i : invites) {
+            assertNotNull(i.email);
+            assertNotNull(i.inviteId);
+            assertNotNull(i.seatNum);
+            assertNotNull(i.section);
         }
     }
 
@@ -231,17 +221,19 @@ public class TestGroupDetails {
         var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var users = response.users;
-        assertEquals(5, users.size());
-        assertEquals(List.of(), response.availableReserves);
+        var members = response.groupMembers;
+        var invites = response.pendingInvites;
+
+        assertEquals(5, members.size());
+        assertEquals(0, invites.size());
+        assertEquals(0, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
 
-        for (Users u : users) {
-            assertNotNull(u.userId);
-            assertNotNull(u.email);
-            assertEquals(true, u.accepted);;
-            assertNotNull(u.section);
-            assertNotNull(u.seatNumber);
+        for (GroupMember m : members) {
+            assertNotNull(m.email);
+            assertNotNull(m.section);
+            assertNotNull(m.seatNum);   
+            assertEquals(false, m.purchased);         
         }
     }
 
@@ -253,8 +245,6 @@ public class TestGroupDetails {
         session = TestHelper.commitMakeSession(model, session);
         controller.groupDeny(session, new GroupDenyRequest(inviteId3));
         session = TestHelper.commitMakeSession(model, session);
-        controller.groupDeny(session, new GroupDenyRequest(inviteId4));
-        session = TestHelper.commitMakeSession(model, session);
 
         var hostId = controller.authenticateToken(session, authToken).getId().toString();
         session = TestHelper.commitMakeSession(model, session);
@@ -262,9 +252,12 @@ public class TestGroupDetails {
         var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var users = response.users;
-        assertEquals(3, users.size());
-        assertEquals(2, response.availableReserves.size());
+        var members = response.groupMembers;
+        var invites = response.pendingInvites;
+        
+        assertEquals(3, members.size());
+        assertEquals(1, invites.size());
+        assertEquals(1, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
     }
 
@@ -285,8 +278,11 @@ public class TestGroupDetails {
         var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var users = response.users;
-        assertEquals(1, users.size());
+        var members = response.groupMembers;
+        var invites = response.pendingInvites;
+
+        assertEquals(1, members.size());
+        assertEquals(0, invites.size());
         assertEquals(4, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
     }
@@ -303,17 +299,24 @@ public class TestGroupDetails {
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
 
-        var reqIds1 = List.of(reserveIdList.get(1)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
+        var reqIds = List.of(reserveIdList.get(1)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer", 1000);
         var redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2,
-                "https://example.com/success", "https://example.com/cancel", reqIds1)).redirectUrl;
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
 
-        var reqIds2 = List.of(reserveIdList.get(2)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
+        reqIds = List.of(reserveIdList.get(2)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
         purchaseAPI.addCustomer("test_customer", 1000);
         redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken3,
-                "https://example.com/success", "https://example.com/cancel", reqIds2)).redirectUrl;
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+        purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+
+        reqIds = List.of(reserveIdList.get(0)).stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 1000);
+        redirectUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken,
+                "https://example.com/success", "https://example.com/cancel", reqIds)).redirectUrl;
         session = TestHelper.commitMakeSession(model, session);
         purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
 
@@ -323,10 +326,17 @@ public class TestGroupDetails {
         var response = controller.groupDetails(session, Map.of("auth_token", authToken, "group_id", groupId));
         session = TestHelper.commitMakeSession(model, session);
 
-        var users = response.users;
-        assertEquals(4, users.size());
+        var members = response.groupMembers;
+        var invites = response.pendingInvites;
+
+        assertEquals(3, members.size());
+        assertEquals(1, invites.size());
         assertEquals(1, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
+
+        for (GroupMember m : members) {
+            assertEquals(true, m.purchased);
+        }
     }
 
     @Test 

@@ -8,31 +8,35 @@ import com.google.gson.annotations.SerializedName;
 import tickr.application.entities.Event;
 
 public class CustomerEventsResponse {
-    public List<Bookings> bookings; 
+    // public List<Bookings> bookings; 
     public int num_results;
-    static public class Bookings {
-        @SerializedName("event_id")
-        public String eventId; 
 
-        @SerializedName("ticket_ids")
-        public List<String> ticketIds = new ArrayList<>();
+    @SerializedName("event_id")
+    public List<String> eventIds;
 
-        public Bookings(String eventId, List<String> ticketIds) {
-            this.eventId = eventId;
-            this.ticketIds = ticketIds;
-        }    
+    // static public class Bookings {
+    //     @SerializedName("event_id")
+    //     public String eventId; 
 
-        public Bookings(String eventId) {
-            this.eventId = eventId;
-        }
+    //     @SerializedName("ticket_ids")
+    //     public List<String> ticketIds = new ArrayList<>();
 
-        public void addTicketId(String ticketId) {
-            this.ticketIds.add(ticketId);
-        }
-    }
+    //     public Bookings(String eventId, List<String> ticketIds) {
+    //         this.eventId = eventId;
+    //         this.ticketIds = ticketIds;
+    //     }    
 
-    public CustomerEventsResponse(List<Bookings> bookings, int num_results) {
-        this.bookings = bookings;
+    //     public Bookings(String eventId) {
+    //         this.eventId = eventId;
+    //     }
+
+    //     public void addTicketId(String ticketId) {
+    //         this.ticketIds.add(ticketId);
+    //     }
+    // }
+
+    public CustomerEventsResponse(List<String> eventIds, int num_results) {
+        this.eventIds = eventIds;
         this.num_results = num_results;
     }
 }

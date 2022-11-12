@@ -89,13 +89,16 @@ public class Server {
         post("/api/event/review/reply", TickrController::replyCreate, ReplyCreate.Request.class);
         get("/api/event/reviews/replies", TickrController::repliesView);
         get("/api/event/hosting", TickrController::eventHostings);
+        get("/api/event/hosting/past", TickrController::eventHostingsPast);
         post("/api/event/review/react", TickrController::commentReact, ReactRequest.class);
         get("/api/event/reserved", TickrController::eventReservedSeats);
         delete("/api/ticket/reserve/cancel", TickrController::reservationCancel, ReserveCancelRequest.class);
         delete("/api/event/review/delete", TickrController::reviewDelete, ReviewDeleteRequest.class);
 
         get("/api/home", TickrController::userEvents);
+        get("/api/home/past", TickrController::userEventsPast);
         get("/api/user/bookings", TickrController::customerBookings);
+        get("/api/user/bookings/past", TickrController::customerBookingsPast);
 
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
@@ -106,6 +109,10 @@ public class Server {
         post("/api/group/accept", TickrController::groupAccept, GroupAcceptRequest.class);
         post("/api/group/deny", TickrController::groupDeny, GroupDenyRequest.class);
         get("/api/group/details", TickrController::groupDetails);
+        delete("/api/group/remove", TickrController::groupRemoveMember, GroupRemoveMemberRequest.class);
+        delete("api/group/cancel", TickrController::groupCancel, GroupCancelRequest.class);
+        delete("/api/group/invite/remove", TickrController::groupRemoveInvite, GroupRemoveInviteRequest.class);
+        get("/api/reserve/details", TickrController::getReserveDetails);
 
         get("/api/recommendations/event", TickrController::recommendEventEvent);
         get("/api/user/recommendations/home", TickrController::recommendUserEvent);
