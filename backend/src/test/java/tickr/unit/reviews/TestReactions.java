@@ -7,6 +7,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.ReplyCreate;
 import tickr.application.serialised.combined.ReviewCreate;
@@ -16,6 +17,7 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.ReactRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -25,7 +27,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
@@ -49,8 +51,8 @@ public class TestReactions {
     private String reviewId;
     private String replyId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
     private MockUnitPurchaseAPI purchaseAPI;
@@ -59,8 +61,9 @@ public class TestReactions {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
@@ -111,6 +114,7 @@ public class TestReactions {
     public void cleanup () {
         model.cleanup();
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

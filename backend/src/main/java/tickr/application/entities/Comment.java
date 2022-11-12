@@ -2,6 +2,8 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.application.serialised.SerialisedReaction;
@@ -11,9 +13,11 @@ import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,8 +63,9 @@ public class Comment {
     @Column(name = "comment_title")
     private String title;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "comment_time")
-    private LocalDateTime commentTime;
+    private ZonedDateTime commentTime;
 
     private Float rating;
 
@@ -120,11 +125,11 @@ public class Comment {
         this.commentText = commentText;
     }
 
-    public LocalDateTime getCommentTime () {
+    public ZonedDateTime getCommentTime () {
         return commentTime;
     }
 
-    private void setCommentTime (LocalDateTime commentTime) {
+    private void setCommentTime (ZonedDateTime commentTime) {
         this.commentTime = commentTime;
     }
 
@@ -137,7 +142,7 @@ public class Comment {
         this.title = title;
         this.commentText = commentText;
         this.rating = rating;
-        commentTime = LocalDateTime.now(ZoneId.of("UTC"));
+        commentTime = ZonedDateTime.now(ZoneId.of("UTC"));
     }
 
     public boolean isWrittenBy (User user) {
@@ -160,8 +165,7 @@ public class Comment {
         if (!isReply()) {
             throw new RuntimeException("Tried to make reply out of review!");
         }
-
-        return new SerialisedReply(id.toString(), author.getId().toString(), commentText, commentTime.format(DateTimeFormatter.ISO_DATE_TIME), makeReactions());
+        return new SerialisedReply(id.toString(), author.getId().toString(), commentText, commentTime.format(DateTimeFormatter.ISO_INSTANT), makeReactions());
     }
 
     public Comment addReply (User replyAuthor, String replyText) {

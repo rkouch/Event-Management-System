@@ -1,7 +1,8 @@
 package tickr.integration.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
@@ -24,6 +27,7 @@ import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.EventHostingsResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.UserIdResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -39,7 +43,7 @@ public class TestEventHostings {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
-
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
         Spark.awaitInitialization();
@@ -56,8 +60,8 @@ public class TestEventHostings {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         eventId = response.getBody(CreateEventResponse.class).event_id;
@@ -68,6 +72,8 @@ public class TestEventHostings {
         Spark.stop();
         hibernateModel.cleanup();
         Spark.awaitStop();
+
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

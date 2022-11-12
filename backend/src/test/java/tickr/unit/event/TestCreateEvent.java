@@ -1,13 +1,9 @@
 package tickr.unit.event;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,8 +15,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.entities.Category;
 import tickr.application.entities.Event;
 import tickr.application.entities.SeatingPlan;
@@ -29,6 +28,7 @@ import tickr.application.entities.User;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
@@ -37,20 +37,25 @@ import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestCreateEvent {
     private DataModel model;
     private TickrController controller;
+    private MockLocationApi locationApi;
 
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
-        
+        locationApi = new MockLocationApi(model);
+        ApiLocator.addLocator(ILocationAPI.class, () -> locationApi);
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @AfterAll
@@ -79,40 +84,40 @@ public class TestCreateEvent {
         tags.add("testtags");
         tickr.persistence.ModelSession finalSession = session;
         assertThrows(ForbiddenException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "test event",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, Set.of(UUID.randomUUID().toString()), categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, Set.of(UUID.randomUUID().toString()), categories, tags)));
         assertThrows(ForbiddenException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "test event",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(UnauthorizedException.class, () -> controller.createEvent(finalSession, new CreateEventRequest("authTokenString", "test event",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest("", "test event",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, null,
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, null, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, null, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, null, "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location, null, "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, "2031-12-03T10:15:30", null, "description", seats, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", null, "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, null, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, null, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, null, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, null, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, null)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, null)));
         CreateEventRequest.SeatingDetails invalidSeats1 = new CreateEventRequest.SeatingDetails(null, 50, 50, true);
         List<CreateEventRequest.SeatingDetails> invalidSeatsList1 = new ArrayList<CreateEventRequest.SeatingDetails>();
         invalidSeatsList1.add(invalidSeats1);
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", invalidSeatsList1, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", invalidSeatsList1, admins, categories, tags)));
 
         CreateEventRequest.SeatingDetails invalidSeats2 = new CreateEventRequest.SeatingDetails("", 100, 50, true);
         List<CreateEventRequest.SeatingDetails> invalidSeatsList2 = new ArrayList<CreateEventRequest.SeatingDetails>();
         invalidSeatsList2.add(invalidSeats2);
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", invalidSeatsList2, admins, categories, tags)));
+            null, location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", invalidSeatsList2, admins, categories, tags)));
 
         // CreateEventRequest.SeatingDetails invalidSeats3 = new CreateEventRequest.SeatingDetails("SectionA", 0, 50, true);
         // List<CreateEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<CreateEventRequest.SeatingDetails>();
@@ -152,15 +157,15 @@ public class TestCreateEvent {
         SerializedLocation location5 = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", null);
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location1, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location1, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location2, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location2, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location3, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location3, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location4, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location4, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(BadRequestException.class, () -> controller.createEvent(finalSession, new CreateEventRequest(authTokenString, "asd",
-            null, location5, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+            null, location5, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
     }
 
     @Test 
@@ -180,12 +185,12 @@ public class TestCreateEvent {
         tags.add("testtags");
         assertThrows(UnauthorizedException.class, () -> controller.createEvent(session, new CreateEventRequest("authTokenString", "test event", 
         null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
         assertThrows(UnauthorizedException.class, () -> controller.createEvent(session, new CreateEventRequest(null, "test event", 
         null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", seats, admins, categories, tags)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)));
     }
 
     @Test 
@@ -208,13 +213,13 @@ public class TestCreateEvent {
         tags.add("testtags");
         assertThrows(BadRequestException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", 
         null, location
-        , "2031-12-04T10:15:30", 
-        "2031-12-03T10:15:30", "description", seats, admins, categories, tags)));
+        , "2031-12-04T10:15:30Z",
+        "2031-12-03T10:15:30Z", "description", seats, admins, categories, tags)));
 
         assertThrows(ForbiddenException.class, () -> controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", 
         null, location
-        , "2031-12-04 10:15:30", 
-        "2031-12-03 10:15:30", "description", seats, admins, categories, tags)));
+        , "2031-12-04 10:15:30Z",
+        "2031-12-03 10:15:30Z", "description", seats, admins, categories, tags)));
     }
 
     @Test
@@ -241,8 +246,8 @@ public class TestCreateEvent {
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var event_uuid = UUID.fromString(event_id);
         session = TestHelper.commitMakeSession(model, session);  
         var eventOpt = session.getById(Event.class, event_uuid);
@@ -250,10 +255,10 @@ public class TestCreateEvent {
         var event = eventOpt.orElse(null);
         assertEquals("test event", event.getEventName());
         // assertEquals(location, event.getLocation());
-        LocalDateTime startDate = LocalDateTime.parse("2031-12-03T10:15:30");
-        LocalDateTime endDate = LocalDateTime.parse("2031-12-04T10:15:30");
-        assertEquals(startDate, event.getEventStart());
-        assertEquals(endDate, event.getEventEnd());
+        ZonedDateTime startDate = ZonedDateTime.parse("2031-12-03T10:15:30Z");
+        ZonedDateTime endDate = ZonedDateTime.parse("2031-12-04T10:15:30Z");
+        assertEquals(startDate.withZoneSameLocal(ZoneId.of("UTC")), event.getEventStart().withZoneSameLocal(ZoneId.of("UTC")));
+        assertEquals(endDate.withZoneSameLocal(ZoneId.of("UTC")), event.getEventEnd().withZoneSameLocal(ZoneId.of("UTC")));
         assertEquals("description", event.getEventDescription());
         assertEquals(150, event.getSeatAvailability());
         for (Tag tag : event.getTags()) {
@@ -279,22 +284,22 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getPostcode(), location.postcode);
         assertEquals(event.getLocation().getState(), location.state);
         assertEquals(event.getLocation().getCountry(), location.country);
-        assertEquals(event.getLocation().getLatitude(), location.latitude);
-        assertEquals(event.getLocation().getLongitude(), location.longitude);
+        assertNull(event.getLocation().getLatitude());
+        assertNull(event.getLocation().getLongitude());
 
         var newSession = TestHelper.commitMakeSession(model, session); 
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", null, admins, categories, tags)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", null, admins, categories, tags)));
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", seats, null, categories, tags)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, null, categories, tags)));
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", seats, admins, null, tags)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, admins, null, tags)));
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
-        , "2031-12-03T10:15:30", 
-        "2031-12-04T10:15:30", "description", seats, admins, categories, null)));
+        , "2031-12-03T10:15:30Z",
+        "2031-12-04T10:15:30Z", "description", seats, admins, categories, null)));
     }
 
     @Test
@@ -321,8 +326,8 @@ public class TestCreateEvent {
         Set<String> tags = new HashSet<>();
         tags.add("testtags");
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var event_uuid = UUID.fromString(event_id);
         session = TestHelper.commitMakeSession(model, session);  
         var eventOpt = session.getById(Event.class, event_uuid);
@@ -330,10 +335,10 @@ public class TestCreateEvent {
         var event = eventOpt.orElse(null);
         assertEquals("test event", event.getEventName());
         // assertEquals(location, event.getLocation());
-        LocalDateTime startDate = LocalDateTime.parse("2031-12-03T10:15:30");
-        LocalDateTime endDate = LocalDateTime.parse("2031-12-04T10:15:30");
-        assertEquals(startDate, event.getEventStart());
-        assertEquals(endDate, event.getEventEnd());
+        ZonedDateTime startDate = ZonedDateTime.parse("2031-12-03T10:15:30Z");
+        ZonedDateTime endDate = ZonedDateTime.parse("2031-12-04T10:15:30Z");
+        assertEquals(startDate.withZoneSameLocal(ZoneId.of("UTC")), event.getEventStart().withZoneSameLocal(ZoneId.of("UTC")));
+        assertEquals(endDate.withZoneSameLocal(ZoneId.of("UTC")), event.getEventEnd().withZoneSameLocal(ZoneId.of("UTC")));
         assertEquals("description", event.getEventDescription());
         assertEquals(150, event.getSeatAvailability());
         for (Tag tag : event.getTags()) {
@@ -359,11 +364,11 @@ public class TestCreateEvent {
         assertEquals(event.getLocation().getPostcode(), location.postcode);
         assertEquals(event.getLocation().getState(), location.state);
         assertEquals(event.getLocation().getCountry(), location.country);
-        assertEquals(event.getLocation().getLatitude(), location.latitude);
-        assertEquals(event.getLocation().getLongitude(), location.longitude);
+        assertNull(event.getLocation().getLatitude());
+        assertNull(event.getLocation().getLongitude());
         var event_id2 = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event2", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var event_uuid2 = UUID.fromString(event_id2);
         session = TestHelper.commitMakeSession(model, session);  
         var eventOpt2 = session.getById(Event.class, event_uuid2);
@@ -390,8 +395,8 @@ public class TestCreateEvent {
         assertEquals(event2.getLocation().getPostcode(), location.postcode);
         assertEquals(event2.getLocation().getState(), location.state);
         assertEquals(event2.getLocation().getCountry(), location.country);
-        assertEquals(event2.getLocation().getLatitude(), location.latitude);
-        assertEquals(event2.getLocation().getLongitude(), location.longitude);
+        assertNull(event2.getLocation().getLatitude());
+        assertNull(event2.getLocation().getLongitude());
     }
 
     @Test
@@ -404,12 +409,41 @@ public class TestCreateEvent {
 
         var location = new SerializedLocation("test street", 12, null, "Sydney", "2000", "NSW", "Aus", "", "");
         var event_id = controller.createEvent(session, new CreateEventRequest(authToken, "test event", FileHelper.readToDataUrl("/test_images/smile.png"),
-                location, "2031-12-03T10:15:30", "2031-12-04T10:15:30", "description", List.of(), Set.of(), Set.of(), Set.of())).event_id;
+                location, "2031-12-03T10:15:30Z", "2031-12-04T10:15:30Z", "description", List.of(), Set.of(), Set.of(), Set.of())).event_id;
 
         session = TestHelper.commitMakeSession(model, session);
         var event = session.getById(Event.class, UUID.fromString(event_id)).orElseThrow(AssertionError::new);
         var newFilePath = FileHelper.getStaticPath() + "/" + event.getEventPicture();
 
         assertTrue(TestHelper.fileDiff("/test_images/smile.png", newFilePath));
+    }
+
+    @Test
+    public void testCreateEventLocation () {
+        var session = model.makeSession();
+        var authToken = controller.userRegister(session,
+                new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var location = new SerializedLocation.Builder()
+                .withStreetNo(1)
+                .withStreetName("High St")
+                .withSuburb("Kensington")
+                .withPostcode("2052")
+                .withState("NSW")
+                .withCountry("Australia")
+                .build();
+
+        var eventId = controller.createEvent(session, new CreateEventReqBuilder().withLocation(location).build(authToken)).event_id;
+        session.commit();
+        session.close();
+        locationApi.awaitLocations();
+        session = model.makeSession();
+
+        var event = session.getById(Event.class, UUID.fromString(eventId)).orElseThrow(AssertionError::new);
+
+        assertEquals("-33.9148449", event.getLocation().getLatitude());
+        assertEquals("151.2254725", event.getLocation().getLongitude());
     }
 }

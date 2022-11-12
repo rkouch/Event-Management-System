@@ -18,7 +18,7 @@ import tickr.util.CryptoHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -138,11 +138,11 @@ public class TestUserRegister {
     @Test
     public void testRegister () {
         var session = model.makeSession();
-        var beforeDate = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
+        var beforeDate = ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
         var authTokenString = controller.userRegister(session,
                 new UserRegisterRequest("test", "first", "last", "test@example.com",
                         "Password123!", "2022-04-14")).authToken;
-        var afterDate = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofSeconds(1)).truncatedTo(ChronoUnit.SECONDS);
+        var afterDate = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofSeconds(1)).truncatedTo(ChronoUnit.SECONDS);
         session = TestHelper.commitMakeSession(model, session);
 
 
@@ -157,7 +157,7 @@ public class TestUserRegister {
         var userOpt = session.getById(User.class, uuid);
         assertTrue(userOpt.isPresent());
         var user = userOpt.orElse(null);
-        var tokenDate = LocalDateTime.ofInstant(authToken.getBody().getIssuedAt().toInstant(), ZoneId.of("UTC"));
+        var tokenDate = ZonedDateTime.ofInstant(authToken.getBody().getIssuedAt().toInstant(), ZoneId.of("UTC"));
         assertTrue(beforeDate.compareTo(tokenDate) <= 0);
         assertTrue(tokenDate.compareTo(afterDate) <= 0);
         assertEquals("test", user.getUsername());

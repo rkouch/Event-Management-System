@@ -7,6 +7,7 @@ import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
@@ -14,13 +15,14 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 import tickr.util.HTTPHelper;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -36,14 +38,15 @@ public class TestTicketReserve {
 
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
 
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -54,7 +57,7 @@ public class TestTicketReserve {
         assertEquals(200, response.getStatus());
         authToken = response.getBody(AuthTokenResponse.class).authToken;
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
@@ -82,6 +85,7 @@ public class TestTicketReserve {
         Spark.awaitStop();
 
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

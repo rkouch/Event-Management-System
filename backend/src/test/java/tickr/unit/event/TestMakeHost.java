@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +21,12 @@ import jdk.jfr.Event;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -44,6 +47,7 @@ public class TestMakeHost {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -63,8 +67,8 @@ public class TestMakeHost {
         eventId = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(1))
-            .withEndDate(LocalDateTime.now().plusDays(2))
+            .withStartDate(ZonedDateTime.now().plusDays(1))
+            .withEndDate(ZonedDateTime.now().plusDays(2))
             .withAdmins(Set.of(newHostId))
             .build(authToken)).event_id;
             
@@ -76,6 +80,7 @@ public class TestMakeHost {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

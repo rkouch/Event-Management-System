@@ -60,7 +60,7 @@ public class FileHelper {
         var fileType = VALID_MEDIA_TYPES.get(dataUri.getMediaType());
         var filePath = STATIC_FILE_PATH + "/" + subdirectory + "/" + filePrefix + "." + fileType;
 
-        try (var fileStream = openOutputStream(filePath)) {
+        try (var fileStream = openOutputStream(filePath, false)) {
             if (!dataUri.writeData(fileStream)) {
                 return Optional.empty();
             }
@@ -103,8 +103,8 @@ public class FileHelper {
         }
     }
 
-    public static OutputStream openOutputStream (String filePath) throws IOException {
-        return new FileOutputStream(filePath);
+    public static OutputStream openOutputStream (String filePath, boolean append) throws IOException {
+        return new FileOutputStream(filePath, append);
     }
 
     public static InputStream openInputStream (String filePath) throws IOException {
@@ -114,6 +114,15 @@ public class FileHelper {
                     .getResourceAsStream(filePath.substring(1));
         } else {
             return new FileInputStream(filePath);
+        }
+    }
+
+    public static void createFileAtPath (String filePath) {
+        try {
+            Files.createFile(Path.of(filePath));
+        } catch (IOException e) {
+            logger.error("Failed to create file at path " + filePath + "!");
+            throw new RuntimeException("Failed to create file at path " + filePath + "!");
         }
     }
 

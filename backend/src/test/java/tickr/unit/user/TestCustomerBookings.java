@@ -10,6 +10,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.PurchaseItem;
 import tickr.application.entities.SeatingPlan;
@@ -22,6 +23,7 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.mock.AbstractMockPurchaseAPI;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -31,8 +33,9 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +52,8 @@ public class TestCustomerBookings {
     private String eventId2;
     private String eventId3;
     private String authToken; 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<String> requestIds;
     private float requestPrice;
@@ -62,6 +65,7 @@ public class TestCustomerBookings {
 
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -75,9 +79,9 @@ public class TestCustomerBookings {
 
         session = TestHelper.commitMakeSession(model, session);
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
-        var startTime2 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2));
-        var startTime3 = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        var startTime2 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2));
+        var startTime3 = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3));
         endTime = startTime.plus(Duration.ofHours(1));
         var endTime2 = startTime2.plus(Duration.ofHours(1));
         var endTime3 = startTime3.plus(Duration.ofHours(1));
@@ -161,6 +165,7 @@ public class TestCustomerBookings {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 

@@ -8,6 +8,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.ReviewCreate;
 import tickr.application.serialised.combined.TicketPurchase;
@@ -15,6 +16,7 @@ import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -24,7 +26,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
@@ -40,8 +42,8 @@ public class TestReviewCreateView {
     private String authToken;
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
     private MockUnitPurchaseAPI purchaseAPI;
@@ -50,8 +52,9 @@ public class TestReviewCreateView {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
@@ -96,6 +99,7 @@ public class TestReviewCreateView {
     public void cleanup () {
         model.cleanup();
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test
@@ -129,8 +133,8 @@ public class TestReviewCreateView {
                 new ReviewCreate.Request(authToken2, eventId, "title", "null", 1.0f)));
 
         var eventId2 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).minusDays(1))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).minusDays(1).plusHours(1))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1).plusHours(1))
                 .withSeatingDetails(seatingDetails)
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
@@ -140,7 +144,7 @@ public class TestReviewCreateView {
         session = TestHelper.commitMakeSession(model, session);
 
         var reqIds2 = controller.ticketReserve(session,
-                new TicketReserve.Request(authToken, eventId2, LocalDateTime.now(ZoneId.of("UTC")).minusDays(1), List.of(
+                new TicketReserve.Request(authToken, eventId2, ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1), List.of(
                         new TicketReserve.TicketDetails("test_section", 1, List.of())
                 ))).reserveTickets.stream().map(r -> r.reserveId).collect(Collectors.toList());
         session = TestHelper.commitMakeSession(model, session);
@@ -156,8 +160,8 @@ public class TestReviewCreateView {
                 new ReviewCreate.Request(authToken, eventId2, "test", "test", 1.0f)));
         session = TestHelper.rollbackMakeSession(model, session);
         var newEventId = controller.createEvent(session, new CreateEventReqBuilder()
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(1))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(2))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(1))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2))
                 .withSeatingDetails(List.of(new CreateEventRequest.SeatingDetails("test_section", 10, 1.0f, true)))
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
@@ -165,7 +169,7 @@ public class TestReviewCreateView {
                 null, null, null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
         var newReqIds = controller.ticketReserve(session, new TicketReserve.Request(authToken2, newEventId,
-                LocalDateTime.now(ZoneId.of("UTC")).plusDays(1).plusMinutes(1),
+                ZonedDateTime.now(ZoneId.of("UTC")).plusDays(1).plusMinutes(1),
                 List.of(new TicketReserve.TicketDetails("test_section", 1, List.of())))).reserveTickets;
         session = TestHelper.commitMakeSession(model, session);
         var newUrl = controller.ticketPurchase(session, new TicketPurchase.Request(authToken2, "http://example.com", "http://example.com",

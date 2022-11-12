@@ -1,12 +1,5 @@
 package tickr.unit.event;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,11 +14,14 @@ import org.junit.jupiter.api.Test;
 
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.entities.Event;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
@@ -33,6 +29,8 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestEventEdit {
     private DataModel model;
@@ -42,12 +40,14 @@ public class TestEventEdit {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
-        
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
+
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @AfterAll
@@ -95,8 +95,8 @@ public class TestEventEdit {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(UUID.randomUUID().toString(), authTokenString, null, 
             null, null, null,null, null, null, null, null, null, false)));
@@ -172,8 +172,8 @@ public class TestEventEdit {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, null, null, null,null,
         null, null, null, null, null, false));
@@ -189,10 +189,10 @@ public class TestEventEdit {
         assertEquals(location.postcode, response.location.postcode);
         assertEquals(location.state, response.location.state);
         assertEquals(location.country, response.location.country);
-        assertEquals(location.longitude, response.location.longitude);
-        assertEquals(location.latitude, response.location.latitude);
-        assertEquals("2031-12-03T10:15:30", response.startDate);
-        assertEquals("2031-12-04T10:15:30", response.endDate);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
+        assertEquals("2031-12-03T10:15:30Z", response.startDate);
+        assertEquals("2031-12-04T10:15:30Z", response.endDate);
         assertEquals("description", response.description);
 
         assertEquals(seats.get(0).section, response.seatingDetails.get(0).section);
@@ -259,11 +259,11 @@ public class TestEventEdit {
         updateTags.add("updatetags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session);  
         admins.add(idTest);
-        controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30","2031-12-05T10:15:30",
+        controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", updatedSeats, admins, updateCategories, updateTags, true));
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
         var newSession = TestHelper.commitMakeSession(model, session); 
@@ -276,10 +276,10 @@ public class TestEventEdit {
         assertEquals(updatedLocation.postcode, response.location.postcode);
         assertEquals(updatedLocation.state, response.location.state);
         assertEquals(updatedLocation.country, response.location.country);
-        assertEquals(updatedLocation.longitude, response.location.longitude);
-        assertEquals(updatedLocation.latitude, response.location.latitude);
-        assertEquals("2031-12-04T10:15:30", response.startDate);
-        assertEquals("2031-12-05T10:15:30", response.endDate);
+        assertNull(response.location.longitude);
+        assertNull(response.location.latitude);
+        assertEquals("2031-12-04T10:15:30Z", response.startDate);
+        assertEquals("2031-12-05T10:15:30Z", response.endDate);
         assertEquals("updated description", response.description);
 
         assertEquals(updatedSeats.get(0).section, response.seatingDetails.get(0).section);
@@ -295,13 +295,13 @@ public class TestEventEdit {
 
         assertTrue(response.published);
 
-        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30","2031-12-05T10:15:30",
+        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", null, admins, updateCategories, updateTags, false)));
         var newSession1 = TestHelper.commitMakeSession(model, newSession);
-        assertDoesNotThrow(() -> controller.editEvent(newSession1, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30","2031-12-05T10:15:30",
+        assertDoesNotThrow(() -> controller.editEvent(newSession1, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", null, admins, updateCategories, updateTags, false)));
         var newSession2 = TestHelper.commitMakeSession(model, newSession1);
-        assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30","2031-12-05T10:15:30",
+        assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", updatedSeats, admins, updateCategories, updateTags, false)));
     }
 
@@ -342,8 +342,8 @@ public class TestEventEdit {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, 
@@ -401,10 +401,10 @@ public class TestEventEdit {
         tags.add("testtags");
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
-                                            , "2031-12-03T10:15:30", 
-                                            "2031-12-04T10:15:30", "description", seats, admins, categories, tags)).event_id;
+                                            , "2031-12-03T10:15:30Z",
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
-        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, adminAuthTokenString, "update name", null, null, "2031-12-04T10:15:30","2031-12-05T10:15:30",
+        assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, adminAuthTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", null, null, null, null, true)));
         session = TestHelper.commitMakeSession(model, newSession);
 
@@ -412,8 +412,8 @@ public class TestEventEdit {
         assertEquals(id, response.host_id);
         assertEquals("update name", response.eventName);
         assertEquals("", response.picture);
-        assertEquals("2031-12-04T10:15:30", response.startDate);
-        assertEquals("2031-12-05T10:15:30", response.endDate);
+        assertEquals("2031-12-04T10:15:30Z", response.startDate);
+        assertEquals("2031-12-05T10:15:30Z", response.endDate);
         assertEquals("updated description", response.description);
 
     }

@@ -2,13 +2,15 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import tickr.util.CryptoHelper;
 
 import java.sql.Date;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -25,17 +27,19 @@ public class AuthToken {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "issue_time")
-    private LocalDateTime issueTime;
+    private ZonedDateTime issueTime;
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(name = "expiry_time")
-    private LocalDateTime expiryTime;
+    private ZonedDateTime expiryTime;
 
     public AuthToken () {
 
     }
 
-    public AuthToken (User user, LocalDateTime issueTime, Duration expiryDuration) {
+    public AuthToken (User user, ZonedDateTime issueTime, Duration expiryDuration) {
         this.user = user;
         this.issueTime = issueTime.truncatedTo(ChronoUnit.SECONDS);
         this.expiryTime = issueTime.plus(expiryDuration).truncatedTo(ChronoUnit.SECONDS);
@@ -57,19 +61,19 @@ public class AuthToken {
         this.user = user;
     }
 
-    private LocalDateTime getIssueTime () {
+    private ZonedDateTime getIssueTime () {
         return issueTime;
     }
 
-    private void setIssueTime (LocalDateTime issueTime) {
+    private void setIssueTime (ZonedDateTime issueTime) {
         this.issueTime = issueTime;
     }
 
-    private LocalDateTime getExpiryTime () {
+    private ZonedDateTime getExpiryTime () {
         return expiryTime;
     }
 
-    private void setExpiryTime (LocalDateTime expiryTime) {
+    private void setExpiryTime (ZonedDateTime expiryTime) {
         this.expiryTime = expiryTime;
     }
 
@@ -77,8 +81,8 @@ public class AuthToken {
         return CryptoHelper.makeJWTBuilder()
                 .setSubject(getUser().getId().toString())
                 .setId(getId().toString())
-                .setIssuedAt(Date.from(getIssueTime().atZone(ZoneId.of("UTC")).toInstant()))
-                .setExpiration(Date.from(getExpiryTime().atZone(ZoneId.of("UTC")).toInstant()))
+                .setIssuedAt(Date.from(getIssueTime().toInstant()))
+                .setExpiration(Date.from(getExpiryTime().toInstant()))
                 .compact();
     }
 }

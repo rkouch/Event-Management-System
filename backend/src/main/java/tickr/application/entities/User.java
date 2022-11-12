@@ -17,7 +17,7 @@ import tickr.util.FileHelper;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,7 +119,7 @@ public class User {
      * @return the resulting auth token
      */
     public AuthToken makeToken (ModelSession session, Duration expiryDuration) {
-        var token = new AuthToken(this, LocalDateTime.now(ZoneId.of("UTC")), expiryDuration);
+        var token = new AuthToken(this, ZonedDateTime.now(ZoneId.of("UTC")), expiryDuration);
         session.save(token);
         getTokens().add(token);
 
@@ -255,7 +255,7 @@ public class User {
         this.adminEvents.add(event);
     }
 
-    private Set<Group> getOwnedGroups () {
+    public Set<Group> getOwnedGroups () {
         return ownedGroups;
     }
 
@@ -263,12 +263,20 @@ public class User {
         this.ownedGroups = ownedGroups;
     }
 
-    private Set<Group> getGroups () {
+    public Set<Group> getGroups () {
         return groups;
     }
 
     private void setGroups (Set<Group> groups) {
         this.groups = groups;
+    }
+
+    public void addOwnedGroup (Group group) {
+        this.ownedGroups.add(group);
+    }
+
+    public void addGroup (Group group) {
+        this.groups.add(group);
     }
 
     public Set<Ticket> getTickets () {
@@ -389,15 +397,15 @@ public class User {
         return tickets; 
     }
 
-    public List<String> getHostingEventIds () {
-        List<Event> hostingEvents = new ArrayList<>(this.hostingEvents);
-        List<String> eventIds = new ArrayList<>();
-        for (Event event : hostingEvents) {
-            eventIds.add(event.getId().toString());
-        }
-        Collections.sort(eventIds);
-        return eventIds;
-    }
+    // public List<String> getHostingEventIds () {
+    //     List<Event> hostingEvents = new ArrayList<>(this.hostingEvents);
+    //     List<String> eventIds = new ArrayList<>();
+    //     for (Event event : hostingEvents) {
+    //         eventIds.add(event.getId().toString());
+    //     }
+    //     Collections.sort(eventIds);
+    //     return eventIds;
+    // }
 
     // public List<String> getPaginatedHostedEvents (int pageStart, int maxResults) {
     //     if (pageStart < 0 || maxResults <= 0) {
@@ -442,5 +450,18 @@ public class User {
     
     public void sendEmail (String subject, String message) {
         ApiLocator.locateApi(IEmailAPI.class).sendEmail(email, subject, message);
+    }
+
+    public boolean isGroupAlreadyCreated(List<String> reservedIds) {
+        for (Group group : ownedGroups) {
+            if (group.getTicketReservations().stream().anyMatch(t -> reservedIds.contains(t.getId().toString()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addReservation(TicketReservation t) {
+        reservations.add(t);
     }
 }

@@ -9,10 +9,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -20,8 +23,9 @@ import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 public class TestEventSearch {
@@ -29,10 +33,14 @@ public class TestEventSearch {
     private TickrController controller;
     private ModelSession session;
     private String authToken;
+    private MockLocationApi locationApi;
     @BeforeEach
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        locationApi = new MockLocationApi(model);
+        ApiLocator.addLocator(ILocationAPI.class, () -> locationApi);
+
         session = model.makeSession();
         authToken = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
         session = TestHelper.commitMakeSession(model, session);
@@ -41,6 +49,7 @@ public class TestEventSearch {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test
@@ -70,6 +79,13 @@ public class TestEventSearch {
         assertThrows(BadRequestException.class, () -> controller.searchEvents(session,
                 Map.of("page_start", Integer.toString(1), "max_results", Integer.toString(1), "search_options",
                         Base64.getEncoder().encodeToString("testing123".getBytes()))));
+
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(null, 1.0).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), null).build()));
+        assertThrows(BadRequestException.class, () -> makeSearch(0, 100,
+                new OptionsBuilder().addLocation(new SerializedLocation.Builder().build(), -1.0).build()));
     }
 
     @Test
@@ -99,8 +115,8 @@ public class TestEventSearch {
 
         for (int i = 0; i < numPages * numPage; i++) {
             eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
-                    .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
-                    .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
+                    .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1 + 300 - i)))
+                    .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2 + 300 - i)))
                     .build(authToken)).event_id);
             session = TestHelper.commitMakeSession(model, session);
             controller.editEvent(session, new EditEventRequest(eventIds.get(eventIds.size() - 1), authToken, null, null, null, null,
@@ -125,33 +141,79 @@ public class TestEventSearch {
     public void testOptions () {
         var ids = createEventOptions();
 
-        var respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).build()).eventIds;
+        var response = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).build());
+        var respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addStartTime(LocalDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addStartTime(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).plusHours(1)).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addEndTime(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addEndTime(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4))).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(0), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addTags(List.of("test4", "test6")).build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addTags(List.of("test4", "test6")).build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(2), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addText("karaoke tEsTb").build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addText("karaoke tEsTb").build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
         assertEquals(2, respIds.size());
         assertEquals(ids.get(0), respIds.get(0));
         assertEquals(ids.get(1), respIds.get(1));
 
-        respIds = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build()).eventIds;
+        response = makeSearch(0, 100, new OptionsBuilder().addCategories(List.of("music", "business")).addText("tennis").build());
+        respIds = response.eventIds;
+        assertEquals(0, response.numResults);
         assertEquals(0, respIds.size());
+
+
+        response = makeSearch(0, 100, new OptionsBuilder()
+                .addLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withPostcode("2052")
+                        .withState("NSW")
+                        .withCountry("Australia")
+                        .build(), 30.0)
+                .build());
+        respIds = response.eventIds;
+        assertEquals(2, response.numResults);
+        assertEquals(2, respIds.size());
+        assertEquals(ids.get(0), respIds.get(0));
+        assertEquals(ids.get(1), respIds.get(1));
+
+        response = makeSearch(0, 100, new OptionsBuilder()
+                .addLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withPostcode("2052")
+                        .withState("NSW")
+                        .withCountry("Australia")
+                        .build(), 260.0)
+                .build());
+        respIds = response.eventIds;
+        assertEquals(3, response.numResults);
+        assertEquals(3, respIds.size());
+        assertEquals(ids.get(2), respIds.get(0));
+        assertEquals(ids.get(0), respIds.get(1));
+        assertEquals(ids.get(1), respIds.get(2));
     }
 
     private List<String> createEventOptions () {
@@ -159,11 +221,19 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestA")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(3)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(4)))
                 .withCategories(Set.of("food", "music", "health"))
                 .withTags(Set.of("test1", "test2", "test3"))
                 .withDescription("Testing karaoke burgers hospital")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("High St")
+                        .withSuburb("Kensington")
+                        .withState("NSW")
+                        .withPostcode("2052")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(0), authToken, null, null, null, null,
@@ -172,11 +242,19 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestB")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(5)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(6)))
                 .withCategories(Set.of("hobbies", "business", "free"))
                 .withTags(Set.of("test4", "test2", "test5"))
                 .withDescription("money capitalism free sewing")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(235)
+                        .withStreetName("Anzac Parade")
+                        .withSuburb("Kensington")
+                        .withState("NSW")
+                        .withPostcode("2033")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(1), authToken, null, null, null, null,
@@ -185,16 +263,26 @@ public class TestEventSearch {
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                         .withEventName("TestC")
-                .withStartDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)))
-                .withEndDate(LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)))
+                .withStartDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1)))
+                .withEndDate(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(2)))
                 .withCategories(Set.of("food", "education"))
                 .withTags(Set.of("test2", "test5", "test6"))
                 .withDescription("money burgers school")
+                .withLocation(new SerializedLocation.Builder()
+                        .withStreetNo(1)
+                        .withStreetName("Parliament Drive")
+                        .withSuburb("Canberra")
+                        .withState("ACT")
+                        .withPostcode("2600")
+                        .withCountry("Australia")
+                        .build())
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(2), authToken, null, null, null, null,
                 null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
+
+        locationApi.awaitLocations();
 
         return entityIds;
     }
@@ -216,28 +304,30 @@ public class TestEventSearch {
 
     private static class OptionsBuilder {
         private SerializedLocation location = null;
+        private Double maxDistance;
 
-        private LocalDateTime startTime = null;
-        private LocalDateTime endTime = null;
+        private ZonedDateTime startTime = null;
+        private ZonedDateTime endTime = null;
 
         private List<String> tags = null;
         private List<String> categories = null;
 
         private String text = null;
 
-        public OptionsBuilder addLocation (String streetName, int streetNo, String unitNo, String suburb, String postcode, String state, String country, String longitude, String latitude) {
-            this.location = new SerializedLocation(streetName, streetNo, unitNo, suburb, postcode, state, country, longitude, latitude);
+        public OptionsBuilder addLocation (SerializedLocation location, Double maxDistance) {
+            this.location = location;
+            this.maxDistance = maxDistance;
 
             return this;
         }
 
-        public OptionsBuilder addStartTime (LocalDateTime startTime) {
+        public OptionsBuilder addStartTime (ZonedDateTime startTime) {
             this.startTime = startTime;
 
             return this;
         }
 
-        public OptionsBuilder addEndTime (LocalDateTime endTime) {
+        public OptionsBuilder addEndTime (ZonedDateTime endTime) {
             this.endTime = endTime;
 
             return this;
@@ -263,7 +353,7 @@ public class TestEventSearch {
 
 
         public EventSearch.Options build () {
-            return new EventSearch.Options(location, startTime, endTime, tags, categories, text);
+            return new EventSearch.Options(location, maxDistance, startTime, endTime, tags, categories, text);
         }
     }
 }

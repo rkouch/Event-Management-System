@@ -11,6 +11,7 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.PurchaseItem;
 import tickr.application.entities.SeatingPlan;
@@ -23,6 +24,7 @@ import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse;
 import tickr.mock.AbstractMockPurchaseAPI;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -32,7 +34,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +51,8 @@ public class TestGetAttendees {
     private String eventId;
     private String authToken; 
     private String authToken2;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<String> requestIds;
     private float requestPrice;
@@ -59,6 +61,7 @@ public class TestGetAttendees {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
@@ -81,7 +84,7 @@ public class TestGetAttendees {
 
         session = TestHelper.commitMakeSession(model, session);
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
         
         eventId = controller.createEvent(session, new CreateEventReqBuilder()
@@ -133,6 +136,7 @@ public class TestGetAttendees {
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

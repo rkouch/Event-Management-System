@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +21,14 @@ import jdk.jfr.Event;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventHostingsResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -49,6 +52,7 @@ public class TestEventHostingsPastFuture {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -63,46 +67,47 @@ public class TestEventHostingsPastFuture {
         controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().minusDays(5))
-                .withEndDate(LocalDateTime.now().minusDays(3))
+                .withStartDate(ZonedDateTime.now().minusDays(5))
+                .withEndDate(ZonedDateTime.now().minusDays(3))
                 .build(authToken));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().minusDays(2))
-                .withEndDate(LocalDateTime.now().minusDays(1))
+                .withStartDate(ZonedDateTime.now().minusDays(2))
+                .withEndDate(ZonedDateTime.now().minusDays(1))
                 .build(authToken));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         session = TestHelper.commitMakeSession(model, session);
         
         controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEventUnsafe(session, new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         session = TestHelper.commitMakeSession(model, session);
     }
 
     @AfterEach
     public void cleanup () {
+        ApiLocator.clearLocator(ILocationAPI.class);
         model.cleanup();
     }
 

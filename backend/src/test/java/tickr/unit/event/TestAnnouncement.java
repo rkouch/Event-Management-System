@@ -8,6 +8,7 @@ import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.email.IEmailAPI;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
@@ -16,6 +17,7 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.MockEmailAPI;
+import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -25,7 +27,7 @@ import tickr.server.exceptions.ForbiddenException;
 import tickr.server.exceptions.UnauthorizedException;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +47,8 @@ public class TestAnnouncement {
     private String adminToken;
     private String eventId;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     private List<CreateEventRequest.SeatingDetails> seatingDetails;
     private MockUnitPurchaseAPI purchaseAPI;
@@ -58,8 +60,9 @@ public class TestAnnouncement {
         controller = new TickrController();
         emailAPI = new MockEmailAPI();
         ApiLocator.addLocator(IEmailAPI.class, () -> emailAPI);
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         seatingDetails = List.of(
@@ -111,6 +114,7 @@ public class TestAnnouncement {
         model.cleanup();
         ApiLocator.clearLocator(IPurchaseAPI.class);
         ApiLocator.clearLocator(IEmailAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

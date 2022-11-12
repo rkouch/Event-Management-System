@@ -147,6 +147,10 @@ def generateData (dataPath):
     data = {}
     with open(dataPath) as f:
         data = json.load(f)
+    
+    print("Clearing existing data!")
+    response = requests.delete(backendUrl + "/api/test/clear", json={})
+    response.raise_for_status()
     '''
     Users:
     {

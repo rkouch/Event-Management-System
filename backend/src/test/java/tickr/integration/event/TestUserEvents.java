@@ -1,7 +1,7 @@
 package tickr.integration.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
@@ -27,6 +29,7 @@ import tickr.application.serialised.responses.EventHostingsResponse;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.UserEventsResponse;
 import tickr.application.serialised.responses.UserIdResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
@@ -41,6 +44,7 @@ public class TestUserEvents {
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -58,8 +62,8 @@ public class TestUserEvents {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(1))
-                .withEndDate(LocalDateTime.now().plusDays(2))
+                .withStartDate(ZonedDateTime.now().plusDays(1))
+                .withEndDate(ZonedDateTime.now().plusDays(2))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event1 = response.getBody(CreateEventResponse.class).event_id;
@@ -70,8 +74,8 @@ public class TestUserEvents {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(3))
-                .withEndDate(LocalDateTime.now().plusDays(4))
+                .withStartDate(ZonedDateTime.now().plusDays(3))
+                .withEndDate(ZonedDateTime.now().plusDays(4))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event2 = response.getBody(CreateEventResponse.class).event_id;
@@ -82,8 +86,8 @@ public class TestUserEvents {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(5))
-                .withEndDate(LocalDateTime.now().plusDays(6))
+                .withStartDate(ZonedDateTime.now().plusDays(5))
+                .withEndDate(ZonedDateTime.now().plusDays(6))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event3 = response.getBody(CreateEventResponse.class).event_id;
@@ -94,8 +98,8 @@ public class TestUserEvents {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(15))
-                .withEndDate(LocalDateTime.now().plusDays(16))
+                .withStartDate(ZonedDateTime.now().plusDays(15))
+                .withEndDate(ZonedDateTime.now().plusDays(16))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event4 = response.getBody(CreateEventResponse.class).event_id;
@@ -106,8 +110,8 @@ public class TestUserEvents {
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withEventName("Test Event")
                 .withSeatingDetails(seatingDetails)
-                .withStartDate(LocalDateTime.now().plusDays(20))
-                .withEndDate(LocalDateTime.now().plusDays(21))
+                .withStartDate(ZonedDateTime.now().plusDays(20))
+                .withEndDate(ZonedDateTime.now().plusDays(21))
                 .build(authToken));
         assertEquals(200, response.getStatus());
         var event5 = response.getBody(CreateEventResponse.class).event_id;
@@ -120,6 +124,7 @@ public class TestUserEvents {
     public void cleanup () {
         Spark.stop();
         hibernateModel.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
         Spark.awaitStop();
     }
 
@@ -128,7 +133,7 @@ public class TestUserEvents {
         var response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(200, response.getStatus());
         assertEquals(response.getBody(UserEventsResponse.class).eventIds.size(), 5);
@@ -136,7 +141,7 @@ public class TestUserEvents {
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusDays(17).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(17).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(200, response.getStatus());
         assertEquals(response.getBody(UserEventsResponse.class).eventIds.size(), 4);
@@ -144,7 +149,7 @@ public class TestUserEvents {
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusDays(14).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(14).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(200, response.getStatus());
         assertEquals(response.getBody(UserEventsResponse.class).eventIds.size(), 3);
@@ -152,7 +157,7 @@ public class TestUserEvents {
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusMinutes(10).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusMinutes(10).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(200, response.getStatus());
         assertEquals(response.getBody(UserEventsResponse.class).eventIds.size(), 0);
@@ -162,13 +167,13 @@ public class TestUserEvents {
     public void testExceptions () {
         var response = httpHelper.get("/api/home", Map.of(
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(400, response.getStatus());
 
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(400, response.getStatus());
 
@@ -182,21 +187,21 @@ public class TestUserEvents {
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().minusDays(3).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().minusDays(3).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(403, response.getStatus());
 
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(0),
             "max_results", Integer.toString(-1),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(400, response.getStatus());
 
         response = httpHelper.get("/api/home", Map.of(
             "page_start", Integer.toString(-1),
             "max_results", Integer.toString(5),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         ));
         assertEquals(400, response.getStatus());
 

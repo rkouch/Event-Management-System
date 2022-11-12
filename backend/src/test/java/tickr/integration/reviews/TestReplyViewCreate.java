@@ -7,6 +7,7 @@ import spark.Spark;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.ReplyCreate;
 import tickr.application.serialised.combined.ReviewCreate;
@@ -19,13 +20,14 @@ import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
 import tickr.application.serialised.responses.RepliesViewResponse;
 import tickr.mock.MockHttpPurchaseAPI;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.server.Server;
 import tickr.util.HTTPHelper;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -48,14 +50,15 @@ public class TestReplyViewCreate {
     private String requestId;
     private List<String> requestIds;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
 
     @BeforeEach
     public void setup () {
         hibernateModel = new HibernateModel("hibernate-test.cfg.xml");
         purchaseAPI = new MockHttpPurchaseAPI("http://localhost:8080");
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(hibernateModel));
 
         Server.start(8080, null, hibernateModel);
         httpHelper = new HTTPHelper("http://localhost:8080");
@@ -66,7 +69,7 @@ public class TestReplyViewCreate {
         assertEquals(200, response.getStatus());
         authToken = response.getBody(AuthTokenResponse.class).authToken;
 
-        startTime = LocalDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
@@ -113,6 +116,7 @@ public class TestReplyViewCreate {
         Spark.awaitStop();
 
         ApiLocator.clearLocator(IPurchaseAPI.class);
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test

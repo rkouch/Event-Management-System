@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +22,15 @@ import jdk.jfr.Event;
 import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EditHostRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.EventHostingsResponse;
+import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
 import tickr.persistence.ModelSession;
@@ -47,6 +50,7 @@ public class TestUserEvents {
     public void setup () {
         model = new HibernateModel("hibernate-test.cfg.xml");
         controller = new TickrController();
+        ApiLocator.addLocator(ILocationAPI.class, () -> new MockLocationApi(model));
 
         seatingDetails = new ArrayList<>();
         seatingDetails.add(new CreateEventRequest.SeatingDetails("SectionA", 10, 50, true));
@@ -61,8 +65,8 @@ public class TestUserEvents {
         var event1 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(1))
-            .withEndDate(LocalDateTime.now().plusDays(2))
+            .withStartDate(ZonedDateTime.now().plusDays(1))
+            .withEndDate(ZonedDateTime.now().plusDays(2))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
@@ -72,8 +76,8 @@ public class TestUserEvents {
         var event2 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(3))
-            .withEndDate(LocalDateTime.now().plusDays(4))
+            .withStartDate(ZonedDateTime.now().plusDays(3))
+            .withEndDate(ZonedDateTime.now().plusDays(4))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
@@ -83,8 +87,8 @@ public class TestUserEvents {
         var event3 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(5))
-            .withEndDate(LocalDateTime.now().plusDays(6))
+            .withStartDate(ZonedDateTime.now().plusDays(5))
+            .withEndDate(ZonedDateTime.now().plusDays(6))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true));
@@ -93,8 +97,8 @@ public class TestUserEvents {
         var event4 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(15))
-            .withEndDate(LocalDateTime.now().plusDays(16))
+            .withStartDate(ZonedDateTime.now().plusDays(15))
+            .withEndDate(ZonedDateTime.now().plusDays(16))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true));
@@ -103,18 +107,19 @@ public class TestUserEvents {
         var event5 = controller.createEvent(session, new CreateEventReqBuilder()
             .withEventName("Test Event")
             .withSeatingDetails(seatingDetails)
-            .withStartDate(LocalDateTime.now().plusDays(20))
-            .withEndDate(LocalDateTime.now().plusDays(21))
+            .withStartDate(ZonedDateTime.now().plusDays(20))
+            .withEndDate(ZonedDateTime.now().plusDays(21))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true));
-
+        session = TestHelper.commitMakeSession(model, session);
         
     }
 
     @AfterEach
     public void cleanup () {
         model.cleanup();
+        ApiLocator.clearLocator(ILocationAPI.class);
     }
 
     @Test 
@@ -122,30 +127,38 @@ public class TestUserEvents {
         var events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals(5, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(17).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(17).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals(4, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(14).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(14).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals(3, events.size());
+        session = TestHelper.commitMakeSession(model, session);
 
         events = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusMinutes(10).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusMinutes(10).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals(0, events.size());
+        session = TestHelper.commitMakeSession(model, session);
     }
 
     @Test
@@ -157,15 +170,15 @@ public class TestUserEvents {
         var list1 = controller.userEvents(session, Map.of(
             "page_start", Integer.toString(pageStart), 
             "max_results", Integer.toString(numEvents),
-            "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
         )).getEventIds();
-
+        session = TestHelper.commitMakeSession(model, session);
         List<String> list2 = new ArrayList<>(); 
         for (int i = -1; i < numEvents / maxResults; i++) {
             var list = controller.userEvents(session, Map.of(
                 "page_start", Integer.toString(pageStart), 
                 "max_results", Integer.toString(maxResults),
-                "before", LocalDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
+                "before", ZonedDateTime.now().plusDays(21).format(DateTimeFormatter.ISO_DATE_TIME)
             ));
             session = TestHelper.commitMakeSession(model, session);
             if (i != 1) {
@@ -184,21 +197,21 @@ public class TestUserEvents {
     public void testExceptions () {
         assertThrows(BadRequestException.class, () -> controller.userEvents(session, Map.of(          
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
         )));
         assertThrows(BadRequestException.class, () -> controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
-            "before", LocalDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
         )));
         assertThrows(BadRequestException.class, () -> controller.userEvents(session, Map.of(
             "page_start", Integer.toString(-1), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
         )));
         assertThrows(BadRequestException.class, () -> controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(-1), 
-            "before", LocalDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().plusDays(0).format(DateTimeFormatter.ISO_DATE_TIME)
         )));
         assertThrows(BadRequestException.class, () -> controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
@@ -208,7 +221,7 @@ public class TestUserEvents {
         assertThrows(ForbiddenException.class, () -> controller.userEvents(session, Map.of(
             "page_start", Integer.toString(0), 
             "max_results", Integer.toString(5), 
-            "before", LocalDateTime.now().minusDays(5).format(DateTimeFormatter.ISO_DATE_TIME)
+            "before", ZonedDateTime.now().minusDays(5).format(DateTimeFormatter.ISO_DATE_TIME)
         )));
     }
 }
