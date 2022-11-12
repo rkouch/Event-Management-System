@@ -9,6 +9,7 @@ import org.hibernate.type.SqlTypes;
 import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.LineItem;
 import tickr.application.serialised.combined.TicketReserve;
+import tickr.application.serialised.responses.ReserveDetailsResponse;
 import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.ForbiddenException;
@@ -203,5 +204,9 @@ public class TicketReservation {
         } else {
             return null;
         }
+    }
+
+    public ReserveDetailsResponse getReserveDetailsResponse() {
+        return new ReserveDetailsResponse(section.getSection(), seatNum, price);
     }
 }

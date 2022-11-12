@@ -1380,4 +1380,15 @@ public class TickrController {
 
         groupDeny(session, new GroupDenyRequest(request.inviteId));
     }   
+
+    public ReserveDetailsResponse getReserveDetails (ModelSession session, Map<String, String> params) {
+        if (params.get("reserve_id") == null) {
+            throw new BadRequestException("Missing reserve ID!");
+        }
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(params.get("reserve_id")))
+                .orElseThrow(() -> new ForbiddenException("Ticket reservation does not exist!"));
+        
+        return reserve.getReserveDetailsResponse();
+    }
 }
