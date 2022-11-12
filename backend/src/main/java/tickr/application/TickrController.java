@@ -1309,4 +1309,47 @@ public class TickrController {
             session.remove(i);
         }
     }
+
+    public void groupRemoveMember (ModelSession session, GroupRemoveMemberRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.authToken == null) {
+            throw new BadRequestException("Invalid auth token!");
+        }
+        if (request.email == null || !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid Email!");
+        }
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new ForbiddenException("Group does not exist!"));
+
+        User leader = authenticateToken(session, request.authToken);
+        if (!leader.equals(group.getLeader())) {
+            throw new BadRequestException("Only the group leader can remove members!");
+        }
+
+        User removeUser = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException("User with email does not exist!"));
+        group.removeUser(removeUser);
+    }
+
+    public void groupCancel (ModelSession session, GroupCancelRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.authToken == null) {
+            throw new BadRequestException("Invalid auth token!");
+        }
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new ForbiddenException("Group does not exist!"));
+
+        User leader = authenticateToken(session, request.authToken);
+
+        if (!leader.equals(group.getLeader())) {
+            throw new BadRequestException("Only the group leader can cancel the group!");
+        }
+        session.remove(group);
+    }
 }

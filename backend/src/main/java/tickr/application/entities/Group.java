@@ -2,6 +2,7 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.server.exceptions.BadRequestException;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
@@ -183,7 +184,7 @@ public class Group {
     }
     
     public List<String> getAvailableReserves(User host) {
-        return  host.equals(this.getLeader()) 
+        return  host.equals(leader) 
         ? ticketReservations.stream()
                 .filter(t -> t.getInvitation() == null && !t.isGroupAccepted())
                 .map(TicketReservation::getId)
@@ -192,4 +193,16 @@ public class Group {
         : null;
     }
 
+    public void removeUser(User user) {
+        if (!users.contains(user)) {
+            throw new BadRequestException("User is not a part of this group!");
+        } else {
+            users.remove(user);
+        }
+        for (TicketReservation t : ticketReservations) {
+            if (t.getUser().equals(user)) {
+                t.removeUserFromGroup(leader);
+            }
+        }
+    }
 }

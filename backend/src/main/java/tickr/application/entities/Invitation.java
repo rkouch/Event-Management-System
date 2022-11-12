@@ -66,6 +66,7 @@ public class Invitation {
         group.acceptInvitation(this, user);
         ticketReservation.acceptInvitation(user);
         user.addReservation(ticketReservation);
+        user.addGroup(group);
     }
 
     public void denyInvitation() {

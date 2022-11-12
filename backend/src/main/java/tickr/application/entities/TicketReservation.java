@@ -186,4 +186,9 @@ public class TicketReservation {
             return null;
         } 
     }
+
+    public void removeUserFromGroup(User leader) {
+        this.groupAccepted = false;
+        this.user = leader;
+    }
 }
