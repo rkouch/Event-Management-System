@@ -107,6 +107,8 @@ public class Server {
         post("/api/group/deny", TickrController::groupDeny, GroupDenyRequest.class);
         get("/api/group/details", TickrController::groupDetails);
 
+        get("/api/recommendations/event", TickrController::recommendEventEvent);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
