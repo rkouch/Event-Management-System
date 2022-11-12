@@ -3,8 +3,8 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import tickr.application.recommendations.SparseVector;
 import tickr.application.serialised.SerializedLocation;
-import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
@@ -22,7 +22,6 @@ import tickr.util.Utils;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -72,6 +71,9 @@ public class Event {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<Comment> comments;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "termId.event", cascade = CascadeType.REMOVE)
+    private Set<TfIdf> tfIdfs = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<SeatingPlan> seatingPlans;
@@ -562,5 +564,31 @@ public class Event {
 
         return Stream.concat(nameMap.entrySet().stream(), descMap.entrySet().stream())
                 .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingLong(Map.Entry::getValue)));
+    }
+
+    public SparseVector<String> getTfIdfVector (int numDocuments) {
+        var keys = tfIdfs.stream().map(TfIdf::getTermString).collect(Collectors.toList());
+        var values = tfIdfs.stream().map(t -> t.getTfIdf(numDocuments)).collect(Collectors.toList());
+
+        return new SparseVector<>(keys, values).normalised();
+    }
+
+    public void setTfIdfs (List<TfIdf> tfIdfs) {
+        this.tfIdfs.clear();
+        this.tfIdfs.addAll(tfIdfs);
+    }
+
+    public SparseVector<String> getTagVector () {
+        return new SparseVector<>(tags.stream().map(Tag::getTags).collect(Collectors.toList()), Collections.nCopies(tags.size(), 1.0))
+                .normalised();
+    }
+
+    public SparseVector<String> getCategoryVector () {
+        return new SparseVector<>(categories.stream().map(Category::getCategory).collect(Collectors.toList()), Collections.nCopies(categories.size(), 1.0))
+                .normalised();
+    }
+
+    public double getDistance (Event other) {
+        return getLocation().getDistance(other.getLocation());
     }
 }

@@ -36,6 +36,10 @@ public class TfIdf {
         return termId.getTerm();
     }
 
+    public String getTermString () {
+        return getTerm().getTerm();
+    }
+
     @Embeddable
     private static class TermId implements Serializable {
         @ManyToOne(fetch = FetchType.LAZY)

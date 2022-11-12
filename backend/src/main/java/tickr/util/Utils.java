@@ -36,4 +36,15 @@ public class Utils {
                 .filter(Predicate.not(String::isBlank))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
+
+    public static double getTfIdf (int termCount, int documentCount, int numDocuments) {
+        assert documentCount > 0;
+
+        return Math.log10(termCount + 1) * Math.log10((double)numDocuments / documentCount);
+    }
+
+    public static double getIdf (int documentCount, int numDocuments) {
+        assert documentCount > 0;
+        return Math.log10((double) numDocuments / documentCount);
+    }
 }

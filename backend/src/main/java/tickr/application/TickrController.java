@@ -12,6 +12,7 @@ import tickr.application.apis.location.LocationPoint;
 import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
+import tickr.application.recommendations.RecommenderEngine;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.*;
@@ -24,6 +25,7 @@ import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+import tickr.util.Pair;
 import tickr.util.Utils;
 
 import java.time.*;
@@ -349,6 +351,7 @@ public class TickrController {
         }
 
         event.setLocation(location);
+        RecommenderEngine.forceRecalculate(session); // TODO
 
         return new CreateEventResponse(event.getId().toString());
     }
@@ -494,6 +497,8 @@ public class TickrController {
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
+
+        RecommenderEngine.forceRecalculate(session); // TODO
         return;
     }
 
@@ -552,6 +557,7 @@ public class TickrController {
         event.getAdmins().remove(newHost);
         event.addAdmin(oldHost);
         event.setHost(newHost);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
@@ -633,6 +639,7 @@ public class TickrController {
         }
         event.onDelete(session);
         session.remove(event);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
@@ -1283,6 +1290,43 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
 
         return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getUserDetails(), group.getAvailableReserves(host));
+    }
+
+    public RecommenderResponse recommendEventEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var event = session.getById(Event.class, parseUUID(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.equals(event))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateSimilarity(session, event, e)))
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, session.getAll(Event.class).size() - 1);
     }
 
     public void clearDatabase (ModelSession session, Object request) {

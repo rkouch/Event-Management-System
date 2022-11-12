@@ -41,6 +41,7 @@ public class TestTfIdf {
 
         session = model.makeSession();
         authToken = controller.userRegister(session, TestHelper.makeRegisterRequest()).authToken;
+        session = TestHelper.commitMakeSession(model, session);
     }
 
     @AfterEach
@@ -62,8 +63,8 @@ public class TestTfIdf {
                 .withDescription("apple apPLe cOOkIe bear")
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
-        RecommenderEngine.forceRecalculate(session);
-        session = TestHelper.commitMakeSession(model, session);
+        //RecommenderEngine.forceRecalculate(session);
+        //session = TestHelper.commitMakeSession(model, session);
 
         var terms = Set.of("test", "event", "apple", "cookie", "bear");
         var totalWords = 6;
@@ -110,8 +111,8 @@ public class TestTfIdf {
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         logger.info("After event creation!");
-        RecommenderEngine.forceRecalculate(session);
-        session = TestHelper.commitMakeSession(model, session);
+        //RecommenderEngine.forceRecalculate(session);
+        //session = TestHelper.commitMakeSession(model, session);
         logger.info("After recalculation!");
         var totalWords1 = 6;
         var totalWords2 = 4;
