@@ -2,7 +2,7 @@ package tickr.application.entities;
 
 import jakarta.persistence.*;
 import tickr.application.serialised.responses.TicketViewResponse;
-import tickr.application.serialised.responses.GroupDetailsResponse.Users;
+import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
@@ -141,7 +141,11 @@ public class Ticket {
         this.group = group;
     }
 
-    public Users createUsersDetails() {
-        return new Users(user.getId().toString(), email, section.getSection(), seatNumber, true);
+    // public Users createUsersDetails() {
+    //     return new Users(user.getId().toString(), email, section.getSection(), seatNumber, true);
+    // }
+
+    public GroupMember createGroupMemberDetails() {
+        return new GroupMember(user.getEmail(), section.getSection(), seatNumber, true);
     }
 }

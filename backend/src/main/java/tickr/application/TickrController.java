@@ -1160,11 +1160,10 @@ public class TickrController {
         }
 
         TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.hostReserveId))
-        .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
+                .orElseThrow(() -> new ForbiddenException("Reserve ID does not exist!"));
 
         Group group = new Group(user, ZonedDateTime.now(ZoneId.of("UTC")), 1, request.getTicketReservations(session, reserve));
 
-        
         session.save(group);
         user.addGroup(group);
         user.addOwnedGroup(group);
@@ -1213,29 +1212,35 @@ public class TickrController {
 
         User user = authenticateToken(session, request.authToken);
 
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new BadRequestException("Group ID does not exist!"));
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.reserveId))
+                .orElseThrow(() -> new BadRequestException("Reserve ID does not exist!"));
+
+        if (reserve.isGroupAccepted()) {
+            throw new BadRequestException("Cannot send invitation for a reserve ID that has been accepted!");
+        }
+
         User inviteUser = session.getByUnique(User.class, "email", request.email)
                 .orElseThrow(() -> new BadRequestException("User with email does not exist!"));
         if (user.equals(inviteUser)) {
             throw new BadRequestException("Host cannot send invite to themself!");
         }
 
-        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
-                .orElseThrow(() -> new BadRequestException("Invalid group ID!"));
-
-        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(request.reserveId))
-                .orElseThrow(() -> new BadRequestException("Invalid reserve ID!"));
-
         reserve.setExpiry(ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(24)));
 
         Invitation invitation;
         if (reserve.getInvitation() == null) {
-            invitation = new Invitation(group, reserve);
+            invitation = new Invitation(group, reserve, inviteUser);
             session.save(invitation);
-            group.addInvitation(invitation);
-            reserve.setInvitation(invitation);
+            invitation.handleInvitation(group, reserve, inviteUser);
         } else {
             invitation = session.getByUnique(Invitation.class, "ticketReservation", reserve)
                     .orElseThrow(() -> new BadRequestException("Invitation does not exist for this reserve ID!"));
+            if (!invitation.getUser().equals(inviteUser)) {
+                throw new BadRequestException("Invitation has already been sent to another user!");
+            }
         }
 
         // logger.info("{}", invitation.getId().toString());
@@ -1261,10 +1266,10 @@ public class TickrController {
     }
     
     public void groupDeny(ModelSession session, GroupDenyRequest request) {
-        if (request.invideId == null) {
+        if (request.inviteId == null) {
             throw new BadRequestException("Invalid invite ID!");
         }
-        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.invideId))
+        Invitation invitation = session.getById(Invitation.class, UUID.fromString(request.inviteId))
                 .orElseThrow(() -> new BadRequestException("Invitation does not exist for this invite ID!"));
 
         invitation.denyInvitation();
@@ -1282,7 +1287,7 @@ public class TickrController {
         Group group = session.getById(Group.class, UUID.fromString(params.get("group_id")))
                 .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
 
-        return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getUserDetails(), group.getAvailableReserves(host));
+        return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getGroupMemberDetails(), group.getPendingInviteDetails(), group.getAvailableReserves(host));
     }
 
     public void clearDatabase (ModelSession session, Object request) {
@@ -1308,5 +1313,82 @@ public class TickrController {
         for (var i : session.getAll(tClass)) {
             session.remove(i);
         }
+    }
+
+    public void groupRemoveMember (ModelSession session, GroupRemoveMemberRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.authToken == null) {
+            throw new BadRequestException("Invalid auth token!");
+        }
+        if (request.email == null || !EMAIL_REGEX.matcher(request.email.trim().toLowerCase()).matches()) {
+            throw new BadRequestException("Invalid Email!");
+        }
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new ForbiddenException("Group does not exist!"));
+
+        User leader = authenticateToken(session, request.authToken);
+        if (!leader.equals(group.getLeader())) {
+            throw new BadRequestException("Only the group leader can remove members!");
+        }
+
+        User removeUser = session.getByUnique(User.class, "email", request.email)
+                .orElseThrow(() -> new ForbiddenException("User with email does not exist!"));
+        group.removeUser(removeUser);
+    }
+
+    public void groupCancel (ModelSession session, GroupCancelRequest request) {
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.authToken == null) {
+            throw new BadRequestException("Invalid auth token!");
+        }
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new ForbiddenException("Group does not exist!"));
+
+        User leader = authenticateToken(session, request.authToken);
+
+        if (!leader.equals(group.getLeader())) {
+            throw new BadRequestException("Only the group leader can cancel the group!");
+        }
+        session.remove(group);
+    }
+
+    public void groupRemoveInvite (ModelSession session, GroupRemoveInviteRequest request) {
+        if (request.authToken == null) {
+            throw new BadRequestException("Invalid auth token!");
+        }
+        if (request.groupId == null) {
+            throw new BadRequestException("Invalid group ID!");
+        }
+        if (request.inviteId == null) {
+            throw new BadRequestException("Invalid invite ID!");
+        }
+
+        User user = authenticateToken(session, request.authToken);
+
+        Group group = session.getById(Group.class, UUID.fromString(request.groupId))
+                .orElseThrow(() -> new ForbiddenException("Group does not exist!"));
+
+        if (!user.equals(group.getLeader())) {
+            throw new BadRequestException("Only the group leader can remove invites!");               
+        }
+
+        groupDeny(session, new GroupDenyRequest(request.inviteId));
+    }   
+
+    public ReserveDetailsResponse getReserveDetails (ModelSession session, Map<String, String> params) {
+        if (params.get("reserve_id") == null) {
+            throw new BadRequestException("Missing reserve ID!");
+        }
+
+        TicketReservation reserve = session.getById(TicketReservation.class, UUID.fromString(params.get("reserve_id")))
+                .orElseThrow(() -> new ForbiddenException("Ticket reservation does not exist!"));
+        
+        return reserve.getReserveDetailsResponse();
     }
 }
