@@ -10,7 +10,6 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
-import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.PurchaseItem;
 import tickr.application.entities.SeatingPlan;
@@ -20,9 +19,9 @@ import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.EventNotificationsRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.AbstractMockPurchaseAPI;
-import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -104,5 +103,7 @@ public class TestEventNotifications {
     }
 
     @Test
-    
+    public void testException(){
+        assertThrows(UnauthorizedException.class, () -> controller.checkEventNotifications(session, new EventNotificationsRequest(UUID.randomUUID().toString(), eventId)));
+    }
 }

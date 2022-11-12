@@ -95,13 +95,11 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
-<<<<<<< HEAD
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<Event> notificationEvents = new HashSet<>();
-=======
+    
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<Invitation> invitations;
->>>>>>> main
 
     public User () {
 

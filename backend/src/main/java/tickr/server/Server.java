@@ -75,6 +75,7 @@ public class Server {
         get("/api/event/search", TickrController::searchEvents);
         delete("/api/event/cancel", TickrController::eventDelete, EventDeleteRequest.class);
         post("/api/event/announce", TickrController::makeAnnouncement, AnnouncementRequest.class);
+        get("/api/event/notifications", TickrController::checkEventNotifications, EventNotificationsRequest.class);
 
         post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
@@ -100,17 +101,6 @@ public class Server {
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
 
-        post("/api/group/create", TickrController::groupCreate, GroupCreateRequest.class);
-        get("/api/groups/get", TickrController::getGroupIds);
-        post("/api/group/invite", TickrController::groupInvite, GroupInviteRequest.class);
-        post("/api/group/accept", TickrController::groupAccept, GroupAcceptRequest.class);
-        post("/api/group/deny", TickrController::groupDeny, GroupDenyRequest.class);
-        get("/api/group/details", TickrController::groupDetails);
-        delete("/api/group/remove", TickrController::groupRemoveMember, GroupRemoveMemberRequest.class);
-        delete("api/group/cancel", TickrController::groupCancel, GroupCancelRequest.class);
-        delete("/api/group/invite/remove", TickrController::groupRemoveInvite, GroupRemoveInviteRequest.class);
-        get("/api/reserve/details", TickrController::getReserveDetails);
-
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
@@ -135,8 +125,6 @@ public class Server {
             paymentAPI.handleWebhookEvent(ctx.controller, ctx.session, ctx.request.body(), sigHeader);
             return new Object();
         }));
-
-        delete("/api/test/clear", TickrController::clearDatabase, Object.class);
     }
 
     /**
