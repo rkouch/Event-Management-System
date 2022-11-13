@@ -126,7 +126,7 @@ public class TestEventCategory {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(0), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -148,7 +148,7 @@ public class TestEventCategory {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(1), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -170,7 +170,7 @@ public class TestEventCategory {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(2), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEvent(session, new CreateEventReqBuilder().build(authToken));
