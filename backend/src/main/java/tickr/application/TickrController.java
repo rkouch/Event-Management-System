@@ -1627,6 +1627,7 @@ public class TickrController {
         var profileVector = RecommenderEngine.buildUserProfile(session, user);
         var eventNum = new AtomicInteger();
         var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.getId().equals(event.getId()))
                 .filter(e -> !e.getHost().equals(user))
                 .filter(Event::isPublished)
                 .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
