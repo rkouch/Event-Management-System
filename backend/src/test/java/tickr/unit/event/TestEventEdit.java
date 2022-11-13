@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -209,14 +208,11 @@ public class TestEventEdit {
 
     @Test 
     public void testEdit () {
-        var logger = LogManager.getLogger();
-        logger.info("Start!");
         var session = model.makeSession();
         var authTokenString = controller.userRegister(session,
         new UserRegisterRequest("test", "first", "last", "test1@example.com",
                 "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        logger.info("Point 1!");
         var authToken = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(authTokenString);
@@ -227,7 +223,6 @@ public class TestEventEdit {
         new UserRegisterRequest("test", "first", "last", "test2@example.com",
                 "Password123!", "2022-04-14")).authToken;
         session = TestHelper.commitMakeSession(model, session);
-        logger.info("Point 2!");
         var authTokenTest = CryptoHelper.makeJWTParserBuilder()
         .build()
         .parseClaimsJws(testAuthTokenString);
@@ -267,16 +262,13 @@ public class TestEventEdit {
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
                                             "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
-        session = TestHelper.commitMakeSession(model, session);
-        logger.info("Point 3!");
+        session = TestHelper.commitMakeSession(model, session);  
         admins.add(idTest);
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", updatedSeats, admins, updateCategories, updateTags, true));
         session = TestHelper.commitMakeSession(model, session);
-        logger.info("Point 4!");
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
-        var newSession = TestHelper.commitMakeSession(model, session);
-        logger.info("Point 5!");
+        var newSession = TestHelper.commitMakeSession(model, session); 
         assertEquals(id, response.host_id);
         assertEquals("update name", response.eventName);
         assertEquals("", response.picture);
@@ -305,7 +297,6 @@ public class TestEventEdit {
 
         assertTrue(response.published);
 
-        logger.info("Point 6!");
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", null, admins, updateCategories, updateTags, false)));
         var newSession1 = TestHelper.commitMakeSession(model, newSession);
@@ -315,7 +306,6 @@ public class TestEventEdit {
         assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", updatedSeats, admins, updateCategories, updateTags, false)));
         TestHelper.commitMakeSession(model, newSession2);
-        logger.info("Point 7!");
     }
 
     @Test

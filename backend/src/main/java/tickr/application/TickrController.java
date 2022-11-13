@@ -700,7 +700,7 @@ public class TickrController {
                     .registerPurchaseItem(session, builder, orderId, user, i.firstName, i.lastName, i.email);
         }
 
-        return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)));
+        return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)).getRedirectUrl());
     }
 
     public void reservationCancel (ModelSession session, ReserveCancelRequest request) {
@@ -719,12 +719,12 @@ public class TickrController {
         }
     }
 
-    public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
+    public void ticketPurchaseSuccess (ModelSession session, String reserveId, String paymentId) {
         logger.info("Ticket purchase {} success!", reserveId);
         var purchaseItems = session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId));
         RecommenderEngine.recordInteraction(session, purchaseItems.get(0).getUser(), purchaseItems.get(0).getEvent(), InteractionType.TICKET_PURCHASE);
         for (var i : purchaseItems) {
-            session.save(i.convert(session));
+            session.save(i.convert(session, paymentId));
             //session.remove(i);
         }
     }
@@ -1735,5 +1735,15 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Ticket reservation does not exist!"));
         
         return reserve.getReserveDetailsResponse();
+    }
+
+    public void ticketRefund (ModelSession session, TicketRefundRequest request) {
+        var user = authenticateToken(session, request.authToken);
+
+        var ticket = session.getById(Ticket.class, parseUUID(request.ticketId))
+                .orElseThrow(() -> new ForbiddenException("Invalid ticket id!"));
+
+        ticket.refund(user);
+        session.remove(ticket);
     }
 }

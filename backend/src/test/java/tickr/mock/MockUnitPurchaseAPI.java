@@ -21,7 +21,7 @@ public class MockUnitPurchaseAPI extends AbstractMockPurchaseAPI {
     @Override
     protected void onSuccess (Order order) {
         var session = model.makeSession();
-        controller.ticketPurchaseSuccess(session, order.getReserveId());
+        controller.ticketPurchaseSuccess(session, order.getReserveId(), order.getPayment().getId());
         session.commit();
         session.close();
     }

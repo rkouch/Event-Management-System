@@ -5,15 +5,23 @@ import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
+import com.stripe.param.RefundCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tickr.application.TickrController;
+import tickr.application.entities.PurchaseItem;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
+import tickr.util.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class StripeAPI implements IPurchaseAPI {
     static final Logger logger = LogManager.getLogger();
@@ -33,17 +41,23 @@ public class StripeAPI implements IPurchaseAPI {
     }
 
     @Override
-    public String registerOrder (IOrderBuilder builder) {
+    public PurchaseResult registerOrder (IOrderBuilder builder) {
         var session = ((PaymentSessionBuilder)builder).build();
 
         var url = session.getUrl();
         logger.info("Created stripe session with url {}!", url);
-        return url;
+
+        var paymentIntent = session.getPaymentIntent();
+        for (var i : ((PaymentSessionBuilder)builder).getPurchaseItems()) {
+            i.setPaymentDetails(paymentIntent);
+        }
+
+        return new PurchaseResult(url, Map.of());
     }
 
     @Override
     public void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader) {
-        logger.info("Webhook event: \n{}", requestBody);
+        logger.debug("Webhook event: \n{}", requestBody);
         Event event = null;
         try {
             event = Webhook.constructEvent(requestBody, sigHeader, webhookSecret);
@@ -52,6 +66,8 @@ public class StripeAPI implements IPurchaseAPI {
         } catch (SignatureVerificationException e) {
             throw new BadRequestException("Invalid signature!");
         }
+
+        logger.info("Received Stripe webhook event \"{}\"!", event.getType());
 
         if ("checkout.session.completed".equals(event.getType())) {
             event.getDataObjectDeserializer()
@@ -67,7 +83,10 @@ public class StripeAPI implements IPurchaseAPI {
         }
 
         var orderId = metadata.get("reserve_id");
-        controller.ticketPurchaseSuccess(session, orderId);
+
+        var paymentIntent = stripeSession.getPaymentIntent();
+
+        controller.ticketPurchaseSuccess(session, orderId, paymentIntent);
     }
 
 
@@ -78,20 +97,37 @@ public class StripeAPI implements IPurchaseAPI {
         }*/
     }
 
+
+
     @Override
     public String getSignatureHeader () {
         return "Stripe-Signature";
+    }
+
+    @Override
+    public void refundItem (String refundId, long refundAmount) {
+        try {
+           Refund.create(RefundCreateParams.builder()
+                    .setPaymentIntent(refundId)
+                    .setAmount(refundAmount)
+                    .build());
+        } catch (StripeException e) {
+            throw new RuntimeException("Refund failed!", e);
+        }
     }
 
     private static class PaymentSessionBuilder implements IOrderBuilder {
         SessionCreateParams.Builder paramsBuilder;
         String orderId;
 
+        private List<PurchaseItem> purchaseItems;
+
         public PaymentSessionBuilder (String orderId) {
             logger.debug("Created builder!");
             paramsBuilder = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT);
             this.orderId = orderId;
+            purchaseItems = new ArrayList<>();
         }
 
         @Override
@@ -107,7 +143,7 @@ public class StripeAPI implements IPurchaseAPI {
                                     .build())
                             .build())
                     .build());
-
+            purchaseItems.add(lineItem.getPurchaseItem());
             return this;
         }
 
@@ -127,6 +163,10 @@ public class StripeAPI implements IPurchaseAPI {
             } catch (StripeException e) {
                 throw new RuntimeException("Stripe exception while making checkout session!", e);
             }
+        }
+
+        public List<PurchaseItem> getPurchaseItems () {
+            return purchaseItems;
         }
     }
 }
