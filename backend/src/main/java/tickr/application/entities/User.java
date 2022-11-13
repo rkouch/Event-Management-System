@@ -94,6 +94,9 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "notificationMembers", cascade = {})
+    private Set<Event> notificationEvents = new HashSet<>();
+    
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<UserInteraction> interactions;
 
@@ -316,7 +319,7 @@ public class User {
         this.tokens = tokens;
     }
 
-    private boolean doReminders () {
+    public boolean doReminders () {
         return reminders;
     }
 
@@ -352,6 +355,10 @@ public class User {
         if (settings.reminders != null) {
             setReminders(settings.reminders);
         }
+    }
+
+    public Set<Event> getNotificationEvents () {
+        return notificationEvents;
     }
 
     public ViewProfileResponse getProfile () {
@@ -472,6 +479,18 @@ public class User {
 
     public void addReservation(TicketReservation t) {
         reservations.add(t);
+    }
+
+    public void editEventNotificaitons(ModelSession session, Event event, Boolean notifications) {
+        if (notifications) {
+            if (!notificationEvents.contains(event)) {
+                notificationEvents.add(event);
+            }
+        } else {
+            if (notificationEvents.contains(event)) {
+                notificationEvents.remove(event);
+            }
+        }
     }
 
     public void addInvitation(Invitation i) {

@@ -8,12 +8,14 @@ import tickr.CreateEventReqBuilder;
 import tickr.TestHelper;
 import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
+import tickr.application.apis.email.IEmailAPI;
 import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.*;
 import tickr.mock.AbstractMockPurchaseAPI;
+import tickr.mock.MockEmailAPI;
 import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
 import tickr.persistence.DataModel;
@@ -55,6 +57,8 @@ public class TestTicketRefund {
         purchaseAPI = new MockUnitPurchaseAPI(controller, model);
         purchaseAPI.addCustomer("test_customer", 20);
         ApiLocator.addLocator(IPurchaseAPI.class, () -> purchaseAPI);
+
+        ApiLocator.addLocator(IEmailAPI.class, () -> new MockEmailAPI());
 
         startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
@@ -102,6 +106,7 @@ public class TestTicketRefund {
         model.cleanup();
         ApiLocator.clearLocator(IPurchaseAPI.class);
         ApiLocator.clearLocator(ILocationAPI.class);
+        ApiLocator.clearLocator(IEmailAPI.class);
     }
 
     @Test
