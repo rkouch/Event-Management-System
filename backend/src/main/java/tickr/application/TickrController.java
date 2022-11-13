@@ -480,11 +480,18 @@ public class TickrController {
             throw new BadRequestException("Invalid seating details!");
         }
 
-        event.makeEventNotification(user, "Event Detail Changes");
-
         // if (event.hasTicketsBeenSold() && request.getSeatingDetails()!= null) {
         //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
         // }
+        if (event.getEventStart().toString() != request.getStartDate() || event.getEventEnd().toString() != request.getEndDate()) {
+            String notification = String.format("Event dates has changed from %s -> %s to %s -> %s\n",
+                event.getEventStart().toString(), event.getEventEnd().toString(), request.getStartDate(), request.getEndDate());
+            if (event.getEventDescription() != request.getDescription()) {
+                String notification2 = String.format("Event description has changed: %s", request.getDescription());
+                notification.concat(notification2);
+            }
+            event.makeEventChangeNotification(user, notification);
+        }
 
         if (request.picture == null) {
             event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
@@ -496,6 +503,9 @@ public class TickrController {
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
+
+
+
         return;
     }
 
@@ -638,7 +648,7 @@ public class TickrController {
             i.getNotificationEvents().remove(event);
         }
 
-        event.makeEventNotification(user, "Event Cancellation");
+        event.makeEventCancelNotification(user);
 
         event.onDelete(session);
         session.remove(event);

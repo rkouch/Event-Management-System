@@ -564,30 +564,34 @@ public class Event {
         }
     }
 
-    public void makeEventNotification(User user, String notification) {
+    public void makeEventCancelNotification(User user) {
+        if (!userIsPrivileged(user)) {
+            throw new ForbiddenException("You are not allowed to make a notification!");
+        }
+        var seen = new HashSet<>();
+
+        for (var i : tickets) {
+            if (!seen.contains(i.getUser().getId())) {
+                EmailHelper.sendEventCancellationNotification(user, this, i.getUser());
+                seen.add(i.getUser().getId());
+            }
+        }
+    }
+
+    public void makeEventChangeNotification(User user, String notification) {
         if (notification == null || notification.equals("")) {
             throw new BadRequestException("Empty notification!");
         }
-
         if (!userIsPrivileged(user)) {
             throw new ForbiddenException("You are not allowed to make a notification!");
         }
 
         var seen = new HashSet<>();
 
-        if (notification.equals("Event Cancellation")) {
-            for (var i : tickets) {
-                if (!seen.contains(i.getUser().getId())) {
-                    EmailHelper.sendEventNotification(user, this, i.getUser(), notification);
-                    seen.add(i.getUser().getId());
-                }
-            }
-        } else {
-            for (var i : notificationMembers) {
-                if (!seen.contains(i)) {
-                    EmailHelper.sendEventNotification(user, this, i, notification);
-                    seen.add(i);
-                }
+        for (var i : notificationMembers) {
+            if (!seen.contains(i)) {
+                EmailHelper.sendEventChangeNotification(user, this, i, notification);
+                seen.add(i);
             }
         }
     }

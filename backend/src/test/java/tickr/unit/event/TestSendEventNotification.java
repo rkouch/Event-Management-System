@@ -17,7 +17,6 @@ import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.requests.EventDeleteRequest;
 import tickr.application.serialised.requests.EventNotificationsUpdateRequest;
-import tickr.application.serialised.requests.SendEventNotificationRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.mock.MockEmailAPI;
 import tickr.mock.MockLocationApi;
@@ -128,8 +127,8 @@ public class TestSendEventNotification {
 
         var msg = emailAPI.getSentMessages().get(0);
         assertEquals("test@example.com", msg.getToEmail());
-        assertEquals("Test Event Name Changes", msg.getSubject());
-        assertTrue(msg.getBody().contains("Event Cancellation"));
+        assertEquals("Test Event Name Cancellation", msg.getSubject());
+        assertTrue(msg.getBody().contains("has cancelled"));
     }
 
     @Test
@@ -143,7 +142,7 @@ public class TestSendEventNotification {
         var msg = emailAPI.getSentMessages().get(0);
         assertEquals("test@example.com", msg.getToEmail());
         assertEquals("Test Event Name Changes", msg.getSubject());
-        assertTrue(msg.getBody().contains("Event Detail Changes"));
+        assertTrue(msg.getBody().contains("made a change in"));
     }
 
     @Test
