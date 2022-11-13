@@ -497,9 +497,21 @@ public class TickrController {
             throw new BadRequestException("Invalid seating details!");
         }
 
-        // if (event.hasTicketsBeenSold() && request.getSeatingDetails()!= null) {
+        // if (event.hasTickdetsBeenSold() && request.getSeatingDetails()!= null) {
         //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
         // }
+        String notification = "";
+        if ((request.getStartDate() != null || request.getEndDate() != null) && (!event.getEventStart().equals(request.getStartDate()) || !event.getEventEnd().equals(request.getEndDate()))) {
+            notification = String.format("Event dates has changed from %s -> %s to %s -> %s\n",
+                event.getEventStart().toString(), event.getEventEnd().toString(), request.getStartDate(), request.getEndDate());
+        }
+        if (request.getDescription() != null && !event.getEventDescription().equals(request.getDescription())) {
+            String notification2 = String.format("Event description has changed: %s", request.getDescription());
+            notification.concat(notification2);
+        }
+        if (!notification.equals("") && !notification.equals(null)) {
+            event.makeEventChangeNotification(user, notification);
+        }
 
         if (request.picture == null) {
             if (request.spotifyPlaylist == null) {
@@ -669,6 +681,13 @@ public class TickrController {
         if (!event.getHost().equals(user)) {
             throw new ForbiddenException("User is not the host of this event!"); 
         }
+
+        for (User i : event.getNotificationMembers()) {
+            i.getNotificationEvents().remove(event);
+        }
+
+        event.makeEventCancelNotification(user);
+
         event.onDelete(session);
         session.remove(event);
         RecommenderEngine.forceRecalculate(session); // TODO
@@ -698,6 +717,11 @@ public class TickrController {
 
         var ticketDatetime = request.getTicketTime();
         var eventId = parseUUID(request.eventId);
+        Event event = session.getById(Event.class, UUID.fromString(request.eventId))
+        .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+        
+        event.editNotificationMembers(session, user, user.doReminders());
+        user.editEventNotificaitons(session, event, user.doReminders());
 
         return session.getById(Event.class, eventId)
                 .map(e -> request.ticketDetails.stream()
@@ -707,6 +731,7 @@ public class TickrController {
                         .collect(Collectors.toList()))
                 .map(TicketReserve.Response::new)
                 .orElseThrow(() -> new ForbiddenException("Invalid event!"));
+
     }
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
@@ -1762,6 +1787,47 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Ticket reservation does not exist!"));
         
         return reserve.getReserveDetailsResponse();
+    }
+
+     // changes the notifcations for the user for an event
+     public void eventNotificationsUpdate (ModelSession session, EventNotificationsUpdateRequest request) {
+        if (request.authToken == null) {
+            throw new UnauthorizedException("Missing auth token!");
+        }
+
+        Event event = session.getById(Event.class, parseUUID(request.eventId))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+        var user = authenticateToken(session, request.authToken);
+
+        event.editNotificationMembers(session, user, request.notifications);
+        user.editEventNotificaitons(session, event, request.notifications);
+    }
+
+    // checks the notifications of user for an event
+    public EventNotificationsResponse checkEventNotifications (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event_id!");
+        }
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Unknown event"));
+
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        } else {
+            throw new BadRequestException("Missing auth token!");
+        }
+        var notification = user.doReminders();
+
+        if (event.getNotificationMembers().contains(user)) {
+            if (user.getNotificationEvents().contains(event)) {
+                notification = true;
+            } 
+        } else {
+            notification = false;
+        }
+
+        return new EventNotificationsResponse(notification);
     }
 
     public void ticketRefund (ModelSession session, TicketRefundRequest request) {

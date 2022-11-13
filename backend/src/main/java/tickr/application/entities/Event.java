@@ -80,6 +80,12 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<SeatingPlan> seatingPlans;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "notification_members",
+            joinColumns = {@JoinColumn(name = "event_id")},
+            inverseJoinColumns = {@JoinColumn(name = "user_id")})
+    private Set<User> notificationMembers = new HashSet<>();
+
     @Column(name = "event_name")
     private String eventName;
 
@@ -293,6 +299,10 @@ public class Event {
 
     public void setSeatingPlans(Set<SeatingPlan> seatingPlans) {
         this.seatingPlans = seatingPlans;
+    }
+
+    public Set<User> getNotificationMembers() {
+        return notificationMembers;
     }
 
     private boolean userHasTicket (User user) {
@@ -591,6 +601,50 @@ public class Event {
         }
     }
 
+    public void makeEventCancelNotification(User user) {
+        if (!userIsPrivileged(user)) {
+            throw new ForbiddenException("You are not allowed to make a notification!");
+        }
+        var seen = new HashSet<>();
+
+        for (var i : tickets) {
+            if (!seen.contains(i.getUser().getId())) {
+                EmailHelper.sendEventCancellationNotification(user, this, i.getUser());
+                seen.add(i.getUser().getId());
+            }
+        }
+    }
+
+    public void makeEventChangeNotification(User user, String notification) {
+        if (notification == null || notification.equals("")) {
+            throw new BadRequestException("Empty notification!");
+        }
+        if (!userIsPrivileged(user)) {
+            throw new ForbiddenException("You are not allowed to make a notification!");
+        }
+
+        var seen = new HashSet<>();
+
+        for (var i : notificationMembers) {
+            if (!seen.contains(i)) {
+                EmailHelper.sendEventChangeNotification(user, this, i, notification);
+                seen.add(i);
+            }
+        }
+    }
+
+    public void editNotificationMembers(ModelSession session, User user, Boolean notifications) {
+        if (notifications) {
+            if (!notificationMembers.contains(user)) {
+                notificationMembers.add(user);
+            }
+        } else {
+            if (notificationMembers.contains(user)) {
+                notificationMembers.remove(user);
+            }
+        }
+    }
+    
     public Map<String, Long> getWordCounts () {
         var nameMap = Utils.toWordsMap(eventName);
         var descMap = Utils.toWordsMap(eventDescription);

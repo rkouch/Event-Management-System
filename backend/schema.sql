@@ -74,6 +74,14 @@ create table `user_groups` (
     foreign key (leader_id) references users(id)
 );
 
+create table notification_members (
+    event_id     varchar(36) not null,
+    user_id      varchar(36) not null,
+    primary key (event_id, user_id),
+    foreign key (event_id) references `events` (id),
+    foreign key (user_id) references users(id)     
+)
+
 create table seating_plan (
     id          varchar(36) not null,
     event_id     varchar(36) not null,
