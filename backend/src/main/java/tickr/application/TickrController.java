@@ -1634,4 +1634,8 @@ public class TickrController {
         
         return reserve.getReserveDetailsResponse();
     }
+
+    public void ticketRefund (ModelSession session, TicketRefundRequest request) {
+
+    }
 }
