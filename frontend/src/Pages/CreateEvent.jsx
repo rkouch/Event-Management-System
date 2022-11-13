@@ -169,6 +169,11 @@ export default function CreateEvent({}) {
     }
   };
 
+  // Handle disable from start date
+  function disableStartDate (date) {
+    return (date < start.start)
+  }
+  
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
     setFieldInState("error", true, end, setEndValue);
@@ -654,6 +659,7 @@ export default function CreateEvent({}) {
                             inputFormat="DD/MM/YYYY HH:mm"
                             renderInput={(params) => <TextField {...params} />}
                             disablePast = {true}
+                            shouldDisableDate={disableStartDate}
                           />
                         </ContrastInputWrapper>
                         <FormHelperText>{end.errorMsg}</FormHelperText>

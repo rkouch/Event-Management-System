@@ -308,7 +308,7 @@ export default function ViewEvent({}) {
                         <Grid item xs={11}>
                           <Typography
                             sx={{
-                              fontSize: 20,
+                              fontSize: 15,
                               color: "#AE759F",
                             }}
                           >
@@ -537,10 +537,9 @@ export default function ViewEvent({}) {
                       </Box>
                     : <></>
                   }
-                  <br/>
-                  {(isValidSpotifyURL('https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=287439ed80a94727')) 
-                    ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
-                        <SpotifyPlayer link={'https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=287439ed80a94727'}/>
+                  {(isValidSpotifyURL(event.spotify_playlist)) 
+                    ? <Box sx={{width: '100%', pt: 4, height: 500, borderRadius: 8}}>
+                        <SpotifyPlayer link={event.spotify_playlist}/>
                       </Box>
                     : <></>
                   }

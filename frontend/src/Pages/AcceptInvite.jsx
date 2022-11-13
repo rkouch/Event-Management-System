@@ -105,6 +105,7 @@ export default function AcceptInvite({}) {
       const reserveSearchParams = new URLSearchParams(reserveDetailsBody)
       const reserveResponse = await apiFetch('GET', `/api/reserve/details?${reserveSearchParams}`, null)
       setReserveDetails(reserveResponse)
+      getEventData(reserveResponse.event_id, setEvent)
     } catch (e) {
       console.log(e)
     }

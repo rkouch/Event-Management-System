@@ -28,6 +28,7 @@ import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
+import { Tooltip } from "@mui/material";
 
 
 export default function Login({customNavigateTo=false}) {
@@ -138,14 +139,16 @@ export default function Login({customNavigateTo=false}) {
                     sx={{borderRadius: 2}}
                     endAdornment={
                       <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={(e) => setFieldInState('visibility', !password.visibility, password, setPassword)}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                        >
-                          {password.visibility ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        <Tooltip title={password.visibility ? "Hide password" : "Show Password"}>
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={(e) => setFieldInState('visibility', !password.visibility, password, setPassword)}
+                            onMouseDown={(e) => e.preventDefault()}
+                            edge="end"
+                          >
+                            {password.visibility ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </Tooltip>
                       </InputAdornment>
                     }
                   />

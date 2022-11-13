@@ -205,7 +205,7 @@ export default function EditEvent({}) {
       setEventPicture(event.picture)
       setPublished(event.published)
       setCategories(event.categories)
-      setSpotifyPlaylist('')
+      setSpotifyPlaylist(event.spotify_playlist)
       const currentSeatingDetails = []
       for (const i in event.seating_details) {
         const section = event.seating_details[i]
@@ -247,6 +247,11 @@ export default function EditEvent({}) {
       setFieldInState("errorMsg", "", end, setEndValue);
     }
   };
+
+  // Handle disable from start date
+  function disableStartDate (date) {
+    return (date < start.start)
+  }
 
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
@@ -778,6 +783,7 @@ export default function EditEvent({}) {
                                 inputFormat="DD/MM/YYYY HH:mm"
                                 renderInput={(params) => <TextField {...params} />}
                                 disablePast = {true}
+                                shouldDisableDate={disableStartDate}
                               />
                             </ContrastInputWrapper>
                             <FormHelperText>{end.errorMsg}</FormHelperText>
@@ -1184,7 +1190,7 @@ export default function EditEvent({}) {
                             }
                             onChange={handleSpotifyChange}
                             placeholder="Add Spotify playlist"
-                            value={event.spotifyPlaylist}
+                            value={spotifyPlaylist}
                           />
                         </ContrastInputWrapper>
                         <FormHelperText>{spotifyError}</FormHelperText>

@@ -320,6 +320,7 @@ export const attachFields = (object1, object2) => {
   return object1
 }
 
+// Checks if the provided url is a valid spotify url
 export const isValidSpotifyURL = (link) => {
   try {
     // Check for valid url
@@ -335,3 +336,4 @@ export const isValidSpotifyURL = (link) => {
     return false
   }
 }
+
