@@ -497,7 +497,7 @@ public class TickrController {
             throw new BadRequestException("Invalid seating details!");
         }
 
-        // if (event.hasTicketsBeenSold() && request.getSeatingDetails()!= null) {
+        // if (event.hasTickdetsBeenSold() && request.getSeatingDetails()!= null) {
         //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
         // }
         String notification = "";
@@ -505,7 +505,7 @@ public class TickrController {
             notification = String.format("Event dates has changed from %s -> %s to %s -> %s\n",
                 event.getEventStart().toString(), event.getEventEnd().toString(), request.getStartDate(), request.getEndDate());
         }
-        if (event.getEventDescription() != request.getDescription()) {
+        if (!event.getEventDescription().equals(request.getDescription())) {
             String notification2 = String.format("Event description has changed: %s", request.getDescription());
             notification.concat(notification2);
         }
@@ -1828,6 +1828,8 @@ public class TickrController {
         }
 
         return new EventNotificationsResponse(notification);
+    }
+
     public void ticketRefund (ModelSession session, TicketRefundRequest request) {
         var user = authenticateToken(session, request.authToken);
 

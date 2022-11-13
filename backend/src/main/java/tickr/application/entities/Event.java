@@ -643,6 +643,8 @@ public class Event {
                 notificationMembers.remove(user);
             }
         }
+    }
+    
     public Map<String, Long> getWordCounts () {
         var nameMap = Utils.toWordsMap(eventName);
         var descMap = Utils.toWordsMap(eventDescription);
