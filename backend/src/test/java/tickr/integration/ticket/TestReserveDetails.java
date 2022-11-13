@@ -121,6 +121,7 @@ public class TestReserveDetails {
         assertEquals(1, details.seatNum);
         assertEquals("test_section", details.section);
         assertEquals(1, details.price);
+        assertEquals(eventId, details.eventId);
 
         response = httpHelper.get("/api/reserve/details", Map.of("reserve_id", requestIds.get(1)));
         assertEquals(200, response.getStatus());

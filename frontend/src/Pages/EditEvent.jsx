@@ -510,7 +510,7 @@ export default function EditEvent({}) {
       tags: tags,
       admins: adminList,
       published:published,
-      spotify_playlist: validURL ? spotifyPlaylist : ''
+      spotify_playlist: validURL ? spotifyPlaylist : null
     };
 
     try {

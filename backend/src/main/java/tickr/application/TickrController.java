@@ -12,6 +12,8 @@ import tickr.application.apis.location.LocationPoint;
 import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
+import tickr.application.recommendations.InteractionType;
+import tickr.application.recommendations.RecommenderEngine;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.*;
@@ -24,6 +26,7 @@ import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+import tickr.util.Pair;
 import tickr.util.Utils;
 
 import java.time.*;
@@ -349,6 +352,7 @@ public class TickrController {
         }
 
         event.setLocation(location);
+        RecommenderEngine.forceRecalculate(session); // TODO
 
         return new CreateEventResponse(event.getId().toString());
     }
@@ -494,6 +498,8 @@ public class TickrController {
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
+
+        RecommenderEngine.forceRecalculate(session); // TODO
         return;
     }
 
@@ -511,6 +517,10 @@ public class TickrController {
 
         if (!event.canView(user)) {
             throw new ForbiddenException("Unable to view event!");
+        }
+
+        if (user != null && !event.getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, event, InteractionType.VIEW);
         }
 
         List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
@@ -552,6 +562,7 @@ public class TickrController {
         event.getAdmins().remove(newHost);
         event.addAdmin(oldHost);
         event.setHost(newHost);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
@@ -633,6 +644,7 @@ public class TickrController {
         }
         event.onDelete(session);
         session.remove(event);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
@@ -709,7 +721,9 @@ public class TickrController {
 
     public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
         logger.info("Ticket purchase {} success!", reserveId);
-        for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
+        var purchaseItems = session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId));
+        RecommenderEngine.recordInteraction(session, purchaseItems.get(0).getUser(), purchaseItems.get(0).getEvent(), InteractionType.TICKET_PURCHASE);
+        for (var i : purchaseItems) {
             session.save(i.convert(session));
             //session.remove(i);
         }
@@ -810,6 +824,7 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
 
         var comment = event.addReview(session, user, request.title, request.text, request.rating);
+        RecommenderEngine.recordRating(session, user, event, request.rating);
         //session.save(comment);
 
         return new ReviewCreate.Response(comment.getId().toString());
@@ -869,6 +884,10 @@ public class TickrController {
         var reply = comment.addReply(user, request.reply);
         session.save(reply);
 
+        if (!comment.getEvent().getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, comment.getEvent(), InteractionType.COMMENT);
+        }
+
         return new ReplyCreate.Response(reply.getId().toString());
     }
 
@@ -923,14 +942,17 @@ public class TickrController {
         }
 
         ZonedDateTime beforeDate;
-
-        try {
-            beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Invalid date time string!");
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
         }
 
-        if (beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
+        if (beforeDate != null && beforeDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot find events in the past!");
         }
 
@@ -939,7 +961,54 @@ public class TickrController {
         var numResults = new AtomicInteger();
 
         var eventIds = events.stream()
-                .filter(e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))))
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .filter(e -> e.isPublished())
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        
+        return new UserEventsResponse(eventIds, numResults.get());
+    }
+
+    public UserEventsResponse userEventsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        List<Event> events = session.getAll(Event.class);
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+
+        var eventIds = events.stream()
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
                 .filter(e -> e.isPublished())
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
@@ -988,8 +1057,67 @@ public class TickrController {
         User user = authenticateToken(session, params.get("auth_token"));
         // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
 
+        ZonedDateTime beforeDate;
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
+        }
+
         var numResults = new AtomicInteger();
         var eventIds = user.getStreamHostingEvents()
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        return new EventHostingsResponse(eventIds, numResults.get());
+    }
+
+    public EventHostingsResponse eventHostingsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        User user = authenticateToken(session, params.get("auth_token"));
+        // var eventHostingIds = user.getPaginatedHostedEvents(pageStart, maxResults);
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getStreamHostingEvents()
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
                 .peek(i -> numResults.incrementAndGet())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
@@ -1016,14 +1144,83 @@ public class TickrController {
         if (pageStart < 0 || maxResults <= 0) {
             throw new BadRequestException("Invalid paging values!");
         }
-        var bookings = user.getBookings();
+
+        ZonedDateTime beforeDate;
+        if (params.get("before") != null) {
+            try {
+                beforeDate = ZonedDateTime.parse(params.get("before"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            beforeDate = null;
+        }
+
         var numResults = new AtomicInteger();
-        var paginatedBookings = bookings.stream()
+        var eventIds = user.getTickets().stream()
+                .map(Ticket::getEvent)
+                .filter(beforeDate != null 
+                    ? e -> e.getEventStart().isBefore(beforeDate) && e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isAfter(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .distinct()
                 .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)
                 .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
                 .collect(Collectors.toList());
-        return new CustomerEventsResponse(paginatedBookings, numResults.get());
+
+        
+        return new CustomerEventsResponse(eventIds, numResults.get());
+    }
+
+    public CustomerEventsResponse customerBookingsPast (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new BadRequestException("Missing auth_token!");
+        }
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Invalid paging details!");
+        }
+
+        User user = authenticateToken(session, params.get("auth_token"));
+
+        var pageStart = Integer.parseInt(params.get("page_start"));
+        var maxResults = Integer.parseInt(params.get("max_results"));
+        if (pageStart < 0 || maxResults <= 0) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        ZonedDateTime afterDate;
+        if (params.get("after") != null) {
+            try {
+                afterDate = ZonedDateTime.parse(params.get("after"), DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid date time string!");
+            }
+        } else {
+            afterDate = null;
+        }
+
+        var numResults = new AtomicInteger();
+        var eventIds = user.getTickets().stream()
+                .map(Ticket::getEvent)
+                .filter(afterDate != null 
+                    ? e -> e.getEventStart().isAfter(afterDate) && e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC"))) 
+                    : e -> e.getEventStart().isBefore(ZonedDateTime.now(ZoneId.of("UTC")))
+                )
+                .distinct()
+                .peek(i -> numResults.incrementAndGet())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+
+        
+        return new CustomerEventsResponse(eventIds, numResults.get());
     }
 
     public EventHostingFutureResponse eventHostingFuture (ModelSession session, Map<String, String> params) {
@@ -1096,6 +1293,10 @@ public class TickrController {
                 .orElseThrow(() -> new ForbiddenException("Invalid comment id!"));
 
         comment.react(session, user, request.reactType);
+
+        if (!comment.getEvent().getHost().equals(user)) {
+            RecommenderEngine.recordInteraction(session, user, comment.getEvent(), InteractionType.REACT);
+        }
     }
 
     public void makeAnnouncement (ModelSession session, AnnouncementRequest request) {
@@ -1290,23 +1491,167 @@ public class TickrController {
         return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getGroupMemberDetails(), group.getPendingInviteDetails(), group.getAvailableReserves(host));
     }
 
+    public RecommenderResponse recommendEventEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var event = session.getById(Event.class, parseUUID(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var returnNum = new AtomicInteger();
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.equals(event))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateSimilarity(session, event, e)))
+                .peek(p -> returnNum.getAndIncrement())
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, returnNum.get());
+    }
+
+    public RecommenderResponse recommendUserEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new UnauthorizedException("Missing auth token!");
+        } else if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var user = authenticateToken(session, params.get("auth_token"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var profileVector = RecommenderEngine.buildUserProfile(session, user);
+        var eventNum = new AtomicInteger();
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.getHost().equals(user))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateUserScore(session, e, profileVector)))
+                .peek(p -> eventNum.getAndIncrement())
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, eventNum.get());
+    }
+
+    public RecommenderResponse recommendEventUserEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("auth_token")) {
+            throw new UnauthorizedException("Missing auth token!");
+        } else if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        } else if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var user = authenticateToken(session, params.get("auth_token"));
+        var event = session.getById(Event.class, parseUUID(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var profileVector = RecommenderEngine.buildUserProfile(session, user);
+        var eventNum = new AtomicInteger();
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.getHost().equals(user))
+                .filter(Event::isPublished)
+                .filter(e -> !e.getEventEnd().isBefore(ZonedDateTime.now()))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateUserEventScore(session, e, event, profileVector)))
+                .peek(p -> eventNum.getAndIncrement())
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, eventNum.get());
+    }
+
     public void clearDatabase (ModelSession session, Object request) {
         logger.info("Clearing database!");
-        clearType(session, AuthToken.class);
-        clearType(session, Category.class);
-        clearType(session, Comment.class);
-        clearType(session, Event.class);
-        clearType(session, Group.class);
-        clearType(session, Location.class);
-        clearType(session, PurchaseItem.class);
-        clearType(session, Reaction.class);
-        clearType(session, ResetToken.class);
-        clearType(session, SeatingPlan.class);
-        clearType(session, Tag.class);
-        clearType(session, TestEntity.class);
-        clearType(session, Ticket.class);
-        clearType(session, TicketReservation.class);
-        clearType(session, User.class);
+        session.clear(AuthToken.class);
+        //clearType(session, AuthToken.class);
+        session.clear(Category.class);
+        //clearType(session, Category.class);
+        session.clear(Comment.class);
+        //clearType(session, Comment.class);
+        session.clear(Event.class);
+        //clearType(session, Event.class);
+        session.clear(Group.class);
+        //clearType(session, Group.class);
+        session.clear(Location.class);
+        //clearType(session, Location.class);
+        session.clear(PurchaseItem.class);
+        //clearType(session, PurchaseItem.class);
+        session.clear(Reaction.class);
+        //clearType(session, Reaction.class);
+        session.clear(ResetToken.class);
+        //clearType(session, ResetToken.class);
+        session.clear(SeatingPlan.class);
+        //clearType(session, SeatingPlan.class);
+        session.clear(Tag.class);
+        //clearType(session, Tag.class);
+        session.clear(TestEntity.class);
+        //clearType(session, TestEntity.class);
+        session.clear(Ticket.class);
+        //clearType(session, Ticket.class);
+        session.clear(TicketReservation.class);
+        //clearType(session, TicketReservation.class);
+        session.clear(User.class);
+        //clearType(session, User.class);
+        session.clear(Invitation.class);
+        //clearType(session, Invitation.class);
+        session.clear(DocumentTerm.class);
+        //clearType(session, DocumentTerm.class);
+        session.clear(TfIdf.class);
+        //clearType(session, TfIdf.class);
     }
 
     private <T> void clearType (ModelSession session, Class<T> tClass) {

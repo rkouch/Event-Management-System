@@ -537,12 +537,15 @@ export default function ViewEvent({}) {
                         </TkrButton2>
                       </Box>
                     : <></>
-
                   }
-                  {/* <Spotify link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/> */}
-                  {/* <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
-                    <SpotifyPlayer link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/>
-                  </Box> */}
+                  {(event.spotify_playlist !== null) 
+                    ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
+                        <SpotifyPlayer link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/>
+                      </Box>
+                    : <></>
+                  }
+
+                  
                 </Grid>
               </Grid>
             </EventForm>

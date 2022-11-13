@@ -72,4 +72,12 @@ public class PurchaseItem {
         session.remove(ticketReservation);
 
     }
+
+    public Event getEvent () {
+        return ticketReservation.getSection().getEvent();
+    }
+
+    public User getUser () {
+        return ticketReservation.getUser();
+    }
 }

@@ -421,7 +421,7 @@ export default function CreateEvent({}) {
       tags: tags,
       admins: adminList,
       picture: eventPicture,
-      spotify_playlist: validURL ? spotifyPlaylist : ''
+      spotify_playlist: validURL ? spotifyPlaylist : null
     };
 
     try {
