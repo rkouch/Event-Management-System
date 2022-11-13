@@ -377,6 +377,8 @@ public class Event {
             this.eventDescription = description;
         }
 
+        this.spotifyPlaylist = spotifyPlaylist;
+
         if (categories != null) {
             List<Category> oldCat = session.getAllWith(Category.class, "event", this);
             for (Category cat : oldCat) {
