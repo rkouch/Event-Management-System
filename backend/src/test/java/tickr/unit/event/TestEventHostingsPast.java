@@ -89,9 +89,7 @@ public class TestEventHostingsPast {
                 .withEndDate(endTime)
                 .build(authToken)).event_id;
 
-        session = TestHelper.commitMakeSession(model, session);
-
-        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
         session = TestHelper.commitMakeSession(model, session);
         
@@ -101,10 +99,8 @@ public class TestEventHostingsPast {
                 .withStartDate(startTime2.minusMinutes(2))
                 .withEndDate(endTime2)
                 .build(authToken)).event_id;
-
-        session = TestHelper.commitMakeSession(model, session);
-
-        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        
+        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
         session = TestHelper.commitMakeSession(model, session);
         
@@ -119,7 +115,7 @@ public class TestEventHostingsPast {
         
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.editEvent(session, new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
     }
 

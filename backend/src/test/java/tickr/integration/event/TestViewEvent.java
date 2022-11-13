@@ -81,12 +81,12 @@ public class TestViewEvent {
 
         var eventResponse = httpHelper.post("/api/event/create", new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
-        "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags));
+        "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null));
         assertEquals(200, eventResponse.getStatus());
         event_id = eventResponse.getBody(CreateEventResponse.class).event_id;
 
         var response1 = httpHelper.put("/api/event/edit", new EditEventRequest(event_id, authTokenString, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response1.getStatus());
 
         var response = httpHelper.get("/api/event/view", Map.of("event_id", event_id)).getBody(EventViewResponse.class);

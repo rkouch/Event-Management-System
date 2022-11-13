@@ -91,7 +91,7 @@ public class TestCreateGroup {
         eventId = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, List.of(

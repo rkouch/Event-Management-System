@@ -63,7 +63,7 @@ public class TestEventSearch {
         var eventId = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         searchResponse = makeSearch(0, 100, null);
@@ -79,7 +79,7 @@ public class TestEventSearch {
         var e1 = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(e1, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
@@ -88,7 +88,7 @@ public class TestEventSearch {
         var e2 = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(e2, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         var ids = makeSearch(0, 100,

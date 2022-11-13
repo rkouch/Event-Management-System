@@ -142,7 +142,7 @@ public class TestEventEventRecommendations {
                 .build(authToken2)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(event1, authToken2, null, null, null, null, null,
-                null, null, null, null, null, true));
+                null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         var event2 = controller.createEvent(session, new CreateEventReqBuilder()
                 .withEventName("testing beta")
@@ -150,7 +150,7 @@ public class TestEventEventRecommendations {
                 .build(authToken2)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(event2, authToken2, null, null, null, null, null,
-                null, null, null, null, null, true));
+                null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         var result = controller.recommendEventEvent(session, Map.of("event_id", event1, "page_start", "0", "max_results", "10"));
@@ -208,7 +208,7 @@ public class TestEventEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(0), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -228,7 +228,7 @@ public class TestEventEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(1), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -248,7 +248,7 @@ public class TestEventEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(2), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEvent(session, new CreateEventReqBuilder().build(authToken));

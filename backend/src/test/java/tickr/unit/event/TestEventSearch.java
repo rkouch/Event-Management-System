@@ -97,7 +97,7 @@ public class TestEventSearch {
         var eventId = controller.createEvent(session, new CreateEventReqBuilder().build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         response = makeSearch(0, 100, null);
@@ -120,7 +120,7 @@ public class TestEventSearch {
                     .build(authToken)).event_id);
             session = TestHelper.commitMakeSession(model, session);
             controller.editEvent(session, new EditEventRequest(eventIds.get(eventIds.size() - 1), authToken, null, null, null, null,
-                    null, null, null, null, null, null, true));
+                    null, null, null, null, null, null, true, null));
             session = TestHelper.commitMakeSession(model, session);
         }
 
@@ -237,7 +237,7 @@ public class TestEventSearch {
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(0), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -258,7 +258,7 @@ public class TestEventSearch {
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(1), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         entityIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -279,7 +279,7 @@ public class TestEventSearch {
                 .build(authToken)).event_id);
 
         controller.editEvent(session, new EditEventRequest(entityIds.get(2), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         locationApi.awaitLocations();

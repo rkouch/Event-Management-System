@@ -49,6 +49,7 @@ create table `events` (
     seat_capacity int,
     event_pic varchar(255) not null,
     published boolean not null,
+    spotify_playlist  varchar(255),
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),

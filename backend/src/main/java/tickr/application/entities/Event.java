@@ -7,6 +7,7 @@ import tickr.application.recommendations.EventVector;
 import tickr.application.recommendations.SparseVector;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -107,6 +108,9 @@ public class Event {
 
     private boolean published;
 
+    @Column(name = "spotify_playlist")
+    private String spotifyPlaylist;
+
     public Event() {}
 
     public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
@@ -121,6 +125,21 @@ public class Event {
         this.host = host;
         this.eventPicture = eventPicture;
         this.published = false;
+    }
+
+    public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
+            String eventDescription, Location location, int seatAvailability, String eventPicture, String spotifyPlaylist) {
+        this.location = location;
+        this.eventName = eventName;
+        this.eventStart = eventStart;
+        this.eventEnd = eventEnd;
+        this.eventDescription = eventDescription;
+        this.seatAvailability = seatAvailability;
+        this.seatCapacity = seatAvailability;
+        this.host = host;
+        this.eventPicture = eventPicture;
+        this.published = false;
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     public UUID getId () {
@@ -316,7 +335,7 @@ public class Event {
     }
 
     public void editEvent (EditEventRequest request, ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
-                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published, String spotifyPlaylist) {
         if (eventName != null) {
             this.eventName = eventName; 
         }
@@ -347,6 +366,10 @@ public class Event {
         if (description != null) {
             this.eventDescription = description;
         }
+        if (spotifyPlaylist != null) {
+            this.spotifyPlaylist = spotifyPlaylist;
+        }
+
         if (categories != null) {
             List<Category> oldCat = session.getAllWith(Category.class, "event", this);
             for (Category cat : oldCat) {
@@ -605,5 +628,11 @@ public class Event {
     public EventVector getEventVector (int numDocuments) {
         return new EventVector(getTfIdfVector(numDocuments), getTagVector(), getCategoryVector(),
                 new SparseVector<>(List.of(host.getId().toString()), List.of(Utils.getIdf(host.getHostingEvents().size(), numDocuments))));
+    }
+
+    public EventViewResponse getEventViewResponse (SerializedLocation location, List<EventViewResponse.SeatingDetails> seatingResponse, Set<String> tags, Set<String> categories, Set<String> admins) {
+        return new EventViewResponse(host.getId().toString(), eventName, eventPicture, location, eventStart.format(DateTimeFormatter.ISO_INSTANT), 
+                eventEnd.format(DateTimeFormatter.ISO_INSTANT), eventDescription, seatingResponse,
+                admins, categories, tags, published, seatAvailability, seatCapacity, spotifyPlaylist);
     }
 }

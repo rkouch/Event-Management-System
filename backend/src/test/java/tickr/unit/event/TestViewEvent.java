@@ -25,6 +25,7 @@ import tickr.persistence.HibernateModel;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
 import tickr.util.CryptoHelper;
+import tickr.util.FileHelper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,7 +79,7 @@ public class TestViewEvent {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         session = TestHelper.commitMakeSession(model, session); 
         var finalSession = session;
         assertThrows(BadRequestException.class, () -> controller.eventView(finalSession, Map.of("event_i", event_id)));
@@ -115,7 +116,7 @@ public class TestViewEvent {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
 
         /*controller.editEvent(session, new EditEventRequest(authTokenString, event_id, null, null, null, null,
                 null, null, null, null, null, null, true));*/
@@ -194,12 +195,12 @@ public class TestViewEvent {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                 , "2031-12-03T10:15:30Z",
-                "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         var session1 = TestHelper.commitMakeSession(model, session);
         assertThrows(ForbiddenException.class, () -> controller.eventView(session1, Map.of("event_id", event_id)));
         var session2 = TestHelper.rollbackMakeSession(model, session1);
         controller.editEvent(session2, new EditEventRequest(event_id, authTokenString, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         var session3 = TestHelper.commitMakeSession(model, session2);
         assertDoesNotThrow(() -> controller.eventView(session3, Map.of("event_id", event_id)));
     }
@@ -230,8 +231,53 @@ public class TestViewEvent {
                 "event_id", eventId,
                 "auth_token", authToken
         ));
-
+        session = TestHelper.commitMakeSession(model, session);
         assertEquals("-33.9148449", response.location.latitude);
         assertEquals("151.2254725", response.location.longitude);
+    }
+
+    @Test 
+    public void testCreateWithSpotifyPlaylist () {
+        var session = model.makeSession();
+        var authToken = controller.userRegister(session,
+                new UserRegisterRequest("test", "first", "last", "test1@example.com",
+                        "Password123!", "2022-04-14")).authToken;
+        session = TestHelper.commitMakeSession(model, session);
+        var eventId = controller.createEvent(session, new CreateEventReqBuilder().withSpotifyPlaylist("spotifyplaylist").build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+
+        var response = controller.eventView(session, Map.of(
+                "event_id", eventId,
+                "auth_token", authToken
+        ));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertEquals("spotifyplaylist", response.spotifyPlaylist);
+
+        var eventId2 = controller.createEvent(session, new CreateEventReqBuilder()
+                .withSpotifyPlaylist("spotifyplaylist")
+                .withPicture("/test_images/smile.png")
+                .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+
+        response = controller.eventView(session, Map.of(
+                "event_id", eventId2,
+                "auth_token", authToken
+        ));
+        session = TestHelper.commitMakeSession(model, session);
+        
+        assertEquals("spotifyplaylist", response.spotifyPlaylist);
+
+        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null,
+                null, null, null, null, null, null, true, "spotify2"));
+        session = TestHelper.commitMakeSession(model, session);
+
+        response = controller.eventView(session, Map.of(
+                "event_id", eventId2,
+                "auth_token", authToken
+        ));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertEquals("spotify2", response.spotifyPlaylist);
     }
 }

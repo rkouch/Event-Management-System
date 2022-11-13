@@ -154,7 +154,7 @@ public class TestUserEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(0), hostToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -177,7 +177,7 @@ public class TestUserEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(1), hostToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -200,14 +200,14 @@ public class TestUserEventRecommendations {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventIds.get(2), hostToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         controller.createEvent(session, new CreateEventReqBuilder().build(hostToken));
         session = TestHelper.commitMakeSession(model, session);
         var hostId = controller.createEvent(session, new CreateEventReqBuilder().build(authToken)).event_id;
         controller.editEvent(session, new EditEventRequest(hostId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         locationApi.awaitLocations();
