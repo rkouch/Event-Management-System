@@ -66,6 +66,8 @@ export default function AcceptInvite({}) {
     errorMsg: ''
   })
 
+  const [error, setError] = React.useState(false)
+
   // Handles for state changes
   const handleFirstNameChange = (e) => {
     // Clear error
@@ -131,6 +133,7 @@ export default function AcceptInvite({}) {
       setAccepted(true)
     } catch (e) {
       console.log(e)
+      setError(true)
     }
   }
 
@@ -180,7 +183,7 @@ export default function AcceptInvite({}) {
                   width: 800,
                   marginLeft: "auto",
                   marginRight: "auto",
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: "#F5F5F5",
                   marginTop: "50px",
                   borderRadius: 3,
                   paddingBottom: 5,
@@ -188,13 +191,24 @@ export default function AcceptInvite({}) {
                   boxShadow: 3
                 }}
               >
-                <Typography sx={{fontSize: 50, fontFamily: 'Segoe UI', textAlign: 'center'}}>
-                  Accept invite to join group?
-                </Typography>
-                <Box sx={{pt: 5, pl: 30, pr: 30, display: 'flex', justifyContent: 'space-between'}}>
-                  <DeleteButton onClick={handleDecline}>Decline</DeleteButton>
-                  <TkrButton onClick={handleAccept}>Accept</TkrButton>
-                </Box>
+                {!error
+                  ? <>
+                      <Typography sx={{fontSize: 50, fontFamily: 'Segoe UI', textAlign: 'center'}}>
+                        Accept invite to join group?
+                      </Typography>
+                      <Box sx={{pt: 5, pl: 30, pr: 30, display: 'flex', justifyContent: 'space-between'}}>
+                        <DeleteButton onClick={handleDecline}>Decline</DeleteButton>
+                        <TkrButton onClick={handleAccept}>Accept</TkrButton>
+                      </Box>
+                    </>
+                  : <CentredBox sx={{height: '100%', alignItems: 'center', flexDirection: 'column', gap: 5}}>
+                      <Typography sx={{fontSize: 50, fontFamily: 'Segoe UI', textAlign: 'center'}}>
+                        Invite expired.
+                      </Typography>
+                      <TkrButton onClick={() => {navigate('/')}}>Back to Tickr</TkrButton>
+                    </CentredBox>
+                }
+                
               </Box>
             </Box>
           </Backdrop> 
