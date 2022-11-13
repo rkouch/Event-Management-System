@@ -323,12 +323,14 @@ export default function SearchResults({}) {
     const streetAddress = address.value.split(' ')
     const locationBody = {
       street_no: (address.value.length !== 0) ? +streetAddress[0]: null,
-      steet_name: (address.value.length !== 0) ? streetAddress[1] + ' ' + streetAddress[2] : null,
+      street_name: (address.value.length !== 0) ? streetAddress[1] + ' ' + streetAddress[2] : null,
       suburb: (suburb.value.length !==  0) ? suburb.value : null,
       postcode: (postcode.value.legnth !== 0) ? postcode.value : null,
       state: (state.value.length !== 0) ? state.value : null,
       country: (country.value.length !== 0) ? country.value : null
     }
+
+    console.log(locationBody)
 
     // Check date filter
     var dateFilter_t = false
