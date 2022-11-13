@@ -33,6 +33,20 @@ public class Vector {
 
     public Vector normalised () {
         var normFactor = 1 / length();
-        return new Vector(elements.stream().map(d -> d * normFactor).collect(Collectors.toList()));
+        return multiply(normFactor);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    public Vector add (Vector other) {
+        if (getDimensions() != other.getDimensions()) {
+            throw new RuntimeException("Vector lengths do not match!");
+        }
+
+
+        return new Vector(Streams.zip(elements.stream(), other.elements.stream(), Double::sum).collect(Collectors.toList()));
+    }
+
+    public Vector multiply (double val) {
+        return new Vector(elements.stream().map(d -> d * val).collect(Collectors.toList()));
     }
 }
