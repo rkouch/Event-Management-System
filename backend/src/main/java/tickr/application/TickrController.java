@@ -1752,6 +1752,40 @@ public class TickrController {
     }
 
     public CategoryEventsResponse eventsByCategory (ModelSession session, Map<String, String> params) {
-        return new CategoryEventsResponse(List.of(), 0);
+        if (!params.containsKey("category")) {
+            throw new BadRequestException("Missing category!");
+        } else if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging values!");
+        }
+
+        var category = params.get("category");
+        if (!Category.validCategory(category)) {
+            throw new ForbiddenException("Invalid category: \"" + category + "\" (ensure case is correct!)");
+        }
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var eventCount = new AtomicInteger();
+        var events = session.getAllWithStream(Category.class, "category", category)
+                .map(Category::getEvent)
+                .peek(c -> eventCount.getAndIncrement())
+                .sorted(Comparator.comparing(Event::getEventStart))
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(Event::getId)
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        return new CategoryEventsResponse(events, eventCount.get());
     }
 }

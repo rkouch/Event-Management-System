@@ -50,7 +50,7 @@ public class Category {
         this.id = id;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 
@@ -68,5 +68,9 @@ public class Category {
 
     public static List<String> getValidCategories () {
         return VALID_CATEGORIES;
+    }
+
+    public static boolean validCategory (String category) {
+        return VALID_CATEGORIES.contains(category);
     }
 }
