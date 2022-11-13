@@ -159,7 +159,6 @@ export default function SearchResults({}) {
     try {
       const search_option_str = JSON.stringify(searchOptions)
       const body = {
-        auth_token: getToken(),
         page_start: pageStart,
         max_results: maxResults,
         search_options: btoa(search_option_str)
@@ -324,7 +323,7 @@ export default function SearchResults({}) {
     const streetAddress = address.value.split(' ')
     const locationBody = {
       street_no: (address.value.length !== 0) ? +streetAddress[0]: null,
-      steet_name: (address.value.legnth !== 0) ? streetAddress[1] + ' ' + streetAddress[2] : null,
+      steet_name: (address.value.length !== 0) ? streetAddress[1] + ' ' + streetAddress[2] : null,
       suburb: (suburb.value.length !==  0) ? suburb.value : null,
       postcode: (postcode.value.legnth !== 0) ? postcode.value : null,
       state: (state.value.length !== 0) ? state.value : null,
