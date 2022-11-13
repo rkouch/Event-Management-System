@@ -74,8 +74,8 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<SeatingPlan> seatingPlans;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
-    @JoinTable(name = "notification_Members",
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "notification_members",
             joinColumns = {@JoinColumn(name = "event_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private Set<User> notificationMembers = new HashSet<>();
@@ -564,8 +564,8 @@ public class Event {
         }
     }
 
-    public void editNotificationMembers(ModelSession session, User user, Boolean notification) {
-        if (notification) {
+    public void editNotificationMembers(ModelSession session, User user, Boolean notifications) {
+        if (notifications) {
             if (!notificationMembers.contains(user)) {
                 notificationMembers.add(user);
             }

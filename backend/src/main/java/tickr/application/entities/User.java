@@ -94,7 +94,7 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<TicketReservation> reservations;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "notificationMembers", cascade = {})
     private Set<Event> notificationEvents = new HashSet<>();
     
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
@@ -474,9 +474,8 @@ public class User {
         reservations.add(t);
     }
 
-<<<<<<< HEAD
-    public void editEventNotificaitons(ModelSession session, Event event, Boolean notification) {
-        if (notification) {
+    public void editEventNotificaitons(ModelSession session, Event event, Boolean notifications) {
+        if (notifications) {
             if (!notificationEvents.contains(event)) {
                 notificationEvents.add(event);
             }
@@ -485,7 +484,8 @@ public class User {
                 notificationEvents.remove(event);
             }
         }
-=======
+    }
+
     public void addInvitation(Invitation i) {
         invitations.add(i);
     }
@@ -498,6 +498,5 @@ public class User {
         addReservation(reserve);
         addGroup(group);
         removeInvitation(invitation);
->>>>>>> main
     }
 }

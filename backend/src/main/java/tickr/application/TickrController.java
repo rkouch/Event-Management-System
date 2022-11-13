@@ -631,6 +631,11 @@ public class TickrController {
         if (!event.getHost().equals(user)) {
             throw new ForbiddenException("User is not the host of this event!"); 
         }
+        
+        for (User i : event.getNotificationMembers()) {
+            i.getNotificationEvents().remove(event);
+        }
+
         event.onDelete(session);
         session.remove(event);
     }
@@ -1578,22 +1583,26 @@ public class TickrController {
 
         Event event = session.getById(Event.class, parseUUID(request.eventId))
                 .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
-
         var user = authenticateToken(session, request.authToken);
+
         event.editNotificationMembers(session, user, request.notifications);
         user.editEventNotificaitons(session, event, request.notifications);
     }
 
     // checks the notifications of user for an event
-    public EventNotificationsResponse checkEventNotifications (ModelSession session, EventNotificationsRequest request) {
-        if (request.authToken == null) {
-            throw new UnauthorizedException("Missing auth token!");
+    public EventNotificationsResponse checkEventNotifications (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event_id!");
         }
+        Event event = session.getById(Event.class, UUID.fromString(params.get("event_id")))
+                        .orElseThrow(() -> new ForbiddenException("Unknown event"));
 
-        Event event = session.getById(Event.class, parseUUID(request.eventId))
-                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
-
-        var user = authenticateToken(session, request.authToken);
+        User user = null;
+        if (params.containsKey("auth_token")) {
+            user = authenticateToken(session, params.get("auth_token"));
+        } else {
+            throw new BadRequestException("Missing auth token!");
+        }
         var notification = user.doReminders();
 
         if (event.getNotificationMembers().contains(user)) {

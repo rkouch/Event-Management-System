@@ -75,7 +75,8 @@ public class Server {
         get("/api/event/search", TickrController::searchEvents);
         delete("/api/event/cancel", TickrController::eventDelete, EventDeleteRequest.class);
         post("/api/event/announce", TickrController::makeAnnouncement, AnnouncementRequest.class);
-        get("/api/event/notifications", TickrController::checkEventNotifications, EventNotificationsRequest.class);
+        get("/api/event/notifications", TickrController::checkEventNotifications);
+        put("/api/event/notifications/update", TickrController::eventNotificationsUpdate, EventNotificationsUpdateRequest.class);
 
         post("/api/ticket/reserve", TickrController::ticketReserve, TicketReserve.Request.class);
         post("/api/ticket/purchase", TickrController::ticketPurchase, TicketPurchase.Request.class);
