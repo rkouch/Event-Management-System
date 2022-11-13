@@ -305,6 +305,7 @@ public class TestEventEdit {
         var newSession2 = TestHelper.commitMakeSession(model, newSession1);
         assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         "updated description", updatedSeats, admins, updateCategories, updateTags, false)));
+        TestHelper.commitMakeSession(model, newSession2);
     }
 
     @Test
