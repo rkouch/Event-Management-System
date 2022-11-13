@@ -135,11 +135,22 @@ public class TestSendEventNotification {
     public void testEventEditEmail() {
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", null, null, null, null, true));
+        null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(1, emailAPI.getSentMessages().size());
 
         var msg = emailAPI.getSentMessages().get(0);
+        assertEquals("test@example.com", msg.getToEmail());
+        assertEquals("Test Event Name Changes", msg.getSubject());
+        assertTrue(msg.getBody().contains("made a change in"));
+
+        controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
+        controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
+        "update description", null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(2, emailAPI.getSentMessages().size());
+
+        msg = emailAPI.getSentMessages().get(0);
         assertEquals("test@example.com", msg.getToEmail());
         assertEquals("Test Event Name Changes", msg.getSubject());
         assertTrue(msg.getBody().contains("made a change in"));

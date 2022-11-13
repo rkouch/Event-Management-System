@@ -32,6 +32,5 @@ public class EmailHelper {
                 sender.getFirstName(), sender.getLastName(), event.getEventName(), eventLink);    
 
         recipient.sendEmail(subject, body);
-
     }
 }
