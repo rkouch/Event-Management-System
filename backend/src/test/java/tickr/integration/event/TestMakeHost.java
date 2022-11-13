@@ -79,7 +79,7 @@ public class TestMakeHost {
         eventId = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
     }
 

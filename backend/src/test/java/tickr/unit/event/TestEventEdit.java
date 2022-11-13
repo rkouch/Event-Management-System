@@ -97,37 +97,37 @@ public class TestEventEdit {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(UUID.randomUUID().toString(), authTokenString, null, 
-            null, null, null,null, null, null, null, null, null, false)));
+            null, null, null,null, null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, "aaa",null, null, null, null, null, null, false)));
+            null, null, "aaa",null, null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, null,"aaa", null, null, null, null, null, false)));
+            null, null, null,"aaa", null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, null, null , null, null, invalidAdmins, null, null, false)));
+            null, null, null, null , null, null, invalidAdmins, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            null, null, null, null , null, null, invalidAdmins2, null, null, false)));
+            null, null, null, null , null, null, invalidAdmins2, null, null, false, null)));
         assertThrows(UnauthorizedException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, "asd", null, 
-            null, null, null, null , null, null, null, null, null, false)));
+            null, null, null, null , null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
-            null, null, null, null , null, null, null, null, null, false)));
+            null, null, null, null , null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-            "asd", null, null, null , null, null, null, null, null, false)));
+            "asd", null, null, null , null, null, null, null, null, false, null)));
         assertThrows(ForbiddenException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, testAuthTokenString, null, 
-            null, null, null, null , null, null, null, null, null, false)));
+            null, null, null, null , null, null, null, null, null, false, null)));
         EditEventRequest.SeatingDetails invalidSeats1 = new EditEventRequest.SeatingDetails(null, 50, 50, true);
         List<EditEventRequest.SeatingDetails> invalidSeatsList1 = new ArrayList<EditEventRequest.SeatingDetails>();
         invalidSeatsList1.add(invalidSeats1);
         assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, null,null, null, invalidSeatsList1, null, null, null, false)));
+        null, null, null,null, null, invalidSeatsList1, null, null, null, false, null)));
 
             EditEventRequest.SeatingDetails invalidSeats2 = new EditEventRequest.SeatingDetails("", 100, 50, true);
         List<EditEventRequest.SeatingDetails> invalidSeatsList2 = new ArrayList<EditEventRequest.SeatingDetails>();
         invalidSeatsList2.add(invalidSeats2);
         assertThrows(BadRequestException.class, () -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, null, 
-        null, null, null,null, null, invalidSeatsList2, null, null, null, false)));
+        null, null, null,null, null, invalidSeatsList2, null, null, null, false, null)));
         //     EditEventRequest.SeatingDetails invalidSeats3 = new EditEventRequest.SeatingDetails("SectionA", 0, 50, true);
         // List<EditEventRequest.SeatingDetails> invalidSeatsList3 = new ArrayList<EditEventRequest.SeatingDetails>();
         // invalidSeatsList3.add(invalidSeats3);
@@ -175,10 +175,10 @@ public class TestEventEdit {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, null, null, null,null,
-        null, null, null, null, null, false));
+        null, null, null, null, null, false, null));
         session = TestHelper.commitMakeSession(model, session);
         var response = controller.eventView(session, Map.of("event_id", event_id, "auth_token", authTokenString));
 
@@ -266,12 +266,12 @@ public class TestEventEdit {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         logger.info("Point 3!");
         admins.add(idTest);
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", updatedSeats, admins, updateCategories, updateTags, true));
+        "updated description", updatedSeats, admins, updateCategories, updateTags, true, null));
         session = TestHelper.commitMakeSession(model, session);
         logger.info("Point 4!");
         var response = controller.eventView(session, Map.of("event_id", event_id)); 
@@ -307,13 +307,13 @@ public class TestEventEdit {
 
         logger.info("Point 6!");
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", null, admins, updateCategories, updateTags, false)));
+        "updated description", null, admins, updateCategories, updateTags, false, null)));
         var newSession1 = TestHelper.commitMakeSession(model, newSession);
         assertDoesNotThrow(() -> controller.editEvent(newSession1, new EditEventRequest(event_id, authTokenString, "update name", null, updatedLocation, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", null, admins, updateCategories, updateTags, false)));
+        "updated description", null, admins, updateCategories, updateTags, false, null)));
         var newSession2 = TestHelper.commitMakeSession(model, newSession1);
         assertDoesNotThrow(() -> controller.editEvent(newSession2, new EditEventRequest(event_id, authTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", updatedSeats, admins, updateCategories, updateTags, false)));
+        "updated description", updatedSeats, admins, updateCategories, updateTags, false, null)));
         TestHelper.commitMakeSession(model, newSession2);
         logger.info("Point 7!");
     }
@@ -356,11 +356,11 @@ public class TestEventEdit {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         session = TestHelper.commitMakeSession(model, session);  
         controller.editEvent(session, new EditEventRequest(event_id, authTokenString, null, 
-        FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null,null, null, null, null, null, null, true));
+        FileHelper.readToDataUrl("/test_images/smile.jpg"), null, null,null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         var response = controller.eventView(session, Map.of("event_id", event_id));
         assertNotEquals("", response.picture);
@@ -415,10 +415,10 @@ public class TestEventEdit {
 
         var event_id = controller.createEvent(session, new CreateEventRequest(authTokenString, "test event", null, location
                                             , "2031-12-03T10:15:30Z",
-                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags)).event_id;
+                                            "2031-12-04T10:15:30Z", "description", seats, admins, categories, tags, null)).event_id;
         var newSession = TestHelper.commitMakeSession(model, session);  
         assertDoesNotThrow(() -> controller.editEvent(newSession, new EditEventRequest(event_id, adminAuthTokenString, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", null, null, null, null, true)));
+        "updated description", null, null, null, null, true, null)));
         session = TestHelper.commitMakeSession(model, newSession);
 
         var response = controller.eventView(session, Map.of("event_id", event_id));

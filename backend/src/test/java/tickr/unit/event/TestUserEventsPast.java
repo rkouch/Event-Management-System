@@ -70,7 +70,7 @@ public class TestUserEventsPast {
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.editEvent(session, new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
 
         var event2 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
@@ -81,7 +81,7 @@ public class TestUserEventsPast {
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.editEvent(session, new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
 
         var event3 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
@@ -91,7 +91,7 @@ public class TestUserEventsPast {
             .withEndDate(ZonedDateTime.now().minusDays(5))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
-        controller.editEvent(session, new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
 
         var event4 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
@@ -101,7 +101,7 @@ public class TestUserEventsPast {
             .withEndDate(ZonedDateTime.now().minusDays(15))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
-        controller.editEvent(session, new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
 
         var event5 = controller.createEventUnsafe(session, new CreateEventReqBuilder()
@@ -111,7 +111,7 @@ public class TestUserEventsPast {
             .withEndDate(ZonedDateTime.now().minusDays(20))
             .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
-        controller.editEvent(session, new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         
     }

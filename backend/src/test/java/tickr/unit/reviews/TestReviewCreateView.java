@@ -75,7 +75,7 @@ public class TestReviewCreateView {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
@@ -140,7 +140,7 @@ public class TestReviewCreateView {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         var reqIds2 = controller.ticketReserve(session,
@@ -166,7 +166,7 @@ public class TestReviewCreateView {
                 .build(authToken)).event_id;
         session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(newEventId, authToken, null, null,
-                null, null, null, null, null, null, null, null, true));
+                null, null, null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         var newReqIds = controller.ticketReserve(session, new TicketReserve.Request(authToken2, newEventId,
                 ZonedDateTime.now(ZoneId.of("UTC")).plusDays(1).plusMinutes(1),

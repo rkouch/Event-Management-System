@@ -91,7 +91,7 @@ public class TestAnnouncement {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null,
-                null, null, null, null, null, null, null, true));
+                null, null, null, null, null, null, null, true, null));
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),

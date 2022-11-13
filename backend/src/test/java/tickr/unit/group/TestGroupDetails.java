@@ -140,7 +140,7 @@ public class TestGroupDetails {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
@@ -195,7 +195,7 @@ public class TestGroupDetails {
         assertEquals(0, response.availableReserves.size());
         assertEquals(hostId, response.hostId);
         assertEquals(hostEmail, members.get(0).email);
-
+        assertEquals(eventId, response.eventId);
         for (PendingInvite i : invites) {
             assertNotNull(i.email);
             assertNotNull(i.inviteId);

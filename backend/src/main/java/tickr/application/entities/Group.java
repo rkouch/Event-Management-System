@@ -1,6 +1,7 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.serialised.responses.GroupDetailsResponse;
 import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
 import tickr.application.serialised.responses.GroupDetailsResponse.PendingInvite;
 import tickr.server.exceptions.BadRequestException;
@@ -226,5 +227,23 @@ public class Group {
                 t.removeUserFromGroup(leader);
             }
         }
+    }
+
+    public String getEventId() {
+        if (tickets.isEmpty() && ticketReservations.isEmpty()) {
+            throw new BadRequestException("There is no event associated with this group!");
+        }
+        
+        if (!ticketReservations.isEmpty()) {
+            List<TicketReservation> r = new ArrayList<>(this.ticketReservations);
+            return r.get(0).getSection().getEvent().getId().toString();
+        } else {
+            List<Ticket> t = new ArrayList<>(this.tickets);
+            return t.get(0).getEvent().getId().toString();
+        }
+    }
+    
+    public GroupDetailsResponse getGroupDetailsResponse(User host) {
+        return new GroupDetailsResponse(leader.getId().toString(), getGroupMemberDetails(), getPendingInviteDetails(), getAvailableReserves(host), getEventId());
     }
 }

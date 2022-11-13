@@ -304,10 +304,23 @@ public class TickrController {
         // creating event from request
         Event event;
         if (request.picture == null) {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "");
+            if (request.spotifyPlaylist == null) {
+                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "");
+            } else {
+                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "", request.spotifyPlaylist);
+            }
+            
         } else {
-            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
-                    FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture).orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+            if (request.spotifyPlaylist == null) {
+                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
+                        FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture)
+                                .orElseThrow(() -> new ForbiddenException("Invalid event image!")));
+            } else {
+                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
+                        FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture)
+                                .orElseThrow(() -> new ForbiddenException("Invalid event image!")), request.spotifyPlaylist);
+            } 
+            
         }
         session.save(event);
         // creating seating plan for each section
@@ -489,14 +502,29 @@ public class TickrController {
         // }
 
         if (request.picture == null) {
-            event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
-         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
+            if (request.spotifyPlaylist == null) {
+                event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
+                request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+                , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, null);
+            } else {
+                event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
+                request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+                , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
+            }
+            
         } else {
-            event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
-            .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
-         request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-         , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
+            if (request.spotifyPlaylist == null) {
+                event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
+                .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
+             request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+             , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, null);
+            } else {
+                event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
+                .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
+             request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
+             , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
+            }
+            
         }
 
         RecommenderEngine.forceRecalculate(session); // TODO
@@ -545,8 +573,7 @@ public class TickrController {
         SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
         event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
 
-        return new EventViewResponse(event.getHost().getId().toString(), event.getEventName(), event.getEventPicture(), location, event.getEventStart().format(DateTimeFormatter.ISO_INSTANT), event.getEventEnd().format(DateTimeFormatter.ISO_INSTANT), event.getEventDescription(), seatingResponse,
-                                    admins, categories, tags, event.isPublished(), event.getSeatAvailability(), event.getSeatCapacity());
+        return event.getEventViewResponse(location, seatingResponse, tags, categories, admins);
     }
 
     public void makeHost (ModelSession session, EditHostRequest request) {
@@ -1488,7 +1515,7 @@ public class TickrController {
         Group group = session.getById(Group.class, UUID.fromString(params.get("group_id")))
                 .orElseThrow(() -> new ForbiddenException("Group ID doesn't exist!"));
 
-        return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getGroupMemberDetails(), group.getPendingInviteDetails(), group.getAvailableReserves(host));
+        return group.getGroupDetailsResponse(host);
     }
 
     public RecommenderResponse recommendEventEvent (ModelSession session, Map<String, String> params) {

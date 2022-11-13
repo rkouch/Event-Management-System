@@ -91,7 +91,7 @@ public class TestEventHostingsPast {
         assertEquals(200, response.getStatus());
         eventId1 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId1, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -103,7 +103,7 @@ public class TestEventHostingsPast {
         assertEquals(200, response.getStatus());
         eventId2 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -115,7 +115,7 @@ public class TestEventHostingsPast {
         assertEquals(200, response.getStatus());
         eventId3 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
       

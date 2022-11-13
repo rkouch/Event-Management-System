@@ -40,6 +40,9 @@ public class EditEventRequest {
 
     public boolean published; 
 
+    @SerializedName("spotify_playlist")
+    public String spotifyPlaylist;
+
     public static class SeatingDetails {
         public String section;
 
@@ -60,11 +63,9 @@ public class EditEventRequest {
     }
     public EditEventRequest () {}
 
-    
-
     public EditEventRequest(String eventId, String authToken, String eventName, String picture,
             SerializedLocation location, String startDate, String endDate, String description,
-            List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags, boolean published) {
+            List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags, boolean published, String spotifyPlaylist) {
         this.eventId = eventId;
         this.authToken = authToken;
         this.eventName = eventName;
@@ -78,6 +79,7 @@ public class EditEventRequest {
         this.categories = categories;
         this.tags = tags;
         this.published = published;
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     public boolean isSeatingDetailsValid() {
