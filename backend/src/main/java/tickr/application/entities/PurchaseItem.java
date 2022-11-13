@@ -64,7 +64,7 @@ public class PurchaseItem {
         this.email = email != null ? email.toLowerCase().trim() : null;
     }
 
-    public Ticket convert (ModelSession session) {
+    public Ticket convert (ModelSession session, String paymentId) {
         var ticket = ticketReservation.convert(firstName, lastName, email, paymentId);
         session.remove(ticketReservation);
 

@@ -714,10 +714,10 @@ public class TickrController {
         }
     }
 
-    public void ticketPurchaseSuccess (ModelSession session, String reserveId) {
+    public void ticketPurchaseSuccess (ModelSession session, String reserveId, String paymentId) {
         logger.info("Ticket purchase {} success!", reserveId);
         for (var i : session.getAllWith(PurchaseItem.class, "purchaseId", UUID.fromString(reserveId))) {
-            session.save(i.convert(session));
+            session.save(i.convert(session, paymentId));
             //session.remove(i);
         }
     }

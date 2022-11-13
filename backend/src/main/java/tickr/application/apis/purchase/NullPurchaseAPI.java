@@ -76,7 +76,7 @@ public class NullPurchaseAPI implements IPurchaseAPI {
         }
 
         if (webhookEvent.type.equals("success")) {
-            controller.ticketPurchaseSuccess(session, webhookEvent.reserveId);
+            controller.ticketPurchaseSuccess(session, webhookEvent.reserveId, webhookEvent.reserveId);
         } else {
             throw new BadRequestException("Invalid webhook event type: \"" + webhookEvent.type + "\"!");
         }

@@ -57,7 +57,7 @@ public class StripeAPI implements IPurchaseAPI {
 
     @Override
     public void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader) {
-        logger.info("Webhook event: \n{}", requestBody);
+        logger.debug("Webhook event: \n{}", requestBody);
         Event event = null;
         try {
             event = Webhook.constructEvent(requestBody, sigHeader, webhookSecret);
@@ -66,6 +66,8 @@ public class StripeAPI implements IPurchaseAPI {
         } catch (SignatureVerificationException e) {
             throw new BadRequestException("Invalid signature!");
         }
+
+        logger.info("Received Stripe webhook event \"{}\"!", event.getType());
 
         if ("checkout.session.completed".equals(event.getType())) {
             event.getDataObjectDeserializer()
@@ -81,7 +83,10 @@ public class StripeAPI implements IPurchaseAPI {
         }
 
         var orderId = metadata.get("reserve_id");
-        controller.ticketPurchaseSuccess(session, orderId);
+
+        var paymentIntent = stripeSession.getPaymentIntent();
+
+        controller.ticketPurchaseSuccess(session, orderId, paymentIntent);
     }
 
 
