@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData, isValidSpotifyURL, loggedIn } from "../Helpers";
+import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData, isValidSpotifyURL, loggedIn, search } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -22,7 +22,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
-import { ContrastInputNoOutline, ContrastInputWrapper, HoverChipSelected, TkrButton, TkrButton2 } from "../Styles/InputStyles";
+import { ContrastInputNoOutline, ContrastInputWrapper, HoverChipSelected, TextButton2, TkrButton, TkrButton2 } from "../Styles/InputStyles";
 import EventReview from "../Components/EventReview";
 import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
@@ -389,9 +389,15 @@ export default function ViewEvent({}) {
                               >
                                 Categories
                               </Typography>
-                              <Typography sx={{fontSize: 18}}>
-                                {event.categories.join(', ')}
-                              </Typography>
+                              <Box sx={{display: 'flex', gap: 1}}>
+                                {event.categories.map((category, key) => {
+                                  return (
+                                    <TextButton2 key={key} onClick={(e) => {search('categories', [category], navigate)}}>
+                                      {category}
+                                    </TextButton2>
+                                  )
+                                })}
+                              </Box>
                             </Box>
                           : <></>
                         }         
