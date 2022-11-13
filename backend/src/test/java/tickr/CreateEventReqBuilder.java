@@ -26,9 +26,14 @@ public class CreateEventReqBuilder {
     private Set<String> admins = new HashSet<>();
     private Set<String> categories = new HashSet<>();
     private Set<String> tags = new HashSet<>();
+    private String spotifyPlaylist = null;
 
     public CreateEventReqBuilder withEventName (String eventName) {
         this.eventName = eventName;
+        return this;
+    }
+    public CreateEventReqBuilder withSpotifyPlaylist (String spotifyPlaylist) {
+        this.spotifyPlaylist = spotifyPlaylist;
         return this;
     }
     public CreateEventReqBuilder withPicture (String pictureLocation) {
@@ -70,7 +75,7 @@ public class CreateEventReqBuilder {
 
     public CreateEventRequest build (String authToken) {
         return new CreateEventRequest(authToken, eventName, picture, location, startDate.format(DateTimeFormatter.ISO_INSTANT),
-                endDate.format(DateTimeFormatter.ISO_INSTANT), description, seatingDetails, admins, categories, tags);
+                endDate.format(DateTimeFormatter.ISO_INSTANT), description, seatingDetails, admins, categories, tags, spotifyPlaylist);
     }
 
     public String getEventName() {

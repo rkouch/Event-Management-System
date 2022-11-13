@@ -49,6 +49,7 @@ create table `events` (
     seat_capacity int,
     event_pic varchar(255) not null,
     published boolean not null,
+    spotify_playlist  varchar(255),
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),
@@ -113,6 +114,9 @@ create table purchase_item (
     first_name varchar(255),
     last_name varchar(255),
     email varchar(255),
+
+    payment_id varchar(255),
+
     primary key (id),
     foreign key (ticket_id) references ticket_reservation(id)
 );
@@ -128,6 +132,9 @@ create table tickets (
     first_name varchar(255),
     last_name varchar(255),
     email varchar(255),
+
+    payment_id varchar(255),
+    price long not null,
 
     primary key (id),
     foreign key (user_id) references users(id),

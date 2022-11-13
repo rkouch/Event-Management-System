@@ -37,6 +37,4 @@ public class TicketViewResponse {
         this.email = email;
         this.groupId = groupId;
     } 
-
-    
 }

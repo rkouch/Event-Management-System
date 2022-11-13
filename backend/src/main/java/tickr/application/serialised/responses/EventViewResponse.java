@@ -42,6 +42,9 @@ public class EventViewResponse {
     @SerializedName("seat_capacity")
     public int seatCapacity = 0;
 
+    @SerializedName("spotify_playlist")
+    public String spotifyPlaylist;
+
     public static class SeatingDetails {
         public String section;
 
@@ -70,7 +73,7 @@ public class EventViewResponse {
 
     public EventViewResponse(String host_id, String eventName, String picture, SerializedLocation location, String startDate,
             String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins,
-            Set<String> categories, Set<String> tags, boolean published, int seatAvailability, int seatCapacity) {
+            Set<String> categories, Set<String> tags, boolean published, int seatAvailability, int seatCapacity, String spotifyPlaylist) {
         this.eventName = eventName;
         this.picture = picture;
         this.location = location;
@@ -85,6 +88,7 @@ public class EventViewResponse {
         this.published = published;
         this.seatAvailability = seatAvailability;
         this.seatCapacity = seatCapacity;
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     

@@ -140,7 +140,7 @@ public class TestGroupDetails {
         eventId = response.getBody(CreateEventResponse.class).event_id;
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventId, authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/ticket/reserve", new TicketReserve.Request(authToken, eventId, startTime, List.of(
@@ -200,6 +200,7 @@ public class TestGroupDetails {
         assertEquals(0, body.availableReserves.size());
         assertEquals(hostId, body.hostId);
         assertEquals(hostEmail, members.get(0).email);
+        assertEquals(eventId, body.eventId);
 
         for (PendingInvite i : invites) {
             assertNotNull(i.email);

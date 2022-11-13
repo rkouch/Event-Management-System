@@ -93,7 +93,7 @@ public class TestCustomerBookings {
                 .withEndDate(endTime)
                 .build(authToken)).event_id;
 
-        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(eventId, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
         session = TestHelper.commitMakeSession(model, session);
         
@@ -104,7 +104,7 @@ public class TestCustomerBookings {
                 .withEndDate(endTime2)
                 .build(authToken)).event_id;
         
-        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
         session = TestHelper.commitMakeSession(model, session);
         
@@ -119,7 +119,7 @@ public class TestCustomerBookings {
         
         session = TestHelper.commitMakeSession(model, session);
 
-        controller.editEvent(session, new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        controller.editEvent(session, new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("SectionA", 1, List.of(1)),

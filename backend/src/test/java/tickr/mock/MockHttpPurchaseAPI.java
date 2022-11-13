@@ -42,7 +42,7 @@ public class MockHttpPurchaseAPI extends AbstractMockPurchaseAPI {
 
         switch (request.type) {
             case "success":
-                controller.ticketPurchaseSuccess(session, request.reserveId);
+                controller.ticketPurchaseSuccess(session, request.reserveId, request.paymentId);
                 break;
             case "failure":
                 controller.ticketPurchaseFailure(session, request.reserveId);
@@ -62,21 +62,21 @@ public class MockHttpPurchaseAPI extends AbstractMockPurchaseAPI {
 
     @Override
     protected void onSuccess (Order order) {
-        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("success", order.getReserveId()),
+        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("success", order.getReserveId(), order.getPayment().getId()),
                 Map.of(getSignatureHeader(), signature), 1000);
         Assertions.assertEquals(200, response.getStatus());
     }
 
     @Override
     protected void onFailure (Order order) {
-        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("failure", order.getReserveId()),
+        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("failure", order.getReserveId(), order.getPayment().getId()),
                 Map.of(getSignatureHeader(), signature), 1000);
         Assertions.assertEquals(200, response.getStatus());
     }
 
     @Override
     protected void onCancel (Order order) {
-        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("cancel", order.getReserveId()),
+        var response = httpHelper.post("/api/payment/webhook", new WebhookRequest("cancel", order.getReserveId(), order.getPayment().getId()),
                 Map.of(getSignatureHeader(), signature), 1000);
         Assertions.assertEquals(200, response.getStatus());
     }
@@ -90,12 +90,14 @@ public class MockHttpPurchaseAPI extends AbstractMockPurchaseAPI {
     private static class WebhookRequest {
         public String type;
         public String reserveId;
+        public String paymentId;
 
         public WebhookRequest () {}
 
-        public WebhookRequest (String type, String reserveId) {
+        public WebhookRequest (String type, String reserveId, String paymentId) {
             this.type = type;
             this.reserveId = reserveId;
+            this.paymentId = paymentId;
         }
     }
 }

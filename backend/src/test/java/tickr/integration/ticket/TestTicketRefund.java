@@ -1,4 +1,4 @@
-package tickr.integration.reviews;
+package tickr.integration.ticket;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,15 +9,15 @@ import tickr.TestHelper;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
-import tickr.application.serialised.combined.ReviewCreate;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
 import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.requests.TicketRefundRequest;
 import tickr.application.serialised.requests.UserRegisterRequest;
 import tickr.application.serialised.responses.AuthTokenResponse;
 import tickr.application.serialised.responses.CreateEventResponse;
-import tickr.application.serialised.responses.ReviewsViewResponse;
+import tickr.application.serialised.responses.TicketBookingsResponse;
 import tickr.mock.MockHttpPurchaseAPI;
 import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
@@ -26,16 +26,17 @@ import tickr.server.Server;
 import tickr.util.HTTPHelper;
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestReviewViewCreate {
+public class TestTicketRefund {
     private DataModel hibernateModel;
     private HTTPHelper httpHelper;
 
@@ -47,6 +48,8 @@ public class TestReviewViewCreate {
 
     private String requestId;
     private List<String> requestIds;
+    private List<String> ticketIds;
+    private float requestPrice;
 
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;
@@ -67,7 +70,7 @@ public class TestReviewViewCreate {
         assertEquals(200, response.getStatus());
         authToken = response.getBody(AuthTokenResponse.class).authToken;
 
-        startTime = ZonedDateTime.now(ZoneId.of("UTC")).minus(Duration.ofDays(1));
+        startTime = ZonedDateTime.now(ZoneId.of("UTC")).plus(Duration.ofDays(1));
         endTime = startTime.plus(Duration.ofHours(1));
 
         List<CreateEventRequest.SeatingDetails> seatingDetails = List.of(
@@ -75,7 +78,7 @@ public class TestReviewViewCreate {
                 new CreateEventRequest.SeatingDetails("test_section2", 20, 4, true)
         );
 
-        response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
+        response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
                 .withStartDate(startTime.minusMinutes(2))
                 .withEndDate(endTime)
                 .withSeatingDetails(seatingDetails)
@@ -96,11 +99,25 @@ public class TestReviewViewCreate {
         requestIds = reserveResponse.reserveTickets.stream()
                 .map(t -> t.reserveId)
                 .collect(Collectors.toList());
-        response = httpHelper.post("/api/ticket/purchase", new TicketPurchase.Request(authToken, "http://success.com", "http://failure.com",
-                requestIds.stream().map(TicketPurchase.TicketDetails::new).collect(Collectors.toList())));
+        requestPrice = reserveResponse.reserveTickets.stream()
+                .map(t -> t.price)
+                .reduce(0.0f, Float::sum);
+
+        var requestDetails = requestIds.stream()
+                .map(TicketPurchase.TicketDetails::new)
+                .collect(Collectors.toList());
+        purchaseAPI.addCustomer("test_customer", 20);
+        response = httpHelper.post("/api/ticket/purchase",
+                new TicketPurchase.Request(authToken, "https://example.com/success", "https://example.com/cancel", requestDetails));
         assertEquals(200, response.getStatus());
-        purchaseAPI.addCustomer("test_customer", 10_000_000);
-        purchaseAPI.fulfillOrder(response.getBody(TicketPurchase.Response.class).redirectUrl, "test_customer");
+        var redirectUrl = response.getBody(TicketPurchase.Response.class).redirectUrl;
+        assertTrue(purchaseAPI.isUrlValid(redirectUrl));
+        var result = purchaseAPI.fulfillOrder(redirectUrl, "test_customer");
+        assertEquals("https://example.com/success", result);
+
+        response = httpHelper.get("/api/event/bookings", Map.of("auth_token", authToken, "event_id", eventId));
+        assertEquals(200, response.getStatus());
+        ticketIds = response.getBody(TicketBookingsResponse.class).tickets;
     }
 
     @AfterEach
@@ -114,80 +131,57 @@ public class TestReviewViewCreate {
     }
 
     @Test
-    public void testBadRequestsCreate () {
-        var response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(null, null, null, null, 1.0f));
+    public void testBadRequests () {
+        var response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(null, null));
         assertEquals(401, response.getStatus());
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(TestHelper.makeFakeJWT(), eventId, "test", "text", 1.0f));
-        assertEquals(401, response.getStatus());
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, UUID.randomUUID().toString(), "test", "text", 1.0f));
-        assertEquals(403, response.getStatus());
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, null, null, null, 1.0f));
-        assertEquals(400, response.getStatus());
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, eventId, "", "testing", 1.0f));
-        assertEquals(400, response.getStatus());
 
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, eventId, "test", "testing", -1.0f));
-        assertEquals(403, response.getStatus());
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, eventId, "test", "testing", 11.0f));
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(TestHelper.makeFakeJWT(), ticketIds.get(0)));
+        assertEquals(401, response.getStatus());
+
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, UUID.randomUUID().toString()));
         assertEquals(403, response.getStatus());
 
         response = httpHelper.post("/api/user/register", TestHelper.makeRegisterRequest());
         assertEquals(200, response.getStatus());
-        var authToken2 = response.getBody(AuthTokenResponse.class).authToken;
-        response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken2, eventId, "test", "testing", 1.0f));
+        var newUser = response.getBody(AuthTokenResponse.class).authToken;
+
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(newUser, ticketIds.get(0)));
         assertEquals(403, response.getStatus());
     }
 
     @Test
-    public void testBadRequestsView () {
-        var response = httpHelper.get("/api/event/reviews");
-        assertEquals(400, response.getStatus());
-        response = httpHelper.get("/api/event/reviews",
-                Map.of("event_id", UUID.randomUUID().toString(), "page_start", "0", "max_results", "1"));
-        assertEquals(403, response.getStatus());
-        response = httpHelper.get("/api/event/reviews",
-                Map.of("auth_token", TestHelper.makeFakeJWT(), "event_id", eventId, "page_start", "0", "max_results", "1"));
-        assertEquals(401, response.getStatus());
+    public void testRefund () {
+        assertEquals(15, purchaseAPI.getCustomer("test_customer").getBalance());
 
-        response = httpHelper.get("/api/event/reviews",
-                Map.of("auth_token", authToken, "event_id", eventId, "page_start", "-1", "max_results", "0"));
+        var response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, ticketIds.get(0)));
+        assertEquals(200, response.getStatus());
+
+        var balance = purchaseAPI.getCustomer("test_customer").getBalance();
+        assertTrue(balance == 16 || balance == 19);
+
+        response = httpHelper.get("/api/ticket/view", Map.of("ticket_id", ticketIds.get(0)));
         assertEquals(403, response.getStatus());
-        response = httpHelper.get("/api/event/reviews",
-                Map.of("auth_token", authToken, "event_id", eventId, "page_start", "a", "max_results", "1"));
+
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, ticketIds.get(1)));
+        assertEquals(200, response.getStatus());
+
+        assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());
+
+        response = httpHelper.get("/api/ticket/view", Map.of("ticket_id", ticketIds.get(1)));
         assertEquals(403, response.getStatus());
     }
 
     @Test
-    public void testReviewCreate () {
-        var response = httpHelper.post("/api/event/review/create",
-                new ReviewCreate.Request(authToken, eventId, "test", "text", 2.1f));
-        assertEquals(200, response.getStatus());
-        var reviewId = response.getBody(ReviewCreate.Response.class).reviewId;
-
-        response = httpHelper.get("/api/event/reviews", Map.of(
-                "auth_token", authToken,
-                "event_id", eventId,
-                "page_start", "0",
-                "max_results", "10"
-        ));
+    public void testDoubleRefund () {
+        var response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, ticketIds.get(0)));
         assertEquals(200, response.getStatus());
 
-        var viewResponse = response.getBody(ReviewsViewResponse.class);
-        assertEquals(1, viewResponse.numResults);
-        assertEquals(1, viewResponse.reviews.size());
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, ticketIds.get(1)));
+        assertEquals(200, response.getStatus());
 
-        var review = viewResponse.reviews.get(0);
-        assertEquals(reviewId, review.reviewId);
-        assertEquals("test", review.title);
-        assertEquals("text", review.text);
-        assertEquals(2.1f, review.rating);
+        response = httpHelper.post("/api/ticket/refund", new TicketRefundRequest(authToken, ticketIds.get(0)));
+        assertEquals(403, response.getStatus());
+
+        assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());
     }
 }
