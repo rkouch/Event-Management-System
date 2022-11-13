@@ -501,15 +501,15 @@ public class TickrController {
         //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
         // }
         String notification = "";
-        if (!event.getEventStart().equals(request.getStartDate()) || !event.getEventEnd().equals(request.getEndDate())) {
+        if ((request.getStartDate() != null || request.getEndDate() != null) && (!event.getEventStart().equals(request.getStartDate()) || !event.getEventEnd().equals(request.getEndDate()))) {
             notification = String.format("Event dates has changed from %s -> %s to %s -> %s\n",
                 event.getEventStart().toString(), event.getEventEnd().toString(), request.getStartDate(), request.getEndDate());
         }
-        if (!event.getEventDescription().equals(request.getDescription())) {
+        if (request.getDescription() != null && !event.getEventDescription().equals(request.getDescription())) {
             String notification2 = String.format("Event description has changed: %s", request.getDescription());
             notification.concat(notification2);
         }
-        if (!notification.equals("")) {
+        if (!notification.equals("") && !notification.equals(null)) {
             event.makeEventChangeNotification(user, notification);
         }
 

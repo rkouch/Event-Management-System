@@ -31,6 +31,7 @@ import tickr.server.exceptions.UnauthorizedException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,7 +94,7 @@ public class TestSendEventNotification {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null,
-                null, null, null, null, null, null, null, true));
+                null, null, null, null, null, null, null, true, null));
 
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),
@@ -135,7 +136,7 @@ public class TestSendEventNotification {
     public void testEventEditEmail() {
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        null, null, null, null, null, true));
+        null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(1, emailAPI.getSentMessages().size());
 
@@ -146,7 +147,7 @@ public class TestSendEventNotification {
 
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "update description", null, null, null, null, true));
+        "update description", null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(2, emailAPI.getSentMessages().size());
 
@@ -160,7 +161,21 @@ public class TestSendEventNotification {
     public void testNotFollowingEmail() {
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, false));
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
-        "updated description", null, null, null, null, true));
+        "updated description", null, null, null, null, true, null));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(0, emailAPI.getSentMessages().size());
+
+        controller.eventDelete(session, new EventDeleteRequest(hostToken, eventId));
+        session = TestHelper.commitMakeSession(model, session);
+        assertEquals(1, emailAPI.getSentMessages().size());
+    }
+
+    @Test
+    public void testEventEditOthers() {
+        controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
+        controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null,
+        null, null, null, null, new HashSet<>(), null, null, true, null));
+
         session = TestHelper.commitMakeSession(model, session);
         assertEquals(0, emailAPI.getSentMessages().size());
 
