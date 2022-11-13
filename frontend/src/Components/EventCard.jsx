@@ -46,7 +46,7 @@ export default function EventCard({event_id}) {
   const handleClick = (e) => {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
-    navigate(`/view_event/${event_id}`)
+    window.location.replace(`/view_event/${event_id}`)
   }
   return (
     <>

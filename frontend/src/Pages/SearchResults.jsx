@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Box } from '@mui/system'
 import { useParams } from 'react-router-dom'
-import { apiFetch, getToken, setFieldInState } from '../Helpers'
+import { apiFetch, getToken, search, setFieldInState } from '../Helpers'
 import { Grid, InputAdornment, TextField, Typography, Collapse, Divider, FormLabel, Tooltip } from '@mui/material'
 import SearchSharpIcon from '@mui/icons-material/SearchSharp';
 import EventCardsPaper from '../Components/EventCardsPaper'
@@ -68,15 +68,40 @@ export default function SearchResults({}) {
   var utc = require('dayjs/plugin/utc')
   dayjs.extend(utc)
 
-  const [searchString, setSearchString] = React.useState(params.search_string)
+  const [searchString, setSearchString] = React.useState('')
   const [resultsNum, setResultsNum] = React.useState(0)
   const [results, setResults] = React.useState([])
   const [moreResults, setMoreResults] = React.useState(false)
   const [showFilters, setShowFilters] = React.useState(false)
   const [searchOptions, setSearchOptions] = React.useState({
-    text: searchString
   })
 
+  // Get Search options from params
+  const getSearchOptions = () => {
+    const searchParams = JSON.parse(atob(params.search_string))
+    console.log('Params from URL')
+    console.log(searchParams)
+    searchParams.location = null
+    searchParams.max_distance = null
+    searchParams.start_time = null
+    searchParams.end_time = null
+    setSearchOptions(searchParams)
+    if (searchParams.text !== null) {
+      setSearchString(searchParams.text)
+    }
+    setTags(searchParams.tags)
+    setSelectCategories(searchParams.categories)
+    
+    if (searchParams.tags.length !== 0 || searchParams.categories.length !== 0) {
+      setShowFilters(true)
+    }
+    // setFieldInState('value', searchParams.start_time, startDate, setStartDate)
+    // setFieldInState('value', searchParams.end_time, endDate, setEndDate)
+  } 
+
+  React.useEffect(() => {
+    getSearchOptions()
+  }, [])
 
   // Search Filter states
   const [address, setAddress] = React.useState({
@@ -130,6 +155,7 @@ export default function SearchResults({}) {
   // Get search results given a page start
   const getSearchResults = async (pageStart) => {
     const maxResults = 20
+    console.log(searchOptions)
     try {
       const search_option_str = JSON.stringify(searchOptions)
       const body = {
@@ -143,7 +169,7 @@ export default function SearchResults({}) {
       const response = await apiFetch('GET', `/api/event/search?${searchParams}`)
       console.log(response)
       if (pageStart === 0) {
-        setResults(response.event_ids)
+        setResults([...response.event_ids])
         setResultsNum(response.event_ids.length)
         setMoreResults(!(response.event_ids.length === response.num_results))
       } else {
@@ -157,11 +183,6 @@ export default function SearchResults({}) {
       console.log(e)
     }
   }
-
-  // Initial fetch of results
-  React.useEffect(() => {
-    getSearchResults(0)
-  }, [])
 
   // Fetch Reviews on search string change
   React.useEffect(() => {

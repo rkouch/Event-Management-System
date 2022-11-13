@@ -322,18 +322,49 @@ export const attachFields = (object1, object2) => {
 
 // Checks if the provided url is a valid spotify url
 export const isValidSpotifyURL = (link) => {
+  if (link === null || link === undefined) {
+    return false
+  }
+
+  if (link.length === 0){
+    return false
+  }
+  // Check for valid spotify url
+  if (!link.includes('open.spotify.com/playlist') && !link.includes('open.spotify.com/album')) {
+    return false
+  } 
+
   try {
     // Check for valid url
     const url = new URL(link)
-    
-    // Check for valid spotify url
-    if (!link.includes('open.spotify.com/playlist')) {
-      return false
-    } else {
-      return true
-    }
+    return true
   } catch (e) {
     return false
   }
 }
 
+// Function to make search
+export const search = (field, value, navigate) => {
+  const locationBody = {
+    street_no: '',
+    steet_name: '',
+    suburb: '',
+    postcode: '',
+    state: '',
+    country: ''
+  }
+
+  const search_filters = {
+    tags: [],
+    categories: [],
+    text: null,
+    location: null,
+    max_distance: null,
+    start_time: null,
+    end_time: null
+  }
+
+  search_filters[field] = value
+  const searchParams = btoa(JSON.stringify(search_filters))
+  navigate(`/search/${searchParams}`)
+}

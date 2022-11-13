@@ -110,7 +110,7 @@ export default function ManageGroup({}) {
                       <CentredBox sx={{height: '100%'}}>
                         <Tooltip title="Back to tickets">
                           <IconButton onClick={()=>{
-                            navigate(`/view_tickets/${event.event_id}`) 
+                            navigate(`/view_tickets/${groupDetails.event_id}`) 
                           }}>
                             <ArrowBackIcon/>
                           </IconButton>
@@ -168,7 +168,7 @@ export default function ManageGroup({}) {
                       ? <Box sx={{width: '100%'}}>
                           <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
                             <Typography sx={{fontSize: 30, fontWeight: 'bold', color: '#333333'}}>
-                              Avaialble reserves
+                              Availalble reserves
                             </Typography>
                           </Box>
                           <CentredBox sx={{flexDirection: 'column'}}>

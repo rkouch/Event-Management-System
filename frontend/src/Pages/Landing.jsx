@@ -18,6 +18,8 @@ import { apiFetch, loggedIn } from '../Helpers';
 import UpcomingEvents from '../Components/UpcomingEvents';
 import UserBookings from '../Components/UserBookings';
 import UserHosting from '../Components/UserHosting';
+import RecommendedEvents from '../Components/RecommendedEvents';
+import CategoriesEventsBar from '../Components/CategoriesEventsBar';
 
 
 const CardsBar = styled(Box)({
@@ -84,20 +86,16 @@ export default function Landing({}) {
               pb: 5,
             }}
           >
-              <Typography
-                sx={{
-                  p: 10,
-                  fontSize: 60,
-                  fontWeight: 'bold',
-                  fontFamily: 'Segoe UI',
-                  textAlign: 'center'
-                }}
-              >
-                Welcome to Tickr
-              </Typography>
+              <CategoriesEventsBar/>
+              {loggedIn()
+                ? <>
+                    <RecommendedEvents/>
+                    <UserBookings/>
+                    <UserHosting/>
+                  </>
+                : <></>
+              }
               <UpcomingEvents/>
-              <UserBookings/>
-              <UserHosting/>
               <br/>
               <br/>
           </Box>

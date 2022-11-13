@@ -42,25 +42,45 @@ const SectionHeading = styled(Box)({
 
 const EVENT_CARD_WIDTH = 250
 
-export default function UserHosting({}) {
+const categories_t = [
+  'Food',
+  'Music',
+  'Travel & Outdoor',
+  'Health',
+  'Sport & Fitness',
+  'Hobbies',
+  'Business',
+  'Free',
+  'Tourism',
+  'Education'
+]
+
+export default function CategoriesEventsBar({}) {
   const theme = useTheme();
   const ref = useRef(null)
-  const [upcomingValue, setUpcomingValue] = React.useState('1');
-  
+  const [upcomingValue, setUpcomingValue] = React.useState('0');
+  const [categories, setCategories] = React.useState([])
   const upcomingChange = (event, newValue) => {
     setUpcomingValue(newValue);
   }; 
 
-  const endOfWeek = dayjs().endOf('week').toISOString()
-  const endOfMonth = dayjs().endOf('month').toISOString()
-  const endOfYear = dayjs().endOf('year').toISOString()
+  const getCategories = async () => {
+    try {
+      const response = await apiFetch('GET', '/api/events/categories/list', null)
+      setCategories(response.categories)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  React.useEffect(() => {
+    getCategories()
+  }, [])
 
   return (
-    <Section ref={ref} sx={{pt: 10}}>
+    <Section ref={ref} sx={{pt: 2, pb: 10}}>
       <TabContext value={upcomingValue}>
         <SectionHeading>
-          Upcoming Events
-          <Divider orientation="vertical" variant="middle" flexItem/>
           <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
             <Tabs
               onChange={upcomingChange}
@@ -69,24 +89,21 @@ export default function UserHosting({}) {
               scrollButtons
               value={upcomingValue}
               >
-              <Tab label="This Week" value="1" />
-              <Tab label="This Month" value="2" />
-              <Tab label="This Year" value="3" />
+              {categories.map((category, key) => {
+                return(
+                  <Tab label={category} value={(key).toString()} key={key}/>
+                )
+              })}
             </Tabs>
           </Box>
         </SectionHeading>
-        {/* Week Pannel */}
-        <TabPanel value="1" sx={{padding: 0}}>
-          <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfWeek}} responseField={'eventIds'}/>
-        </TabPanel>
-        {/* Month Pannel */}
-        <TabPanel value="2" sx={{padding: 0}}>
-          <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfMonth}} responseField={'eventIds'}/>
-        </TabPanel>
-        {/* Year Pannel */}
-        <TabPanel value="3" sx={{padding: 0}}>
-          <EventsBar endpoint={'/api/home'} additionalParams={{before: endOfYear}} responseField={'eventIds'}/>
-        </TabPanel>
+        {categories.map((category, key) => {
+          return (
+            <TabPanel key={key} value={(key).toString()} sx={{padding: 0}}>
+              <EventsBar endpoint={'/api/events/category'} additionalParams={{category: category}} responseField={'event_ids'}/>
+            </TabPanel>
+          )
+        })}
       </TabContext>
     </Section>
   )

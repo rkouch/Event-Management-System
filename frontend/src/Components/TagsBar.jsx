@@ -6,13 +6,13 @@ import ShadowInput from "./ShadowInput";
 import Chip from '@mui/material/Chip';
 import { borderRadius, styled, alpha } from '@mui/system';
 import { ContrastInput, ContrastInputNoOutline, ContrastInputWrapper } from "../Styles/InputStyles";
-import { setFieldInState, stringToColor } from "../Helpers";
+import { search, setFieldInState, stringToColor } from "../Helpers";
 import { Typography } from "@mui/material";
 import TagIcon from '@mui/icons-material/Tag';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import DeleteIcon from '@mui/icons-material/Delete'
 
-export default function TagsBar({tags, setTags=null, editable=false}) {
+export default function TagsBar({tags, setTags=null, editable=false, navigate=false}) {
   const [newTag, setNewTag] = React.useState('')
 
   const addTag = () => {
@@ -32,6 +32,9 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
     setTags([])
   }
 
+  const handleTagSearch = (tag) => {
+    search('tags', [tag], navigate)
+  }
 
   return (
     <Box>
@@ -96,8 +99,12 @@ export default function TagsBar({tags, setTags=null, editable=false}) {
                         label={data}
                         sx={{
                           backgroundColor: stringToColor(data),
-                          color: "#FFFFFF"
+                          color: "#FFFFFF",
+                          '&:hover': {
+                            backgroundColor: stringToColor(data)
+                          }
                         }}
+                        onClick={() => {handleTagSearch(data)}}
                       />
                     );
                   })}
