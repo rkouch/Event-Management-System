@@ -105,6 +105,21 @@ public class Server {
         get("/api/user/hosting/future", TickrController::eventHostingFuture);
         get("/api/user/hosting/past", TickrController::eventHostingPast);
 
+        post("/api/group/create", TickrController::groupCreate, GroupCreateRequest.class);
+        get("/api/groups/get", TickrController::getGroupIds);
+        post("/api/group/invite", TickrController::groupInvite, GroupInviteRequest.class);
+        post("/api/group/accept", TickrController::groupAccept, GroupAcceptRequest.class);
+        post("/api/group/deny", TickrController::groupDeny, GroupDenyRequest.class);
+        get("/api/group/details", TickrController::groupDetails);
+        delete("/api/group/remove", TickrController::groupRemoveMember, GroupRemoveMemberRequest.class);
+        delete("api/group/cancel", TickrController::groupCancel, GroupCancelRequest.class);
+        delete("/api/group/invite/remove", TickrController::groupRemoveInvite, GroupRemoveInviteRequest.class);
+        get("/api/reserve/details", TickrController::getReserveDetails);
+
+        get("/api/recommendations/event", TickrController::recommendEventEvent);
+        get("/api/user/recommendations/home", TickrController::recommendUserEvent);
+        get("/api/user/recommendations/event", TickrController::recommendEventUserEvent);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()
@@ -129,7 +144,7 @@ public class Server {
             paymentAPI.handleWebhookEvent(ctx.controller, ctx.session, ctx.request.body(), sigHeader);
             return new Object();
         }));
-        
+
         delete("/api/test/clear", TickrController::clearDatabase, Object.class);
     }
 
@@ -211,7 +226,6 @@ public class Server {
         }));
 
         /*Spark.after(((request, response) -> {
-
         }));*/
     }
 
