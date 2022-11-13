@@ -12,6 +12,7 @@ import tickr.application.apis.location.LocationPoint;
 import tickr.application.apis.location.LocationRequest;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.entities.*;
+import tickr.application.recommendations.RecommenderEngine;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.combined.*;
 import tickr.application.serialised.requests.*;
@@ -24,6 +25,7 @@ import tickr.server.exceptions.NotFoundException;
 import tickr.server.exceptions.UnauthorizedException;
 import tickr.util.CryptoHelper;
 import tickr.util.FileHelper;
+import tickr.util.Pair;
 import tickr.util.Utils;
 
 import java.time.*;
@@ -349,6 +351,7 @@ public class TickrController {
         }
 
         event.setLocation(location);
+        RecommenderEngine.forceRecalculate(session); // TODO
 
         return new CreateEventResponse(event.getId().toString());
     }
@@ -494,6 +497,8 @@ public class TickrController {
          request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
          , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published);
         }
+
+        RecommenderEngine.forceRecalculate(session); // TODO
         return;
     }
 
@@ -552,6 +557,7 @@ public class TickrController {
         event.getAdmins().remove(newHost);
         event.addAdmin(oldHost);
         event.setHost(newHost);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public EventSearch.Response searchEvents (ModelSession session, Map<String, String> params) {
@@ -633,6 +639,7 @@ public class TickrController {
         }
         event.onDelete(session);
         session.remove(event);
+        RecommenderEngine.forceRecalculate(session); // TODO
     }
 
     public void userDeleteAccount(ModelSession session, UserDeleteRequest request) {
@@ -1468,23 +1475,81 @@ public class TickrController {
         return new GroupDetailsResponse(group.getLeader().getId().toString(), group.getGroupMemberDetails(), group.getPendingInviteDetails(), group.getAvailableReserves(host));
     }
 
+    public RecommenderResponse recommendEventEvent (ModelSession session, Map<String, String> params) {
+        if (!params.containsKey("event_id")) {
+            throw new BadRequestException("Missing event id!");
+        }
+
+        if (!params.containsKey("page_start") || !params.containsKey("max_results")) {
+            throw new BadRequestException("Missing paging details!");
+        }
+
+        var event = session.getById(Event.class, parseUUID(params.get("event_id")))
+                .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+
+        int pageStart = 0;
+        int maxResults = 0;
+        try {
+            pageStart = Integer.parseInt(params.get("page_start"));
+            maxResults = Integer.parseInt(params.get("max_results"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid paging details!", e);
+        }
+
+        if (pageStart < 0 || maxResults <= 0 || maxResults > 256) {
+            throw new BadRequestException("Invalid paging values!");
+        }
+
+        var recommendEvents = session.getAllStream(Event.class)
+                .filter(e -> !e.equals(event))
+                .map(e -> new Pair<>(e.getId().toString(), RecommenderEngine.calculateSimilarity(session, event, e)))
+                .sorted(Comparator.comparingDouble((Pair<String, Double> p) -> p.getSecond()).reversed())
+                .skip(pageStart)
+                .limit(maxResults)
+                .map(p -> new RecommenderResponse.Event(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+
+        return new RecommenderResponse(recommendEvents, session.getAll(Event.class).size() - 1);
+    }
+
     public void clearDatabase (ModelSession session, Object request) {
         logger.info("Clearing database!");
-        clearType(session, AuthToken.class);
-        clearType(session, Category.class);
-        clearType(session, Comment.class);
-        clearType(session, Event.class);
-        clearType(session, Group.class);
-        clearType(session, Location.class);
-        clearType(session, PurchaseItem.class);
-        clearType(session, Reaction.class);
-        clearType(session, ResetToken.class);
-        clearType(session, SeatingPlan.class);
-        clearType(session, Tag.class);
-        clearType(session, TestEntity.class);
-        clearType(session, Ticket.class);
-        clearType(session, TicketReservation.class);
-        clearType(session, User.class);
+        session.clear(AuthToken.class);
+        //clearType(session, AuthToken.class);
+        session.clear(Category.class);
+        //clearType(session, Category.class);
+        session.clear(Comment.class);
+        //clearType(session, Comment.class);
+        session.clear(Event.class);
+        //clearType(session, Event.class);
+        session.clear(Group.class);
+        //clearType(session, Group.class);
+        session.clear(Location.class);
+        //clearType(session, Location.class);
+        session.clear(PurchaseItem.class);
+        //clearType(session, PurchaseItem.class);
+        session.clear(Reaction.class);
+        //clearType(session, Reaction.class);
+        session.clear(ResetToken.class);
+        //clearType(session, ResetToken.class);
+        session.clear(SeatingPlan.class);
+        //clearType(session, SeatingPlan.class);
+        session.clear(Tag.class);
+        //clearType(session, Tag.class);
+        session.clear(TestEntity.class);
+        //clearType(session, TestEntity.class);
+        session.clear(Ticket.class);
+        //clearType(session, Ticket.class);
+        session.clear(TicketReservation.class);
+        //clearType(session, TicketReservation.class);
+        session.clear(User.class);
+        //clearType(session, User.class);
+        session.clear(Invitation.class);
+        //clearType(session, Invitation.class);
+        session.clear(DocumentTerm.class);
+        //clearType(session, DocumentTerm.class);
+        session.clear(TfIdf.class);
+        //clearType(session, TfIdf.class);
     }
 
     private <T> void clearType (ModelSession session, Class<T> tClass) {

@@ -291,15 +291,19 @@ public class TestCreateEvent {
         assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", null, admins, categories, tags)));
-        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        var newSession1 = TestHelper.commitMakeSession(model, newSession);
+        assertDoesNotThrow(() -> controller.createEvent(newSession1, new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", seats, null, categories, tags)));
-        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        var newSession2 = TestHelper.commitMakeSession(model, newSession1);
+        assertDoesNotThrow(() -> controller.createEvent(newSession2, new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", seats, admins, null, tags)));
-        assertDoesNotThrow(() -> controller.createEvent(newSession, new CreateEventRequest(authTokenString, "test event", null, location
+        var newSession3 = TestHelper.commitMakeSession(model, newSession2);
+        assertDoesNotThrow(() -> controller.createEvent(newSession3, new CreateEventRequest(authTokenString, "test event", null, location
         , "2031-12-03T10:15:30Z",
         "2031-12-04T10:15:30Z", "description", seats, admins, categories, null)));
+        TestHelper.commitMakeSession(model, newSession3);
     }
 
     @Test

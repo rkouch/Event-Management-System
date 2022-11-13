@@ -229,6 +229,25 @@ create table invitation (
     foreign key (user_id) references users(id)
 );
 
+create table document_term_count (
+  term varchar(255) not null,
+  term_count int not null,
+
+  primary key (term)
+);
+
+create table tf_idf (
+    term varchar(255) not null,
+    event_id varchar(36) not null,
+
+    term_freq double not null,
+    document_count int not null,
+
+    primary key (term, event_id),
+    foreign key (term) references document_term_count(term),
+    foreign key (event_id) references `events`(id)
+);
+
 create table TestTable
 (
     id    varchar(36),

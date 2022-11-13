@@ -114,6 +114,8 @@ public class Server {
         delete("/api/group/invite/remove", TickrController::groupRemoveInvite, GroupRemoveInviteRequest.class);
         get("/api/reserve/details", TickrController::getReserveDetails);
 
+        get("/api/recommendations/event", TickrController::recommendEventEvent);
+
         Spark.get("/api/payment/cancel", (req, response) -> {
             var wrapper = new RouteWrapper<>(dataModel, ctx -> {
                 var paramMap = ctx.request.queryParams()

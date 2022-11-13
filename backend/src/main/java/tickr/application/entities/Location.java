@@ -179,4 +179,12 @@ public class Location {
             return d;
         }
     }
+
+    public double getDistance (Location other) {
+        if (latitude == null || longitude == null || other.getLatitude() == null || other.getLongitude() == null) {
+            return Double.POSITIVE_INFINITY;
+        } else {
+            return new LocationPoint(latitude, longitude).getDistance(new LocationPoint(other.getLatitude(), other.getLongitude()));
+        }
+    }
 }
