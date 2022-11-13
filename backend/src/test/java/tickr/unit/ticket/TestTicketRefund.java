@@ -12,10 +12,7 @@ import tickr.application.apis.location.ILocationAPI;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.combined.TicketPurchase;
 import tickr.application.serialised.combined.TicketReserve;
-import tickr.application.serialised.requests.CreateEventRequest;
-import tickr.application.serialised.requests.EditEventRequest;
-import tickr.application.serialised.requests.TicketRefundRequest;
-import tickr.application.serialised.requests.UserRegisterRequest;
+import tickr.application.serialised.requests.*;
 import tickr.mock.AbstractMockPurchaseAPI;
 import tickr.mock.MockLocationApi;
 import tickr.mock.MockUnitPurchaseAPI;
@@ -160,6 +157,14 @@ public class TestTicketRefund {
 
         assertThrows(ForbiddenException.class, () -> controller.ticketRefund(session, new TicketRefundRequest(authToken, ticketIds.get(0))));
         session = TestHelper.rollbackMakeSession(model, session);
+
+        assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());
+    }
+
+    @Test
+    public void testEventCancelRefund () {
+        controller.eventDelete(session, new EventDeleteRequest(authToken, eventId));
+        session = TestHelper.commitMakeSession(model, session);
 
         assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());
     }
