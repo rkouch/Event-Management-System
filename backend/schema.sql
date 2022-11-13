@@ -248,6 +248,19 @@ create table tf_idf (
     foreign key (event_id) references `events`(id)
 );
 
+create table user_interaction (
+    id varchar(36) not null,
+    interact_time datetime not null,
+    user_id varchar(36) not null,
+    event_id varchar(36) not null,
+    interact_type int not null,
+    rating double,
+
+    primary key (id),
+    foreign key (user_id) references `users`(id),
+    foreign key (event_id) references `events`(id)
+);
+
 create table TestTable
 (
     id    varchar(36),

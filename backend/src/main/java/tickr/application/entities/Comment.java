@@ -77,7 +77,7 @@ public class Comment {
         this.id = id;
     }
 
-    private Event getEvent () {
+    public Event getEvent () {
         return event;
     }
 
