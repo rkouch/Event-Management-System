@@ -132,7 +132,7 @@ create table tickets (
     last_name varchar(255),
     email varchar(255),
 
-    payment_id varchar(255) not null,
+    payment_id varchar(255),
     price long not null,
 
     primary key (id),

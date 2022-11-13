@@ -121,6 +121,9 @@ public class TicketReservation {
     }
 
     public Ticket convert (String firstName, String lastName, String email, String paymentId) {
+        if (paymentId == null && price != 0) {
+            throw new RuntimeException("Invalid payment id!");
+        }
         Ticket ticket = new Ticket(user, section, seatNum, firstName, lastName, email, paymentId, (long)Math.floor(price * 100));
         if (group != null) {
             group.convert(ticket, this);

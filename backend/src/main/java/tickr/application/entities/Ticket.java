@@ -168,6 +168,8 @@ public class Ticket {
             throw new ForbiddenException("Attempted to refund ticket after event has started!");
         }
 
-        ApiLocator.locateApi(IPurchaseAPI.class).refundItem(paymentId, price);
+        if (paymentId != null) {
+            ApiLocator.locateApi(IPurchaseAPI.class).refundItem(paymentId, price);
+        }
     }
 }

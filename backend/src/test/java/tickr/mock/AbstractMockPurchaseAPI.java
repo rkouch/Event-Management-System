@@ -260,7 +260,11 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
         }
 
         public String getId () {
-            return id;
+            if (amountRemaining != 0) {
+                return id;
+            } else {
+                return null;
+            }
         }
     }
 }

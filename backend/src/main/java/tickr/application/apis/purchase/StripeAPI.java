@@ -1,6 +1,8 @@
 package tickr.application.apis.purchase;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -17,6 +19,7 @@ import tickr.application.entities.PurchaseItem;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
 import tickr.server.exceptions.ForbiddenException;
+import tickr.util.HTTPHelper;
 import tickr.util.Pair;
 
 import java.util.ArrayList;
@@ -42,7 +45,14 @@ public class StripeAPI implements IPurchaseAPI {
 
     @Override
     public PurchaseResult registerOrder (IOrderBuilder builder) {
-        var session = ((PaymentSessionBuilder)builder).build();
+        logger.info("Registering a stripe order!");
+        var paymentBuilder = (PaymentSessionBuilder)builder;
+
+        if (paymentBuilder.getOrderPrice() == 0) {
+            return registerFreeOrder(paymentBuilder);
+        }
+
+        var session = paymentBuilder.build();
 
         var url = session.getUrl();
         logger.info("Created stripe session with url {}!", url);
@@ -55,9 +65,33 @@ public class StripeAPI implements IPurchaseAPI {
         return new PurchaseResult(url, Map.of());
     }
 
+    private PurchaseResult registerFreeOrder (PaymentSessionBuilder builder) {
+        logger.info("Registering a free order, bypassing the Stripe API");
+        new Thread(() -> {
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException ignored) {}
+
+            var httpHelper = new HTTPHelper("http://localhost:8080");
+
+            var response = httpHelper.post("/api/payment/webhook", builder.buildFreeRequest(), Map.of(
+                    getSignatureHeader(), "FREE"
+            ), 1000);
+            if (response.getStatus() != 200) {
+                logger.error("Webhook for free event failed with status {} and body\n{}", response.getStatus(), response.getBodyRaw());
+            }
+        }).start();
+
+        return new PurchaseResult(builder.successUrl, Map.of());
+    }
+
     @Override
     public void handleWebhookEvent (TickrController controller, ModelSession session, String requestBody, String sigHeader) {
         logger.debug("Webhook event: \n{}", requestBody);
+        if ("FREE".equals(sigHeader)) {
+            completeFreePayment(controller, session, requestBody);
+            return;
+        }
         Event event = null;
         try {
             event = Webhook.constructEvent(requestBody, sigHeader, webhookSecret);
@@ -74,6 +108,12 @@ public class StripeAPI implements IPurchaseAPI {
                     .getObject()
                     .ifPresent(s -> completePayment(controller, session, (Session) s));
         }
+    }
+
+    private void completeFreePayment (TickrController controller, ModelSession session, String requestBody) {
+        var orderId = new Gson().fromJson(requestBody, FreeEventRequest.class).orderId;
+
+        controller.ticketPurchaseSuccess(session, orderId, null);
     }
 
     private void completePayment (TickrController controller, ModelSession session, Session stripeSession) {
@@ -121,6 +161,8 @@ public class StripeAPI implements IPurchaseAPI {
         String orderId;
 
         private List<PurchaseItem> purchaseItems;
+        private long orderPrice = 0;
+        private String successUrl;
 
         public PaymentSessionBuilder (String orderId) {
             logger.debug("Created builder!");
@@ -128,6 +170,7 @@ public class StripeAPI implements IPurchaseAPI {
                     .setMode(SessionCreateParams.Mode.PAYMENT);
             this.orderId = orderId;
             purchaseItems = new ArrayList<>();
+            successUrl = null;
         }
 
         @Override
@@ -144,6 +187,7 @@ public class StripeAPI implements IPurchaseAPI {
                             .build())
                     .build());
             purchaseItems.add(lineItem.getPurchaseItem());
+            orderPrice += lineItem.getPrice();
             return this;
         }
 
@@ -152,6 +196,7 @@ public class StripeAPI implements IPurchaseAPI {
             cancelUrl = String.format("http://localhost:8080/api/payment/cancel?url=%s&order_id=%s", cancelUrl, orderId);
             logger.debug("Setting redirect urls: {}, {}!", successUrl, cancelUrl);
             paramsBuilder = paramsBuilder.setSuccessUrl(successUrl).setCancelUrl(cancelUrl);
+            this.successUrl = successUrl;
             return this;
         }
 
@@ -165,8 +210,27 @@ public class StripeAPI implements IPurchaseAPI {
             }
         }
 
+        public FreeEventRequest buildFreeRequest () {
+            return new FreeEventRequest(orderId);
+        }
+
+        public long getOrderPrice () {
+            return orderPrice;
+        }
+
         public List<PurchaseItem> getPurchaseItems () {
             return purchaseItems;
+        }
+    }
+
+    private static class FreeEventRequest {
+        @SerializedName("order_id")
+        public String orderId;
+
+        public FreeEventRequest () {}
+
+        public FreeEventRequest (String orderId) {
+            this.orderId = orderId;
         }
     }
 }
