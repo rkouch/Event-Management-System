@@ -1746,4 +1746,12 @@ public class TickrController {
         ticket.refund(user);
         session.remove(ticket);
     }
+
+    public CategoriesResponse categoriesList (ModelSession session, Map<String, String> params) {
+        return new CategoriesResponse(Category.getValidCategories());
+    }
+
+    public CategoryEventsResponse eventsByCategory (ModelSession session, Map<String, String> params) {
+        return new CategoryEventsResponse(List.of(), 0);
+    }
 }

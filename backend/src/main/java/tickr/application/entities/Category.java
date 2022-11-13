@@ -5,11 +5,24 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "categories")
 public class Category {
+    private static final List<String> VALID_CATEGORIES = List.of(
+            "Food",
+            "Music",
+            "Travel & Outdoor",
+            "Health",
+            "Sport & Fitness",
+            "Hobbies",
+            "Business",
+            "Free",
+            "Tourism",
+            "Education"
+    );
     @Id
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
@@ -51,5 +64,9 @@ public class Category {
 
     private void setCategory (String category) {
         this.category = category;
+    }
+
+    public static List<String> getValidCategories () {
+        return VALID_CATEGORIES;
     }
 }
