@@ -103,6 +103,9 @@ public class Event {
     @Column(name = "event_pic")
     private String eventPicture;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
+    private Set<UserInteraction> interactions = new HashSet<>();
+
     private boolean published;
 
     @Column(name = "spotify_playlist")
@@ -524,6 +527,12 @@ public class Event {
     public void onDelete (ModelSession session) {
         if (eventPicture != null) {
             FileHelper.deleteFileAtUrl(eventPicture);
+        }
+
+        if (!getEventStart().isBefore(ZonedDateTime.now())) {
+            for (var i : tickets) {
+                i.refund(i.getUser());
+            }
         }
     }
 

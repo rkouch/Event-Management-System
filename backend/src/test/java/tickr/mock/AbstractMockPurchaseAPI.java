@@ -3,17 +3,22 @@ package tickr.mock;
 import tickr.application.apis.purchase.IOrderBuilder;
 import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.apis.purchase.LineItem;
+import tickr.application.apis.purchase.PurchaseResult;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
 
     private final Map<String, Customer> customers;
     private final Map<String, Order> orders;
 
+    private final Map<String, Payment> payments;
+
     public AbstractMockPurchaseAPI () {
         customers = new HashMap<>();
         orders = new HashMap<>();
+        payments = new HashMap<>();
     }
 
     public void addCustomer (String customerId, float defaultBalance) {
@@ -39,6 +44,12 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
             return order.getCancelUrl();
         } else {
             onSuccess(order);
+
+            var payment = order.getPayment();
+
+            payments.put(payment.getId(), payment);
+            payment.setCustomer(customer);
+
             return order.getSuccessUrl();
         }
     }
@@ -64,10 +75,24 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
     }
 
     @Override
-    public String registerOrder (IOrderBuilder builder) {
+    public PurchaseResult registerOrder (IOrderBuilder builder) {
         var order = ((OrderBuilder)builder).build();
         orders.put(order.getOrderId(), order);
-        return order.getOrderId();
+
+        for (var i : ((OrderBuilder)builder).getLineItems()) {
+            i.getPurchaseItem().setPaymentDetails(order.getPayment().getId());
+        }
+
+        return new PurchaseResult(order.getOrderId(), Map.of());
+    }
+
+    @Override
+    public void refundItem (String refundId, long refundAmount) {
+        if (!payments.containsKey(refundId)) {
+            throw new RuntimeException("Invalid refund id!");
+        }
+
+        payments.get(refundId).refund(refundAmount);
     }
 
     abstract protected void onSuccess (Order order);
@@ -109,23 +134,28 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
     }
 
     public static class Order {
-        private final List<LineItem> items;
+        private final List<OrderItem> items;
         private String orderId;
         private String reserveId;
         private String successUrl;
         private String cancelUrl;
 
+        private Payment payment;
+
         public Order (String orderId, String reserveId, List<LineItem> items, String successUrl, String cancelUrl) {
             this.orderId = orderId;
             this.reserveId = reserveId;
-            this.items = items;
+            this.items = items.stream().map(OrderItem::new).collect(Collectors.toList());
             this.successUrl = successUrl;
             this.cancelUrl = cancelUrl;
+            this.payment = new Payment(items.stream()
+                    .map(LineItem::getPrice)
+                    .reduce(0L, Long::sum));
         }
 
         public float getPrice () {
             return (float)items.stream()
-                    .map(LineItem::getPrice)
+                    .map(OrderItem::getPrice)
                     .reduce(0L, Long::sum) / 100;
         }
 
@@ -143,6 +173,28 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
 
         public String getReserveId () {
             return reserveId;
+        }
+
+        public Payment getPayment () {
+            return payment;
+        }
+    }
+
+    protected static class OrderItem {
+        private String itemName;
+        private long price;
+
+        public OrderItem (LineItem item) {
+            this.itemName = item.getItemName();
+            this.price = item.getPrice();
+        }
+
+        public String getItemName () {
+            return itemName;
+        }
+
+        public long getPrice () {
+            return price;
         }
     }
 
@@ -172,6 +224,47 @@ public abstract class AbstractMockPurchaseAPI implements IPurchaseAPI {
 
         public Order build () {
             return new Order("test://example.com/test/" + UUID.randomUUID(), reserveId, items, successUrl, cancelUrl);
+        }
+
+        public List<LineItem> getLineItems () {
+            return items;
+        }
+    }
+
+    protected static class Payment {
+        private String id;
+        private long amountRemaining;
+        private Customer customer;
+
+        public Payment (long amountRemaining) {
+            this.id  = UUID.randomUUID().toString();
+            this.amountRemaining = amountRemaining;
+        }
+
+        public void refund (long amount) {
+            if (amount > amountRemaining) {
+                throw new RuntimeException("Attempted to refund over payment amount!");
+            }
+
+            if (customer == null) {
+                throw new RuntimeException("Attempted to refund unpaid payment!");
+            }
+
+            amountRemaining -= amount;
+
+            customer.deposit(amount / 100.0f);
+        }
+
+        public void setCustomer (Customer customer) {
+            this.customer = customer;
+        }
+
+        public String getId () {
+            if (amountRemaining != 0) {
+                return id;
+            } else {
+                return null;
+            }
         }
     }
 }

@@ -92,6 +92,7 @@ public class TestReserveDetails {
                 new TicketReserve.TicketDetails("test_section", 2, List.of(1, 2)),
                 new TicketReserve.TicketDetails("test_section2", 1, List.of(3))
         )));
+        session = TestHelper.commitMakeSession(model, session);
         requestIds = response.reserveTickets.stream().map(t -> t.reserveId).collect(Collectors.toList());
         requestPrice = response.reserveTickets.stream().map(t -> t.price).reduce(0.0f, Float::sum);
     }

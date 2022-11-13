@@ -116,6 +116,7 @@ public class TestEventHostingsPast {
         session = TestHelper.commitMakeSession(model, session);
 
         controller.editEvent(session, new EditEventRequest(eventId3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
+        session = TestHelper.commitMakeSession(model, session);
     }
 
     @AfterEach
