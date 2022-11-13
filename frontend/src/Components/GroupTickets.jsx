@@ -35,6 +35,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
   const [activeStep, setActiveStep] = React.useState(0);
   const [showSelect, setShowSelect] = React.useState(true)
   const [showInvite, setShowInvite] = React.useState(false)
+  const [showInviteInfo, setShowInviteInfo] = React.useState(false)
   const [selectTicket, setSelectTicket] = React.useState('')
   const [invites, setInvites] = React.useState([])
   const [groupId, setGroupId] = React.useState('')
@@ -180,11 +181,16 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
       console.log(e)
     }
     setShowInvite(true)
+    setShowInviteInfo(true)
     setInvites([])
     setInfo(false)
     setGroupCreated(true)
     setShowSelect(false)
   }
+
+  React.useEffect(() => {
+    setShowInviteInfo(false)
+  }, [invites])
 
   // Group leader purchases their ticket
   const handleCheckout = async () => {
@@ -361,6 +367,18 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
             <ExpandMoreIcon/>
           </ExpandMore>
         </Box>
+        <Collapse in={showInvite}>
+          <Box sx={{p: 3, backgroundColor: '#DDDDDD', borderRadius: 5, mb: 1}}>
+            <Typography
+              sx={{
+                fontFamily: "Segoe UI",
+                fontSize: 17,
+              }}
+            >
+              Invite other members of Tickr. This can also be done after the ticket has been purchased.
+            </Typography>
+          </Box>
+        </Collapse>
         <Collapse in={showInvite}>
           <CentredBox sx={{flexDirection: 'column'}}>
             {reservedTickets.map((ticket, key) => {

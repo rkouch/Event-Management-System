@@ -333,33 +333,35 @@ export default function EditEvent({}) {
     }
   };
 
+  React.useEffect(() => {
+    if (spotifyPlaylist !== undefined) {
+      if (spotifyPlaylist.length === 0) {
+        setSpotifyError('')
+      }
+    }
+  }, [spotifyPlaylist])
+
   // Handles spotify playlist input
   const handleSpotifyChange = (e) => {
     // empty string provided
-    if (e.target.value.length === 0) {
-      setSpotifyPlaylist('')
-      setSpotifyError('')
-      return
-    }
+    setSpotifyError('')
+    setSpotifyPlaylist(e.target.value)
     const link = e.target.value
     try {
       // Check for valid url
       const url = new URL(link)
       
       // Check for valid spotify url
-      if (!e.target.value.includes('open.spotify.com/playlist')) {
+      if (!isValidSpotifyURL(e.target.value)) {
         setSpotifyError('Invalid playlist URL.')
-        setSpotifyPlaylist('')
+        console.log('Bad URL')
         return
       }
-      setSpotifyPlaylist(e.target.value)
       setSpotifyError('')
     } catch (e) {
-      setSpotifyPlaylist('')
       setSpotifyError('Invalid playlist URL.')
       return
     }
-    
   }
 
   const removeAdmin = (index) => {
@@ -528,6 +530,7 @@ export default function EditEvent({}) {
       spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
     };
 
+    console.log(body)
     try {
       const response = await apiFetch('PUT', '/api/event/edit', body)
       navigate(`/view_event/${params.event_id}`)
@@ -1196,17 +1199,17 @@ export default function EditEvent({}) {
                         <FormHelperText>{spotifyError}</FormHelperText>
                       </FormControl>
                       
-                      {(spotifyPlaylist !== '')
+                      {(isValidSpotifyURL(spotifyPlaylist))
                         ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
                             <SpotifyPlayer link={spotifyPlaylist} setValidURL={setValidURL} editable={true}/>
                           </Box>
                         : <></>
                       }
-                      
                     </Box>
                   </Grid>
                 </Grid>
               </EventForm>
+              <br/>
               <Grid container spacing={2} sx={{width: '100%', pr: 5, pl: 5}}>
                 <Grid item xs={3}>
                   <FormInput>

@@ -1,19 +1,9 @@
 import { Select, useTheme, alpha, MenuItem, Checkbox, ListItemText } from "@mui/material";
 import React from "react"
+import { apiFetch } from "../Helpers";
 import { ContrastInputNoOutline } from "../Styles/InputStyles";
 
-const categories = [
-  'Food',
-  'Music',
-  'Travel & Outdoor',
-  'Health',
-  'Sport & Fitness',
-  'Hobbies',
-  'Business',
-  'Free',
-  'Tourism',
-  'Education'
-]
+
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -38,6 +28,20 @@ function getStyles(name, personName, theme) {
 
 export default function CategorySelector({selectCategories, setSelectCategories, editable=false}) {
   const theme = useTheme()
+  const [categories, setCategories] = React.useState([])
+
+  const getCategories = async () => {
+    try {
+      const response = await apiFetch('GET', '/api/events/categories/list', null)
+      setCategories(response.categories)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  React.useEffect(() => {
+    getCategories()
+  }, [])
 
   // Handle Categories change
   const handleCategoriesChange = (e) => {

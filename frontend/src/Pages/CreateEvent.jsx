@@ -216,26 +216,23 @@ export default function CreateEvent({}) {
   // Handles spotify playlist input
   const handleSpotifyChange = (e) => {
     // empty string provided
-    if (e.target.value.length === 0) {
-      setSpotifyPlaylist('')
-      setSpotifyError('')
-      return
-    }
+    setSpotifyError('')
+    setSpotifyPlaylist(e.target.value)
     const link = e.target.value
     try {
       // Check for valid url
       const url = new URL(link)
       
       // Check for valid spotify url
-      if (!e.target.value.includes('open.spotify.com/playlist')) {
+      if (!isValidSpotifyURL(e.target.value)) {
         setSpotifyError('Invalid playlist URL.')
-        setSpotifyPlaylist('')
+        // setSpotifyPlaylist('')
+        console.log('Bad URL')
         return
       }
-      setSpotifyPlaylist(e.target.value)
+      
       setSpotifyError('')
     } catch (e) {
-      setSpotifyPlaylist('')
       setSpotifyError('Invalid playlist URL.')
       return
     }
@@ -965,7 +962,7 @@ export default function CreateEvent({}) {
                     <FormHelperText>{spotifyError}</FormHelperText>
                   </FormControl>
                   
-                  {(spotifyPlaylist !== '')
+                  {(isValidSpotifyURL(spotifyPlaylist))
                     ? <Box sx={{width: '100%', height: 500, borderRadius: 8, pt: 2}}>
                         <SpotifyPlayer link={spotifyPlaylist} setValidURL={setValidURL} editable={true}/>
                       </Box>

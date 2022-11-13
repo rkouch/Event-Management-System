@@ -15,7 +15,7 @@ import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import { Link, useNavigate } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
-import { getToken, getUserData, loggedIn } from '../Helpers';
+import { getToken, getUserData, loggedIn, search } from '../Helpers';
 import AccountMenu from './AccountMenu';
 
 const Search = styled('div')(({ theme }) => ({
@@ -54,7 +54,7 @@ export default function Header({searchValue=''}) {
 
   const handleSubmitSearch = (e) => {
     if (e.key === 'Enter') {
-      navigate(`/search/${searchString}`)
+      search('text', searchString, navigate)
     }
   }
 
@@ -92,7 +92,7 @@ export default function Header({searchValue=''}) {
                     placeholder='Search'
                     onChange={handleSearch}
                     onKeyPress={handleSubmitSearch}
-                    value={searchString}
+                    value={searchString }
                   >
                   </SearchInput>
                 </Search>

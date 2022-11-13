@@ -43,6 +43,8 @@ export default function GroupTicket({ticket, groupId}) {
       setInviteSent(true)
     } catch (e) {
       console.log(e)
+      setError(true)
+      setHelperMsg(e.reason)
     }
 
   }
