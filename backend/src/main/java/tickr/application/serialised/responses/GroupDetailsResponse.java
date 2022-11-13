@@ -18,12 +18,16 @@ public class GroupDetailsResponse {
 
     @SerializedName("available_reserves")
     public List<String> availableReserves;
+
+    @SerializedName("event_id")
+    public String eventId;
         
-    public GroupDetailsResponse(String hostId, List<GroupMember> groupMembers, List<PendingInvite> pendingInvites, List<String> availableReserves) {
+    public GroupDetailsResponse(String hostId, List<GroupMember> groupMembers, List<PendingInvite> pendingInvites, List<String> availableReserves, String eventId) {
         this.hostId = hostId;
         this.groupMembers = groupMembers;
         this.pendingInvites = pendingInvites;
         this.availableReserves = availableReserves;
+        this.eventId = eventId;
     }
 
     static public class GroupMember {

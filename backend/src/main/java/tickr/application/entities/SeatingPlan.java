@@ -161,7 +161,7 @@ public class SeatingPlan {
     }
 
     public List<TicketReservation> reserveSeats (ModelSession session, User user, int quantity) {
-        if (availableSeats < quantity) {
+        if (getAvailableSeats() < quantity) {
             throw new ForbiddenException("Not enough tickets remaining!");
         }
 

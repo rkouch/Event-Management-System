@@ -4,7 +4,7 @@ import Header from "../Components/Header"
 import { BackdropNoBG, CentredBox, H3, UploadPhoto } from "../Styles/HelperStyles"
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
-import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, sortSection } from "../Helpers";
+import { apiFetch, checkValidEmail, getEventData, getToken, setFieldInState, setReservedTicketsLocal, sortSection } from "../Helpers";
 import { Alert, Collapse, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { EventForm } from "./ViewEvent";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -14,8 +14,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { borderRadius, styled, alpha } from '@mui/system';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Switch from '@mui/material/Switch';
-import { ContrastInput, ContrastInputWrapper, TkrButton } from "../Styles/InputStyles";
+import { ContrastInput, ContrastInputWrapper, TextButton2, TkrButton } from "../Styles/InputStyles";
 import SectionDetails from "../Components/SectionDetails";
+import GroupsIcon from '@mui/icons-material/Groups';
+import GroupTickets from "../Components/GroupTickets";
+import OrderDetails from "../Components/OrderDetails";
 
 
 const ExpandMore = styled((props) => {
@@ -66,12 +69,17 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
   const [error2, setError2] = React.useState(false)
   const [errorMsg2, setErrorMsg2] = React.useState('')
 
+  // States for collapsable sections
   const [ticketSelect, setTicketSelect] = React.useState(true)
   const [detailsInput, setDetailsInput] = React.useState(false)
+
   const [customNames, setCustomNames] = React.useState(false)
   const [areTicketsReserved, setAreTicketsReserved] = React.useState(false)
 
+  // Reserved tickets
   const [reservedTickets, setReservedTickets] = React.useState([])
+
+  // Selected tickets
   const [orderDetails, setOrderDetails] = React.useState([])
 
   const [userDetails, setUserDetails] = React.useState({
@@ -80,6 +88,35 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     email: ''
   })
 
+  const [groupTicketBuy, setGroupTicketBuy] = React.useState(false)
+  const [groupLeaderTicket, setGroupLeaderTicket] = React.useState({
+    section: '',
+    seat_number: '',
+    price: ''
+  })
+  const [groupCart, setGroupCart] = React.useState(0)
+
+  // If group ticket purchase, update cart to reflect this
+  React.useEffect(() => {
+    var selectable_t = false
+    var sectionPrice = 0
+    selectedSeats.forEach(function(section) {
+      if (section.section === groupLeaderTicket.section) {
+        selectable_t = section.selectable
+      }
+    })
+    setGroupLeaderTicket({...groupLeaderTicket, selectable: selectable_t})
+    // setGroupCart(groupLeaderTicket.price)
+    if (!groupTicketBuy) {
+      const init = {
+        section: '',
+        seat_number: '',
+        price: ''
+      }
+      setGroupLeaderTicket(init)
+
+    }
+  }, [groupTicketBuy])
 
   // Get section details and available seats
   const getSectionDetails = async () => {
@@ -106,7 +143,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       sectionDetails_t.push(section_det)
     }
     // sortSection(sectionDetails_t)
-    console.log(sectionDetails_t)
     
     // Check booked seats
     try {
@@ -142,7 +178,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       const param2 = new URLSearchParams(body2)
       const response2 = await apiFetch('GET', `/api/event/reserved?${param2}`, null)
       const reserved = response2.reserved
-      console.log(reserved)
+
       // Sort through tickets bought and attach to respective section
       sectionDetails_t.forEach(function (section) {
         reserved.forEach(function(reserve) {
@@ -160,7 +196,9 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
   // Set up seat selector
   React.useEffect(() => {
-    getSectionDetails()
+    if (!areTicketsReserved) {
+      getSectionDetails()
+    }
   }, [event.event_name])
 
 
@@ -180,6 +218,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     setOrderTotal(total)
   }, [sectionDetails])
 
+  // Initial get event data
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
   },[])
@@ -203,7 +242,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
 
   const handleTicketInput = (reserve_id, field, value) => {
-    // Find tciket within ticket details
+    // Find ticket within ticket details
     setError(false)
     setErrorMsg('')
     const newState = reservedTickets.map(ticket => {
@@ -213,6 +252,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
       return ticket
     })
+    console.log(newState)
     setReservedTickets(newState)
   }
 
@@ -235,7 +275,39 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     }
   }
 
-  const handleCheckout = async () => {
+  // User chooses to edit their selection
+  const handleEditSelection = async () => {
+    // set tickets reserved to false, cancel reserves
+    try {
+      // cancel all reservations
+      console.log(reservedTickets)
+      const reserveIds = []
+      reservedTickets.forEach(function (reserve) {
+        reserveIds.push(reserve.reserve_id)
+      })
+
+      const body = {
+        auth_token: getToken(),
+        reservations: reserveIds
+      }
+
+      const response = await apiFetch('DELETE', '/api/ticket/reserve/cancel', body)
+      // setReservedTickets([])
+    } catch (e) {
+      console.log(e)
+      return
+    }
+    setAreTicketsReserved(false)
+    setTicketSelect(true)
+    setDetailsInput(false)
+    console.log('orderDetails')
+    console.log(orderDetails)
+    console.log('sectionDetails')
+    console.log(sectionDetails)
+    return
+  }
+
+  const handleReserve = async () => {
     // Prepare data package
     const ticketDetails = []
     sectionDetails.forEach(function (section) {
@@ -271,6 +343,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       
       const reservedTickets_t = []
       setTicketOrder(response.reserve_tickets)
+      setReservedTicketsLocal(response.reserve_tickets)
+
       response.reserve_tickets.forEach((function (reserve) {
         reserve['first_name'] = ''
         reserve['last_name'] = ''
@@ -306,6 +380,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     }
   }
 
+  const openGroupTicketBuy = () => {
+    setGroupTicketBuy(true)
+  }
+
   React.useEffect(() => {
     if (error2)  {
       setError2(false)
@@ -313,6 +391,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     }
   }, [reservedTickets])
 
+  // Purchase ticket
   const handlePayment = async () => {
     var errorStatus = false
     // If custom names, check all fields are filled
@@ -347,7 +426,8 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
 
     } else {
-      if (userDetails.firstName === '' || userDetails.lastName === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
+      console.log(userDetails)
+      if (userDetails.first_name === '' || userDetails.last_name === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
         setError2(true)
         setErrorMsg2("Invalid form details. Check all fields have been filled.")
         return
@@ -376,10 +456,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         console.log(error)
       }
     }
-
-    
-    
-
   }
 
   return (
@@ -414,7 +490,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         <Tooltip title="Back to event">
                           <IconButton onClick={()=>{
                             if (areTicketsReserved) {
-                              window.location.replace('http://localhost:3000/cancel_reservation')
+                              window.location.replace(`http://localhost:3000/cancel_reservation/${params.event_id}`)
                             } else {
                               navigate(`/view_event/${params.event_id}`)
                             }
@@ -448,6 +524,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                   <br/>
                   <br/>
                   <Box sx={{pl: 1, pr: 1}}>
+                    {/* Select Tickets */}
                     <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: ticketSelect ? '#FFFFFF' : '#EEEEEE'}}>
                       <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -456,20 +533,14 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                           </Typography>
                         </Grid>
                         <Grid item xs={4}>
-                          {/* <Box sx={{display:'flex', width: '100%', justifyContent: 'flex-end'}}>
-                            <ExpandMore
-                              sx={{
-                                m:0
-                              }}
-                              expand={ticketSelect}
-                              onClick={(e)=> {setTicketSelect(!ticketSelect)}}
-                              aria-expanded={ticketSelect}
-                              aria-label="show more"
-                              disabled={areTicketsReserved}
-                            >
-                              <ExpandMoreIcon />
-                            </ExpandMore>
-                          </Box> */}
+                          <Box sx={{display:'flex', width: '100%', height: '100%', justifyContent: 'flex-end', alignItems: 'center'}}>
+                            {areTicketsReserved
+                              ? <TextButton2 onClick={handleEditSelection}>
+                                  Edit selection
+                                </TextButton2>
+                              : <></>
+                            }
+                          </Box>
                         </Grid>
                       </Grid>
                       <Collapse in={ticketSelect}>
@@ -492,9 +563,9 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                             {(allSeatsSelected() && selectedSeats.length !== 0)
                               ? <TkrButton
                                 sx={{width: '100%'}}
-                                  onClick={handleCheckout}
+                                  onClick={handleReserve}
                                 >
-                                  Confirm Seats
+                                  Confirm Tickets
                                 </TkrButton>
                               : <FormControl sx={{width: '100%'}}>
                                   <TkrButton
@@ -519,6 +590,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                       </Collapse>
                     </Box>
                     <br/>
+                    {/* Enter in Order Details */}
                     <Box sx={{display: 'flex', justifyContent: 'center', p: 1, borderRadius: 2, flexDirection: 'column', backgroundColor: detailsInput ? '#FFFFFF' : '#EEEEEE'}}>
                       <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -544,108 +616,80 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                         </Grid>
                       </Grid>
                       <Collapse in={detailsInput}>
-                        <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
-                          <br/>
-                          {/* Custom Name Seating */}
-                          <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
-                                <FormGroup >
-                                  <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
-                                </FormGroup>
-                              </Box>  
-                            </Grid>
-                          </Grid>
-                          {customNames
-                            ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
-                                {orderDetails.map((section, key) => {
-                                  return (
-                                    <SectionDetails key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
-                                  )
-                                })}
-                              </Box>
-                            : <Grid container spacing={2}>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={4}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      fullWidth
-                                      placeholder="First Name"
-                                      value={userDetails.firstName}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('firstName', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={4}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      fullWidth
-                                      placeholder="Last Name"
-                                      value={userDetails.lastName}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('lastName', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={2}></Grid>
-                                <Grid item xs={8}>
-                                  <ContrastInputWrapper>
-                                    <ContrastInput
-                                      placeholder="Email"
-                                      fullWidth
-                                      value={userDetails.email}
-                                      onChange={(e) => {
-                                        setError2(false)
-                                        setErrorMsg2('')
-                                        setFieldInState('email', e.target.value, userDetails, setUserDetails)
-                                      }}
-                                    >
-                                    </ContrastInput>
-                                  </ContrastInputWrapper>
-                                </Grid>
-                                <Grid item xs={2}></Grid>
+                        <Collapse in={!groupTicketBuy}>
+                          <CentredBox sx={{flexDirection: 'column', ml: 5, mr: 5}}>
+                            <br/>
+                            {/* Custom Name Seating */}
+                            <Grid container spacing={2}>
+                              <Grid item xs={6}>
                               </Grid>
-                          }
-                          <br/>
-                          <TkrButton
-                            sx={{width: '100%'}}
-                            onClick={handlePayment}
-                            startIcon={<ShoppingCartOutlinedIcon/>}
-                          >
-                            Checkout
-                          </TkrButton>
-                          <br/>
-                          <br/>
-                          <Collapse in={error2}>
-                            <CentredBox>
-                              <Alert severity="error">{errorMsg2}</Alert>
-                            </CentredBox>
-                          </Collapse>
-                        </CentredBox>
+                              <Grid item xs={6}>
+                                {(reservedTickets.length > 1)
+                                  ? <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+                                      <FormGroup >
+                                        <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
+                                      </FormGroup>
+                                    </Box>  
+                                  : <></>
+                                }
+                              </Grid>
+                            </Grid>
+                            {customNames
+                              ? <Box sx={{p: 2, borderRadius: 2, width: '100%'}}>
+                                  {orderDetails.map((section, key) => {
+                                    return (
+                                      <SectionDetails key={key} section={section} getTicketDetails={getTicketDetails} handleTicketInput={handleTicketInput} handleSectionExpanded={handleSectionExpanded}/>
+                                    )
+                                  })}
+                                </Box>
+                              : <OrderDetails setError={setError2} userDetails={userDetails} setUserDetails={setUserDetails} setErrorMsg={setErrorMsg2} />
+                            }
+                            <br/>
+                            <Grid container>
+                              <Grid xs={8} item>
+                              </Grid>
+                              <Grid xs item>
+                                {(reservedTickets.length > 1)
+                                  ? <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                                      <TextButton2 startIcon={<GroupsIcon/>} onClick={openGroupTicketBuy}>
+                                        Buying as a group?
+                                      </TextButton2> 
+                                    </Box>
+                                  : <></>
+                                }
+                              </Grid>
+                            </Grid>
+                            <br/>
+                            <TkrButton
+                              sx={{width: '100%'}}
+                              onClick={handlePayment}
+                              startIcon={<ShoppingCartOutlinedIcon/>}
+                            >
+                              Checkout
+                            </TkrButton>
+                            <br/>
+                            <br/>
+                            <Collapse in={error2}>
+                              <CentredBox>
+                                <Alert severity="error">{errorMsg2}</Alert>
+                              </CentredBox>
+                            </Collapse>
+                          </CentredBox>
+                        </Collapse>
+                        {/* Group ticket buying menu */}
+                        <Collapse in={groupTicketBuy}>
+                          <GroupTickets reservedTickets={reservedTickets} setGroupTicketBuy={setGroupTicketBuy} setGroupLeaderTicket={setGroupLeaderTicket}/>
+                        </Collapse>
                       </Collapse>
                     </Box>
                   </Box>
-                  
-                  
                 </Grid>
                 <Divider orientation="vertical" flexItem></Divider>
-                <Grid item xs={4}>
+                <Grid item xs>
                   <Box sx={{height: "100%"}}>
                     <CentredBox sx={{flexDirection: 'column', widht: '100%'}}>
                       {(event.picture !== '')
-                        ? <UploadPhoto src={event.picture}/>
+                        ? <UploadPhoto src={event.picture} sx={{width:'100%', height: 300}}/>
                         : <Box sx={{width: '100%', height: 300, borderRadius: 5, backgroundColor: '#EEEEEE'}}>
                             <CentredBox sx={{height: '100%', alignItems: 'center'}}>
                               <Typography sx={{fontWeight: 'bold', fontSize: 40, pt: 1, texAlign: 'center'}}>
@@ -674,64 +718,109 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                             </Typography>
                             <Divider/>
                             <br/>
-                            <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
-                              {selectedSeats.map((section, key) => {
-                                return (
-                                  <Grid item key={key} sx={{width: '100%'}}>
+                            {!groupTicketBuy
+                              ? <Box>
+                                  <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
+                                    {selectedSeats.map((section, key) => {
+                                      return (
+                                        <Grid item key={key} sx={{width: '100%'}}>
+                                          <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
+                                            <Grid item xs={9}>
+                                              <Typography sx={{fontSize: 20}}>
+                                                {section.quantity} x {section.section} - ${section.ticket_price}
+                                              </Typography>
+                                              {section.selectable
+                                                ? <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+                                                    {section.seatsSelected.map((seat, key) => {
+                                                      if (key !== section.seatsSelected.length - 1) {
+                                                        return (
+                                                          <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                                            {seat},
+                                                          </Typography>
+                                                        )
+                                                      } else {
+                                                        return (
+                                                          <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                                            {seat}
+                                                          </Typography>
+                                                        )
+                                                      }
+                                                    })}
+                                                    
+                                                  </Box>
+                                                : <>
+                                                  </>
+                                              }
+                                            </Grid>
+                                            <Grid item xs={3}>
+                                              <Typography sx={{fontSize: 20, textAlign: 'right'}}>
+                                                ${(section.ticket_price*section.quantity)}
+                                              </Typography>
+                                            </Grid>
+                                          </Grid>
+                                          <br/>
+                                        </Grid>
+                                      )
+                                    })}
+                                  </Grid>
+                                  <br/>
+                                  <Divider/>
+                                  <br/>
+                                  <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
+                                    <Grid item xs={9}>
+                                      <Typography sx={{fontSize: 20}}>
+                                        Total: 
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                      <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                        ${orderTotal} 
+                                      </Typography>
+                                    </Grid>
+                                  </Grid>
+                                </Box>
+                              : <Box>
+                                  <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
                                     <Grid container spacing={2} sx={{pl: 1, pr: 1}}>
                                       <Grid item xs={9}>
                                         <Typography sx={{fontSize: 20}}>
-                                          {section.quantity} x {section.section} - ${section.ticket_price}
+                                          1 x {groupLeaderTicket.section} - ${groupLeaderTicket.price}
                                         </Typography>
-                                        {section.selectable
-                                          ? <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
-                                              {section.seatsSelected.map((seat, key) => {
-                                                if (key !== section.seatsSelected.length - 1) {
-                                                  return (
-                                                    <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
-                                                      {seat},
-                                                    </Typography>
-                                                  )
-                                                } else {
-                                                  return (
-                                                    <Typography key={key} sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
-                                                      {seat}
-                                                    </Typography>
-                                                  )
-                                                }
-                                              })}
-                                              
-                                            </Box>
-                                          : <>
-                                            </>
-                                        }
+                                        <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+                                          <Typography sx={{color: 'rgba(0, 0, 0, 0.6)'}}>
+                                            {groupLeaderTicket.section[0]}{groupLeaderTicket.seat_number}
+                                          </Typography>
+                                        </Box>
                                       </Grid>
                                       <Grid item xs={3}>
                                         <Typography sx={{fontSize: 20, textAlign: 'right'}}>
-                                          ${(section.ticket_price*section.quantity)}
+                                          {/* ${(section.ticket_price*section.quantity)} */}
                                         </Typography>
                                       </Grid>
                                     </Grid>
-                                    <br/>
                                   </Grid>
-                                )
-                              })}
-                            </Grid>
-                            <br/>
-                            <Divider/>
-                            <br/>
-                            <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
-                              <Grid item xs={9}>
-                                <Typography sx={{fontSize: 20}}>
-                                  Total: 
-                                </Typography>
-                              </Grid>
-                              <Grid item xs={3}>
-                                <Typography sx={{fontSize: 25, textAlign: 'right'}}>
-                                  ${orderTotal} 
-                                </Typography>
-                              </Grid>
-                            </Grid>
+                                  <br/>
+                                  <Divider/>
+                                  <br/>
+                                  <Grid container spacing={2} sx={{pl: 2, pr: 2}}>
+                                    <Grid item xs={9}>
+                                      <Typography sx={{fontSize: 20}}>
+                                        Total: 
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                      {(groupTicketBuy)
+                                        ? <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                            ${groupLeaderTicket.price}
+                                          </Typography>
+                                        : <Typography sx={{fontSize: 25, textAlign: 'right'}}>
+                                            ${orderTotal}
+                                          </Typography>
+                                      }
+                                    </Grid>
+                                  </Grid>
+                                </Box>
+                            }
                           </Box>
                       }
                     </Box>

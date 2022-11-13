@@ -57,5 +57,17 @@ export const TickrTheme = createTheme({
         }
       }
     },
+    MuiTypography: {
+      allVariants: {
+        fontFamily: 'Segoe UI'
+      }
+    },
+    MuiStepIcon: {
+      root: {
+        '&.active': {
+          color: 'red',
+          },
+      }
+    }
   },
 });

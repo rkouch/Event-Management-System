@@ -67,7 +67,7 @@ public class TestUserEventsPast {
         assertEquals(200, response.getStatus());
         var event1 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event1, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -79,7 +79,7 @@ public class TestUserEventsPast {
         assertEquals(200, response.getStatus());
         var event2 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event2, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -91,7 +91,7 @@ public class TestUserEventsPast {
         assertEquals(200, response.getStatus());
         var event3 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event3, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -103,7 +103,7 @@ public class TestUserEventsPast {
         assertEquals(200, response.getStatus());
         var event4 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event4, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/test/event/create", new CreateEventReqBuilder()
@@ -115,7 +115,7 @@ public class TestUserEventsPast {
         assertEquals(200, response.getStatus());
         var event5 = response.getBody(CreateEventResponse.class).event_id;
 
-        response = httpHelper.put("/api/event/edit", new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true));
+        response = httpHelper.put("/api/event/edit", new EditEventRequest(event5, authToken, null, null, null, null, null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
     }
 

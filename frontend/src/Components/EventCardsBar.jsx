@@ -5,7 +5,6 @@ import { Backdrop, BackdropNoBG, CentredBox, ContentBox } from '../Styles/Helper
 import { styled } from '@mui/system';
 import { Link } from "react-router-dom";
 import Grid from '@mui/material/Grid';
-import Header2 from '../Components/Header2';
 import { Card, Container, Divider, Typography } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -29,34 +28,49 @@ const CardsBar = styled(Box)({
   flexWrap: 'nowrap'
 })
 
-export default function EventCardsBar({event_ids = [], filterKeys=[], filterValues=[]}) {
-  const [eventIds, setEventIds] = React.useState(event_ids)
+const FillerCard = styled(Box)({
+  width: '250px',
+  height: '400px',
+})
+
+export default function EventCardsBar({event_ids = [], filterKeys=[], filterValues=[], center=false, cardsPerBar}) {
+  const [eventIds, setEventIds] = React.useState([...event_ids])
 
   React.useEffect(() => {
-    setEventIds(event_ids)
-    console.log('new events list')
-  }, [event_ids])
-  // const paramsObj = {
-  //   page_start: 0,
-  //   max_results: 10,
-  // }
+    setEventIds([...event_ids])
+    const fillerNum = cardsPerBar - event_ids.length
+    console.log(event_ids)
+    console.log('cardsPerBar: ',cardsPerBar)
+    console.log('event_ids.length: ',event_ids.length)
+    console.log('Need to fill: ',fillerNum)
+    if (fillerNum !== 0 && center) {
+      const filler_a = []
+      const filler_t = Array(filler_a).fill(1)
+      console.log('Creating fillers')
+      setFillerCard([...filler_t])
+    } else {
+      setFillerCard([])
+    }
+    // if (fillerNum !== 0) {
+    //   console.log(event_ids)
+    //   console.log('cardsPerBar: ',cardsPerBar)
+    //   console.log('event_ids.length: ',event_ids.length)
+    //   console.log('Need to fill: ',fillerNum)
+    //   const filler_a = []
+    //   const filler_t = Array(filler_a).fill(1)
+    //   console.log(filler_t)
+    //   setFillerCard([...filler_t])
+    // }
+    
+    
+  }, [event_ids, center])
 
-  // const searchParams = new URLSearchParams(paramsObj)
-  // const getEventIds = async () => {
-  //   try {
-  //     const response = await apiFetch('GET', `/api/event/search?${searchParams}`, null)
-  //     setEventIds(response.event_ids)
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
+  const [fillerCard, setFillerCard] = React.useState([])
 
-  // React.useEffect(() => {
-  //   getEventIds()
-  // }, [])
+
 
   return (
-    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6',}}>
+    <Box sx={{display: 'flex', width: '100%', backgroundColor: '#F6F6F6', borderRadius: 3, justifyContent: (center || event_ids.length === 0)  ? 'center' : 'flex-start'}}>
       {(event_ids.length > 0)
         ? <CardsBar>
             {eventIds.map((value, key) => {
@@ -64,11 +78,20 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
                 <EventCard key={key} event_id={value}/>
               )
             })}
+            {fillerCard.map((value, key) => {
+              console.log(value)
+              return (
+                <FillerCard key={key}/>
+              )
+            })}
           </CardsBar>
         : <CardsBar sx={{alignItems: 'center'}}>
-            <Typography sx={{fontSize: 45, color: '#CCCCCC'}}>
-              No Events
-            </Typography>
+            <Box sx={{width: '100%'}}>
+              <Typography sx={{fontSize: 45, color: '#CCCCCC', textAlign: 'center'}}>
+                No Events
+              </Typography>
+            </Box>
+            
           </CardsBar>
       }
       

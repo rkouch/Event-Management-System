@@ -14,7 +14,7 @@ import UserAvatar from "./UserAvatar";
 import Skeleton from '@mui/material/Skeleton';
 import Person4Icon from '@mui/icons-material/Person4';
 
-export default function AdminItem({index, adminID, removeAdmin, editEvent=false, openHostMenu=null, setNewHost=null}) {
+export default function AdminItem({index, adminID, removeAdmin, newAdmins=[], editEvent=false, openHostMenu=null, setNewHost=null}) {
   const [userData, setUserData] = React.useState({
     userName: '',
     firstName: '',
@@ -42,14 +42,25 @@ export default function AdminItem({index, adminID, removeAdmin, editEvent=false,
                 sx={{
                   display: 'flex'
                 }}
-              >
-                <Tooltip title="Make Host">
-                  <IconButton
-                    onClick={handleMakeHost}
-                  >
-                    <Person4Icon/>
-                  </IconButton>
-                </Tooltip>
+              > 
+                {/* Check if admin is newly added, event must be first saved */}
+                {(newAdmins.includes(adminID))
+                  ? <Tooltip title="Save the event before making user a host.">
+                      <span>
+                        <IconButton disabled
+                          >
+                            <Person4Icon/>
+                          </IconButton>
+                      </span>              
+                    </Tooltip>
+                  : <Tooltip title="Make Host">
+                      <IconButton
+                        onClick={handleMakeHost}
+                      >
+                        <Person4Icon/>
+                      </IconButton>
+                    </Tooltip>
+                }
                 <Divider orientation="vertical" variant="middle" flexItem/>
                 <Tooltip title="Remove Admin">
                   <IconButton

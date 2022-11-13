@@ -98,6 +98,9 @@ public class User {
     private Set<Event> notificationEvents = new HashSet<>();
     
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<UserInteraction> interactions;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<Invitation> invitations;
 
     public User () {
@@ -344,6 +347,10 @@ public class User {
         return new NotificationManagement.Settings(doReminders());
     }
 
+    public Set<UserInteraction> getInteractions () {
+        return interactions;
+    }
+
     public void setSettings (NotificationManagement.Settings settings) {
         if (settings.reminders != null) {
             setReminders(settings.reminders);
@@ -428,7 +435,7 @@ public class User {
     }
 
     // public List<Bookings> getBookings () {
-    //     List<Ticket> tickets = new ArrayList<>(this.tickets); 
+    //     List<Ticket> tickets = new ArrayList<>(this.tickets);
     //     Collections.sort(tickets, new Comparator<Ticket> () {
     //         @Override
     //         public int compare(Ticket t1, Ticket t2) {

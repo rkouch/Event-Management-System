@@ -116,11 +116,15 @@ public class TicketReservation {
         var purchaseItem = new PurchaseItem(purchaseId, this, firstName, lastName, email);
         session.save(purchaseItem);
 
-        return builder.withLineItem(new LineItem(String.format("%s (%s%d)", getSection().getEvent().getEventName(), getSection().getSection().substring(0, 1), getSeatNum()), this.price));
+        return builder.withLineItem(new LineItem(String.format("%s (%s%d)", getSection().getEvent().getEventName(),
+                getSection().getSection().charAt(0), getSeatNum()), this.price, purchaseItem));
     }
 
-    public Ticket convert (String firstName, String lastName, String email) {
-        Ticket ticket = new Ticket(user, section, seatNum, firstName, lastName, email);
+    public Ticket convert (String firstName, String lastName, String email, String paymentId) {
+        if (paymentId == null && price != 0) {
+            throw new RuntimeException("Invalid payment id!");
+        }
+        Ticket ticket = new Ticket(user, section, seatNum, firstName, lastName, email, paymentId, (long)Math.floor(price * 100));
         if (group != null) {
             group.convert(ticket, this);
         }

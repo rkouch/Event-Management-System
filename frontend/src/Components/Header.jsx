@@ -12,7 +12,7 @@ import SearchSharpIcon from '@mui/icons-material/SearchSharp';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { TkrButton, TkrButton2 } from '../Styles/InputStyles';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Container, Divider } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import { getToken, getUserData, loggedIn } from '../Helpers';
@@ -44,7 +44,20 @@ const SearchInput = styled(OutlinedInput)(({ theme }) => ({
   borderRadius: '5px'
 }))
 
-export default function Header({}) {
+export default function Header({searchValue=''}) {
+  const navigate = useNavigate()
+  const [searchString, setSearchString] = React.useState(searchValue)
+
+  const handleSearch = (e) => {
+    setSearchString(e.target.value)
+  }
+
+  const handleSubmitSearch = (e) => {
+    if (e.key === 'Enter') {
+      navigate(`/search/${searchString}`)
+    }
+  }
+
   return (
     <HeaderBar>
       <Grid container >
@@ -77,6 +90,9 @@ export default function Header({}) {
                     }
                     fullWidth={true}
                     placeholder='Search'
+                    onChange={handleSearch}
+                    onKeyPress={handleSubmitSearch}
+                    value={searchString}
                   >
                   </SearchInput>
                 </Search>

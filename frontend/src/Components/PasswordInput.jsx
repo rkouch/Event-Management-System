@@ -15,6 +15,7 @@ import { FlexRow, Logo, H3 } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
 import { Link, useNavigate } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
+import { Tooltip } from "@mui/material";
 
 
 export default function PasswordInput ({state, setState, placeholder='Password', requirements=false, setError}) {
@@ -84,14 +85,16 @@ export default function PasswordInput ({state, setState, placeholder='Password',
       sx={{borderRadius: 2}}
       endAdornment={
         <InputAdornment position="end">
-          <IconButton
-            aria-label="toggle password visibility"
-            onClick={(e) => setFieldInState('visibility', !state.visibility, state, setState)}
-            onMouseDown={(e) => e.preventDefault()}
-            edge="end"
-          >
-            {state.visibility ? <VisibilityOff /> : <Visibility />}
-          </IconButton>
+          <Tooltip title={state.visibility ? "Hide password" : "Show Password"}>
+            <IconButton
+              aria-label="toggle password visibility"
+              onClick={(e) => setFieldInState('visibility', !state.visibility, state, setState)}
+              onMouseDown={(e) => e.preventDefault()}
+              edge="end"
+            >
+              {state.visibility ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          </Tooltip>
         </InputAdornment>
       }
     />

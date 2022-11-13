@@ -40,6 +40,9 @@ public class PurchaseItem {
     @Column(name = "email")
     private String email;
 
+    @Column(name = "payment_id")
+    private String paymentId;
+
     static final Logger logger = LogManager.getLogger();
 
     public PurchaseItem () {
@@ -61,8 +64,8 @@ public class PurchaseItem {
         this.email = email != null ? email.toLowerCase().trim() : null;
     }
 
-    public Ticket convert (ModelSession session) {
-        var ticket = ticketReservation.convert(firstName, lastName, email);
+    public Ticket convert (ModelSession session, String paymentId) {
+        var ticket = ticketReservation.convert(firstName, lastName, email, paymentId);
         session.remove(ticketReservation);
 
         return ticket;
@@ -71,5 +74,17 @@ public class PurchaseItem {
     public void cancel (ModelSession session) {
         session.remove(ticketReservation);
 
+    }
+
+    public void setPaymentDetails (String paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public Event getEvent () {
+        return ticketReservation.getSection().getEvent();
+    }
+
+    public User getUser () {
+        return ticketReservation.getUser();
     }
 }

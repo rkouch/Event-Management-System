@@ -9,13 +9,13 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser, sortSection } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser, sortSection, isValidSpotifyURL } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
+import { Avatar, Backdrop, Box, Divider, FormGroup, FormLabel, InputAdornment, List, ListItem, Switch, Typography } from "@mui/material";
 import ShadowInput from "../Components/ShadowInput";
 import { styled, alpha } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -32,11 +32,14 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import UserAvatar from "../Components/UserAvatar";
+import SpotifyLogo from "../Images/SpotifyLogo.svg"
 
-import { ContrastInput, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
+import { ContrastInput, ContrastInputNoOutline, ContrastInputWrapper, DeleteButton, FormInput, TextButton, TkrButton, TkrButton2 } from '../Styles/InputStyles';
 import TagsBar from "../Components/TagsBar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
+import CategorySelector from "../Components/CategorySelector";
+import SpotifyPlayer from "../Components/SpotifyPlayer";
 
 
 export const EventForm = styled("div")({
@@ -55,14 +58,16 @@ export const EventForm = styled("div")({
 export default function EditEvent({}) {
   const params = useParams()
   const navigate = useNavigate()
+  var utc = require('dayjs/plugin/utc')
+  dayjs.extend(utc)
   // States
   const [start, setStartValue] = React.useState({
-    start: dayjs("2014-08-18T21:11:54"),
+    start: "2014-08-18T21:11:54",
     error: false,
   });
 
   const [end, setEndValue] = React.useState({
-    end: dayjs("2014-08-18T21:11:54"),
+    end: "2014-08-18T21:11:54",
     error: false,
     errorMsg: "",
   });
@@ -147,6 +152,14 @@ export default function EditEvent({}) {
 
   const [openDeleteMenu, setOpenDeleteMenu] = React.useState(false)
 
+  const [categories, setCategories] = React.useState(false)
+
+  const [newAdmins, setNewAdmins] = React.useState([])
+
+  const [spotifyPlaylist, setSpotifyPlaylist] = React.useState('')
+  const [spotifyError, setSpotifyError] = React.useState('')
+  const [validURL, setValidURL] = React.useState(false)
+
   const [event, setEvent] = React.useState({
     event_name: "",
     location: {
@@ -166,7 +179,7 @@ export default function EditEvent({}) {
     host_id: '',
     published: true,
   })
-  
+
   React.useState(() => {
     getEventData(params.event_id, setEvent)
   }, [])
@@ -174,7 +187,6 @@ export default function EditEvent({}) {
   // Set Values
   React.useEffect(() => {
     try {
-      console.log(event)
       setFieldInState('value', event.event_name, eventName, setEventName)
       setFieldInState('value', event.description, description, setDescription)
       const eventLocation = event.location
@@ -186,21 +198,20 @@ export default function EditEvent({}) {
       setAdminList(event.admins)
       setTags(event.tags)
 
-
-
-      setFieldInState('start', dayjs(event.start_date).format(), start, setStartValue)
-      setFieldInState('end', dayjs(event.end_date).format(), end, setEndValue)
+      const start_date_t = dayjs(event.start_date)
+      setFieldInState('start', start_date_t.utc().local().format(), start, setStartValue)
+      const end_date_t = dayjs(event.end_date)
+      setFieldInState('end', end_date_t.utc().local().format(), end, setEndValue)
       setEventPicture(event.picture)
       setPublished(event.published)
-
+      setCategories(event.categories)
+      setSpotifyPlaylist(event.spotify_playlist)
       const currentSeatingDetails = []
       for (const i in event.seating_details) {
         const section = event.seating_details[i]
-        console.log(section)
         section['availability'] = section.total_seats
         currentSeatingDetails.push(section)
       }
-      console.log(currentSeatingDetails)
       setSeatingList(currentSeatingDetails)
       // setPublished(response.published)
 
@@ -237,6 +248,11 @@ export default function EditEvent({}) {
     }
   };
 
+  // Handle disable from start date
+  function disableStartDate (date) {
+    return (date < start.start)
+  }
+
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
     setFieldInState("error", true, end, setEndValue);
@@ -263,7 +279,6 @@ export default function EditEvent({}) {
   
 
   const addAdmin = async (e) => {
-    console.log(adminList)
 
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
@@ -276,7 +291,7 @@ export default function EditEvent({}) {
     }
 
     setAdminLoading(true)
-    // Check if you are adding yourself to an event or user already is in event
+    // Check if you are adding yourself to an event
     try {
       const response = await apiFetch('GET',`/api/user/profile?auth_token=${getToken()}`)
       if (newAdmin.email === response.email) {
@@ -292,7 +307,7 @@ export default function EditEvent({}) {
     // Check if user exists
     try {
       const response = await apiFetch('GET', `/api/user/search?email=${newAdmin.email}`, null)
-      console.log(response)
+
       // Check if user already added as an admin
       if (adminList.includes(response.user_id)) {
         setFieldInState('email', '', newAdmin, setNewAdmin)
@@ -302,6 +317,12 @@ export default function EditEvent({}) {
       const adminList_t = [...adminList];
       adminList_t.push(response.user_id);
       setAdminList(adminList_t);
+
+      // Add new admin to new adminList
+      const newAdmins_t = [...newAdmins];
+      newAdmins_t.push(response.user_id);
+      setNewAdmins(newAdmins_t);
+
       setFieldInState('email', '', newAdmin, setNewAdmin)
       setAdminLoading(false)
     } catch (error) {
@@ -311,6 +332,35 @@ export default function EditEvent({}) {
       setAdminLoading(false)
     }
   };
+
+  // Handles spotify playlist input
+  const handleSpotifyChange = (e) => {
+    // empty string provided
+    if (e.target.value.length === 0) {
+      setSpotifyPlaylist('')
+      setSpotifyError('')
+      return
+    }
+    const link = e.target.value
+    try {
+      // Check for valid url
+      const url = new URL(link)
+      
+      // Check for valid spotify url
+      if (!e.target.value.includes('open.spotify.com/playlist')) {
+        setSpotifyError('Invalid playlist URL.')
+        setSpotifyPlaylist('')
+        return
+      }
+      setSpotifyPlaylist(e.target.value)
+      setSpotifyError('')
+    } catch (e) {
+      setSpotifyPlaylist('')
+      setSpotifyError('Invalid playlist URL.')
+      return
+    }
+    
+  }
 
   const removeAdmin = (index) => {
     const admin_list = [...adminList];
@@ -339,7 +389,6 @@ export default function EditEvent({}) {
   };
 
   const handleNewHost = async () => {
-    console.log(newHost)
     // Send api request for admin
     const body = {
       auth_token: getToken(),
@@ -377,8 +426,6 @@ export default function EditEvent({}) {
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
-      console.log("event empty")
-      console.log(eventName)
       setFieldInState('error', true, eventName, setEventName)
       error = true
     }
@@ -461,26 +508,28 @@ export default function EditEvent({}) {
       latitude: ''
     };
 
+    const start_date_t = dayjs(start.start).utc().format()
+    const end_date_t = dayjs(end.end).utc().format()
+
     const body = {
       auth_token: getToken(),
       event_id: params.event_id,
       event_name: eventName.value,
       picture: newPhoto ? eventPicture : null,
       location: locationBody,
-      start_date:  dayjs(start.start),
-      end_date: dayjs(end.end),
+      start_date:  start_date_t,
+      end_date: end_date_t,
       description: description.value,
       seating_details: seatingList,
-      categories: [],
-      tags: [],
+      categories: categories,
+      tags: tags,
       admins: adminList,
       published:published,
+      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
     };
 
-  
     try {
       const response = await apiFetch('PUT', '/api/event/edit', body)
-      console.log(response)
       navigate(`/view_event/${params.event_id}`)
     } catch (error) {
       console.log(error)
@@ -600,7 +649,6 @@ export default function EditEvent({}) {
                                   const image = await fileToDataUrl(e.target.files[0])
                                   setEventPicture(image)
                                   setNewPhoto(true)
-                                  console.log("uploaded image")
                                 }}
                               />
                             </Button>
@@ -735,6 +783,7 @@ export default function EditEvent({}) {
                                 inputFormat="DD/MM/YYYY HH:mm"
                                 renderInput={(params) => <TextField {...params} />}
                                 disablePast = {true}
+                                shouldDisableDate={disableStartDate}
                               />
                             </ContrastInputWrapper>
                             <FormHelperText>{end.errorMsg}</FormHelperText>
@@ -789,7 +838,7 @@ export default function EditEvent({}) {
                               </CentredBox>
                             </Grid>
                             <Grid item xs={7}>
-                              <AdminsBar editable={true} adminsList={adminList} removeAdmin={removeAdmin} editEvent={true} openHostMenu={setNewHostMenu} setNewHost={setNewHost}/>
+                              <AdminsBar editable={true} adminsList={adminList} newAdmins={newAdmins} removeAdmin={removeAdmin} editEvent={true} openHostMenu={setNewHostMenu} setNewHost={setNewHost}/>
                             </Grid>
                           </>
                         : <>
@@ -1121,8 +1170,39 @@ export default function EditEvent({}) {
                     }
                     <br/>
                     <Box>
+                      <h3> Categories </h3>
+                      <CategorySelector editable={true} setSelectCategories={setCategories} selectCategories={categories}/>
+                    </Box>
+                    <Box>
                       <h3> Tags </h3>
                       <TagsBar tags={tags} setTags={setTags} editable={true}/>
+                    </Box>
+                    <Box>
+                      <h3> Spotify playlist </h3>
+                      <FormControl sx={{width: "100%"}}>
+                        <ContrastInputWrapper>
+                          <ContrastInputNoOutline 
+                            fullWidth
+                            startAdornment={
+                              <InputAdornment position="start">
+                                <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(0,0,0,0)'}} alt='SpotifyLogo' src={SpotifyLogo}/>
+                              </InputAdornment>
+                            }
+                            onChange={handleSpotifyChange}
+                            placeholder="Add Spotify playlist"
+                            value={spotifyPlaylist}
+                          />
+                        </ContrastInputWrapper>
+                        <FormHelperText>{spotifyError}</FormHelperText>
+                      </FormControl>
+                      
+                      {(spotifyPlaylist !== '')
+                        ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
+                            <SpotifyPlayer link={spotifyPlaylist} setValidURL={setValidURL} editable={true}/>
+                          </Box>
+                        : <></>
+                      }
+                      
                     </Box>
                   </Grid>
                 </Grid>

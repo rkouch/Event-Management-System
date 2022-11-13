@@ -41,6 +41,9 @@ public class CreateEventRequest {
 
     public Set<String> tags;
 
+    @SerializedName("spotify_playlist")
+    public String spotifyPlaylist;
+
     public static class SeatingDetails {
         public String section;
         public int availability; 
@@ -60,7 +63,7 @@ public class CreateEventRequest {
     }
 
     public CreateEventRequest (String authToken, String eventName, String picture, SerializedLocation location, String startDate, 
-    String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags) {
+    String endDate, String description, List<SeatingDetails> seatingDetails, Set<String> admins, Set<String> categories, Set<String> tags, String spotifyPlaylist) {
         this.authToken = authToken;
         this.eventName = eventName;
         this.picture = picture; 
@@ -72,6 +75,7 @@ public class CreateEventRequest {
         this.admins = admins;
         this.categories = categories;
         this.tags = tags; 
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     public boolean isValid() {

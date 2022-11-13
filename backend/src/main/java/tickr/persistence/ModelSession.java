@@ -61,6 +61,12 @@ public interface ModelSession {
      */
     <T> void remove (T entity);
 
+    default <T> void clear (Class<T> tClass) {
+        for (var i : getAll(tClass)) {
+            remove(i);
+        }
+    }
+
 
     /**
      * Creates a new transaction with the same session

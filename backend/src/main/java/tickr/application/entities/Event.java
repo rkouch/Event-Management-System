@@ -3,9 +3,11 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import tickr.application.recommendations.EventVector;
+import tickr.application.recommendations.SparseVector;
 import tickr.application.serialised.SerializedLocation;
-import tickr.application.serialised.combined.EventSearch;
 import tickr.application.serialised.requests.EditEventRequest;
+import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
 import tickr.persistence.ModelSession;
 import tickr.server.exceptions.BadRequestException;
@@ -22,11 +24,12 @@ import tickr.util.Utils;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "events")
@@ -71,6 +74,9 @@ public class Event {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<Comment> comments;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "termId.event", cascade = CascadeType.REMOVE)
+    private Set<TfIdf> tfIdfs = new HashSet<>();
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
     private Set<SeatingPlan> seatingPlans;
 
@@ -103,7 +109,13 @@ public class Event {
     @Column(name = "event_pic")
     private String eventPicture;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "event", cascade = CascadeType.REMOVE)
+    private Set<UserInteraction> interactions = new HashSet<>();
+
     private boolean published;
+
+    @Column(name = "spotify_playlist")
+    private String spotifyPlaylist;
 
     public Event() {}
 
@@ -119,6 +131,21 @@ public class Event {
         this.host = host;
         this.eventPicture = eventPicture;
         this.published = false;
+    }
+
+    public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
+            String eventDescription, Location location, int seatAvailability, String eventPicture, String spotifyPlaylist) {
+        this.location = location;
+        this.eventName = eventName;
+        this.eventStart = eventStart;
+        this.eventEnd = eventEnd;
+        this.eventDescription = eventDescription;
+        this.seatAvailability = seatAvailability;
+        this.seatCapacity = seatAvailability;
+        this.host = host;
+        this.eventPicture = eventPicture;
+        this.published = false;
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     public UUID getId () {
@@ -318,7 +345,7 @@ public class Event {
     }
 
     public void editEvent (EditEventRequest request, ModelSession session, String eventName, String picture, SerializedLocation locations, String startDate, String endDate, String description, 
-                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published) {
+                             Set<String> categories, Set<String> tags, Set<String> admins, List<EditEventRequest.SeatingDetails> seatingDetails, boolean published, String spotifyPlaylist) {
         if (eventName != null) {
             this.eventName = eventName; 
         }
@@ -349,6 +376,10 @@ public class Event {
         if (description != null) {
             this.eventDescription = description;
         }
+        if (spotifyPlaylist != null) {
+            this.spotifyPlaylist = spotifyPlaylist;
+        }
+
         if (categories != null) {
             List<Category> oldCat = session.getAllWith(Category.class, "event", this);
             for (Category cat : oldCat) {
@@ -507,6 +538,12 @@ public class Event {
         if (eventPicture != null) {
             FileHelper.deleteFileAtUrl(eventPicture);
         }
+
+        if (!getEventStart().isBefore(ZonedDateTime.now())) {
+            for (var i : tickets) {
+                i.refund(i.getUser());
+            }
+        }
     }
 
     public boolean matchesCategories (List<String> categories) {
@@ -606,5 +643,48 @@ public class Event {
                 notificationMembers.remove(user);
             }
         }
+    public Map<String, Long> getWordCounts () {
+        var nameMap = Utils.toWordsMap(eventName);
+        var descMap = Utils.toWordsMap(eventDescription);
+
+        return Stream.concat(nameMap.entrySet().stream(), descMap.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingLong(Map.Entry::getValue)));
+    }
+
+    public SparseVector<String> getTfIdfVector (int numDocuments) {
+        var keys = tfIdfs.stream().map(TfIdf::getTermString).collect(Collectors.toList());
+        var values = tfIdfs.stream().map(t -> t.getTfIdf(numDocuments)).collect(Collectors.toList());
+
+        return new SparseVector<>(keys, values).normalised();
+    }
+
+    public void setTfIdfs (List<TfIdf> tfIdfs) {
+        this.tfIdfs.clear();
+        this.tfIdfs.addAll(tfIdfs);
+    }
+
+    public SparseVector<String> getTagVector () {
+        return new SparseVector<>(tags.stream().map(Tag::getTags).collect(Collectors.toList()), Collections.nCopies(tags.size(), 1.0))
+                .normalised();
+    }
+
+    public SparseVector<String> getCategoryVector () {
+        return new SparseVector<>(categories.stream().map(Category::getCategory).collect(Collectors.toList()), Collections.nCopies(categories.size(), 1.0))
+                .normalised();
+    }
+
+    public double getDistance (Event other) {
+        return getLocation().getDistance(other.getLocation());
+    }
+
+    public EventVector getEventVector (int numDocuments) {
+        return new EventVector(getTfIdfVector(numDocuments), getTagVector(), getCategoryVector(),
+                new SparseVector<>(List.of(host.getId().toString()), List.of(Utils.getIdf(host.getHostingEvents().size(), numDocuments))));
+    }
+
+    public EventViewResponse getEventViewResponse (SerializedLocation location, List<EventViewResponse.SeatingDetails> seatingResponse, Set<String> tags, Set<String> categories, Set<String> admins) {
+        return new EventViewResponse(host.getId().toString(), eventName, eventPicture, location, eventStart.format(DateTimeFormatter.ISO_INSTANT), 
+                eventEnd.format(DateTimeFormatter.ISO_INSTANT), eventDescription, seatingResponse,
+                admins, categories, tags, published, seatAvailability, seatCapacity, spotifyPlaylist);
     }
 }

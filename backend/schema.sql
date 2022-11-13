@@ -49,6 +49,7 @@ create table `events` (
     seat_capacity int,
     event_pic varchar(255) not null,
     published boolean not null,
+    spotify_playlist  varchar(255),
 /*    has_seats    boolean not null,*/
     primary key (id),
     foreign key (host_id) references users(id),
@@ -121,6 +122,9 @@ create table purchase_item (
     first_name varchar(255),
     last_name varchar(255),
     email varchar(255),
+
+    payment_id varchar(255),
+
     primary key (id),
     foreign key (ticket_id) references ticket_reservation(id)
 );
@@ -136,6 +140,9 @@ create table tickets (
     first_name varchar(255),
     last_name varchar(255),
     email varchar(255),
+
+    payment_id varchar(255),
+    price long not null,
 
     primary key (id),
     foreign key (user_id) references users(id),
@@ -235,6 +242,38 @@ create table invitation (
     foreign key (group_id) references `user_groups`(id),
     foreign key (reserve_id) references ticket_reservation(id),
     foreign key (user_id) references users(id)
+);
+
+create table document_term_count (
+  term varchar(255) not null,
+  term_count int not null,
+
+  primary key (term)
+);
+
+create table tf_idf (
+    term varchar(255) not null,
+    event_id varchar(36) not null,
+
+    term_freq double not null,
+    document_count int not null,
+
+    primary key (term, event_id),
+    foreign key (term) references document_term_count(term),
+    foreign key (event_id) references `events`(id)
+);
+
+create table user_interaction (
+    id varchar(36) not null,
+    interact_time datetime not null,
+    user_id varchar(36) not null,
+    event_id varchar(36) not null,
+    interact_type int not null,
+    rating double,
+
+    primary key (id),
+    foreign key (user_id) references `users`(id),
+    foreign key (event_id) references `events`(id)
 );
 
 create table TestTable

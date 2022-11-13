@@ -1,5 +1,3 @@
-import React from 'react';
-import { Route } from 'react-router';
 
 // Function to make api calls
 export const apiFetch = (method, route, body) => {
@@ -35,12 +33,13 @@ export const apiFetch = (method, route, body) => {
             break;
           default:
             reject("Defaulted fetch response")
+            break
         }
       })
       .catch((response) => {
         console.log(response);
         response.json().then((data) => {
-          resolve(data);
+          reject(data);
         });
       });
   });
@@ -128,6 +127,10 @@ export const getEventData = async (eventId, setEventData=null) => {
       response = await apiFetch('GET', `/api/event/view?event_id=${eventId}`, null)
     }
     sortSection(response.seating_details)
+    // const start_date = response.start_date
+    // const end_date = response.end_date
+    // response.start_date = start_date.concat('Z')
+    // response.end_date = end_date.concat('Z')
     setEventData(response)
   } catch (error) {
     console.log(error)
@@ -215,9 +218,7 @@ export const checkIfUser = async (userId, setState) => {
       if (userId === response_2.user_id) {
         setState(true)
         // navigate(`/my_profile`)
-      } else {
-        setState(false)
-      }
+      } 
     } catch (e) {
       console.log(e)
     }
@@ -266,3 +267,73 @@ export const getTicketDetails = async(ticket_id, setTicketDetails) => {
   }
   setTicketDetails(response)
 }
+
+// Set reserved tickets in local storage
+export const setReservedTicketsLocal = (reserved_tickets) => {
+  // Check if there are reserved tickets in local storage, clear them if there are
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  if (ticketNum !== null) {
+    var i = 0
+    while (i < ticketNum) {
+      localStorage.removeItem(`reserve_${i}`)
+      i += 1
+    }
+  }
+  localStorage.setItem('reserve_ticket_num', reserved_tickets.length)
+  for (const m in reserved_tickets) {
+    const reserve = reserved_tickets[m]
+    localStorage.setItem(`reserve_${m}`, reserve.reserve_id)
+  }
+}
+
+export const getReservedTicketsLocal = () => {
+  const reservedTickets = []
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  var i = 0
+  while (i < ticketNum) {
+    reservedTickets.push(localStorage.getItem(`reserve_${i}`))
+    i+= 1
+  }
+  return (reservedTickets)
+}
+
+export const clearReservedTicketsLocal = () => {
+  const ticketNum = localStorage.getItem('reserve_ticket_num')
+  var i = 0
+  while (i < ticketNum) {
+    localStorage.removeItem(`reserve_${i}`)
+    i+= 1
+  }
+  localStorage.removeItem('reserve_ticket_num')
+}
+
+// Check if a string has a number
+export const hasNumber = (string) => {
+  return /\d/.test(string);
+}
+
+export const attachFields = (object1, object2) => {
+  // attach additional params
+  Object.keys(object2).forEach(function (param) {
+    object1[param] = object2[param]
+  }) 
+  return object1
+}
+
+// Checks if the provided url is a valid spotify url
+export const isValidSpotifyURL = (link) => {
+  try {
+    // Check for valid url
+    const url = new URL(link)
+    
+    // Check for valid spotify url
+    if (!link.includes('open.spotify.com/playlist')) {
+      return false
+    } else {
+      return true
+    }
+  } catch (e) {
+    return false
+  }
+}
+
