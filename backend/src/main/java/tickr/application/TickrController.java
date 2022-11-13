@@ -480,6 +480,8 @@ public class TickrController {
             throw new BadRequestException("Invalid seating details!");
         }
 
+        event.makeEventNotification(user, "Event Detail Changes");
+
         // if (event.hasTicketsBeenSold() && request.getSeatingDetails()!= null) {
         //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
         // }
@@ -631,10 +633,12 @@ public class TickrController {
         if (!event.getHost().equals(user)) {
             throw new ForbiddenException("User is not the host of this event!"); 
         }
-        
+
         for (User i : event.getNotificationMembers()) {
             i.getNotificationEvents().remove(event);
         }
+
+        event.makeEventNotification(user, "Event Cancellation");
 
         event.onDelete(session);
         session.remove(event);

@@ -564,6 +564,34 @@ public class Event {
         }
     }
 
+    public void makeEventNotification(User user, String notification) {
+        if (notification == null || notification.equals("")) {
+            throw new BadRequestException("Empty notification!");
+        }
+
+        if (!userIsPrivileged(user)) {
+            throw new ForbiddenException("You are not allowed to make a notification!");
+        }
+
+        var seen = new HashSet<>();
+
+        if (notification.equals("Event Cancellation")) {
+            for (var i : tickets) {
+                if (!seen.contains(i.getUser().getId())) {
+                    EmailHelper.sendEventNotification(user, this, i.getUser(), notification);
+                    seen.add(i.getUser().getId());
+                }
+            }
+        } else {
+            for (var i : notificationMembers) {
+                if (!seen.contains(i)) {
+                    EmailHelper.sendEventNotification(user, this, i, notification);
+                    seen.add(i);
+                }
+            }
+        }
+    }
+
     public void editNotificationMembers(ModelSession session, User user, Boolean notifications) {
         if (notifications) {
             if (!notificationMembers.contains(user)) {
