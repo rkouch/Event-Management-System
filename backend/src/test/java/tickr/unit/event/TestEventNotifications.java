@@ -143,7 +143,7 @@ public class TestEventNotifications {
     }
 
     @Test
-    public void testException(){
+    public void testException() {
         assertThrows(UnauthorizedException.class, () -> controller.checkEventNotifications(session, Map.of("auth_token", UUID.randomUUID().toString(), "event_id", eventId)));
         assertThrows(ForbiddenException.class, () -> controller.checkEventNotifications(session, Map.of("auth_token", authToken, "event_id", UUID.randomUUID().toString())));
         assertThrows(BadRequestException.class, () -> controller.checkEventNotifications(session, Map.of("auth_token", authToken)));
@@ -153,7 +153,7 @@ public class TestEventNotifications {
     @Test
     public void testCheckNotification() {
         var response = controller.checkEventNotifications(session, Map.of("auth_token", authToken, "event_id", eventId));
-        assertEquals(response.notifications, false);
+        assertEquals(response.notifications, true);
 
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, false));
         response = controller.checkEventNotifications(session, Map.of("auth_token", authToken, "event_id", eventId));
@@ -162,6 +162,13 @@ public class TestEventNotifications {
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));    
         response = controller.checkEventNotifications(session, Map.of("auth_token", authToken, "event_id", eventId));
         assertEquals(response.notifications, true);
+    }
+
+    @Test
+    public void testDefault() {
+        var response = controller.checkEventNotifications(session, Map.of("auth_token", authToken, "event_id", eventId));
+        assertEquals(response.notifications, true);
+
     }
 
 

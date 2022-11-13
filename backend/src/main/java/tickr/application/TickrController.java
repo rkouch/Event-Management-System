@@ -681,6 +681,11 @@ public class TickrController {
 
         var ticketDatetime = request.getTicketTime();
         var eventId = parseUUID(request.eventId);
+        Event event = session.getById(Event.class, UUID.fromString(request.eventId))
+        .orElseThrow(() -> new ForbiddenException("Invalid event id!"));
+        
+        event.editNotificationMembers(session, user, user.doReminders());
+        user.editEventNotificaitons(session, event, user.doReminders());
 
         return session.getById(Event.class, eventId)
                 .map(e -> request.ticketDetails.stream()
@@ -690,6 +695,7 @@ public class TickrController {
                         .collect(Collectors.toList()))
                 .map(TicketReserve.Response::new)
                 .orElseThrow(() -> new ForbiddenException("Invalid event!"));
+
     }
 
     public TicketPurchase.Response ticketPurchase (ModelSession session, TicketPurchase.Request request) {
