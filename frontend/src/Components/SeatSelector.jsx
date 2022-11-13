@@ -40,6 +40,7 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
   };
 
   const handleQuantityChange = (key, qty) => {
+    // If a qunaity is selected, open seat selector
     if (qty > 0) {
       setExpanded(true)
       var seats_t = []
@@ -58,9 +59,12 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
       setExpanded(false)
       setRowsList([])
     }
+
+    // Update section details accordingly
     const new_sections = sectionDetails.map((value, key_m) => {
       if (key_m === key) {
         if (qty < value.seatsSelected.length) {
+          // New quantity is less than the selected value, remove from end of list
           var newSeatsSelected = value.seatsSelected.splice(0, qty)
           return {...value, quantity: qty, seatsSelected: newSeatsSelected}
         } else if (qty > value.seatsSelected.length) {

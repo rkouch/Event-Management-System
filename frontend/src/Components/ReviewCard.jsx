@@ -20,8 +20,6 @@ import { useParams } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function ReviewCard({review_details, review_num, isAttendee, isHost, isReviewer, handleRemoveReview, index}) {
-  console.log(review_details)
-  console.log(isReviewer)
   const params = useParams()
   const [review, setReview] = React.useState(review_details)
   const [reactBar, setReactBar] = React.useState(false)
@@ -111,7 +109,7 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
     try {
       const body = {
         auth_token: getToken(),
-        comment_id: review.review_id
+        comment_id: review.reviewId
       }
       const response = await apiFetch('DELETE', '/api/event/review/delete', body)
     } catch (e) {

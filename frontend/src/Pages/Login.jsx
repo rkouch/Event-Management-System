@@ -26,11 +26,14 @@ import '../App.css';
 import { apiFetch, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
+import { Tooltip } from "@mui/material";
 
 
-export default function Login({}) {
+export default function Login({customNavigateTo=false}) {
+  const params = useParams()
+
   const [email, setEmail] = React.useState({
     email: '',
     error: false,
@@ -79,7 +82,11 @@ export default function Login({}) {
     try {
       const response = await apiFetch('POST', '/api/user/login', body)
       setToken(response.auth_token)
-      navigate("/")
+      if (customNavigateTo) {
+        navigate(`/ticket/purchase/group/${params.invite_id}`)
+      } else {
+        navigate("/")
+      }
     } catch (errorResponse) {
       console.log(errorResponse.reason)
       console.log(error)
@@ -101,7 +108,7 @@ export default function Login({}) {
               fontSize: '30px',
             }}
           >
-            Login
+            Login 
           </H3>
           <Divider/>
           <br/>
@@ -132,14 +139,16 @@ export default function Login({}) {
                     sx={{borderRadius: 2}}
                     endAdornment={
                       <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={(e) => setFieldInState('visibility', !password.visibility, password, setPassword)}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                        >
-                          {password.visibility ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        <Tooltip title={password.visibility ? "Hide password" : "Show Password"}>
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={(e) => setFieldInState('visibility', !password.visibility, password, setPassword)}
+                            onMouseDown={(e) => e.preventDefault()}
+                            edge="end"
+                          >
+                            {password.visibility ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </Tooltip>
                       </InputAdornment>
                     }
                   />

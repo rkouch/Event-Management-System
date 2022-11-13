@@ -41,7 +41,7 @@ export default function EventCard({event_id}) {
     } catch(e) {
       console.log(e)
     }
-  },[])
+  },[event_id])
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -61,6 +61,8 @@ export default function EventCard({event_id}) {
                 boxShadow: '4',
                 cursor: 'pointer',
               },
+              display: 'flex',
+              flexDirection: 'column'
             }}
             onClick={handleClick}
           > 

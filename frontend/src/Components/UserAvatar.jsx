@@ -61,7 +61,7 @@ export default function UserAvatar({userId, size=35, host=false}) {
       {(userData.userName !== '')
         ? <>
             {host
-              ? <Tooltip title="Event Host">
+              ? <Tooltip title= {`Event Host | @${userData.userName}`}>
                   <Badge 
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     badgeContent={<Person4Icon/>}

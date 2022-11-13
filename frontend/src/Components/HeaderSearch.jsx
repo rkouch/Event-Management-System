@@ -44,20 +44,7 @@ const SearchInput = styled(OutlinedInput)(({ theme }) => ({
   borderRadius: '5px'
 }))
 
-export default function Header({searchValue=''}) {
-  const navigate = useNavigate()
-  const [searchString, setSearchString] = React.useState(searchValue)
-
-  const handleSearch = (e) => {
-    setSearchString(e.target.value)
-  }
-
-  const handleSubmitSearch = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/search/${searchString}`)
-    }
-  }
-
+export default function HeaderSearch({}) {
   return (
     <HeaderBar>
       <Grid container >
@@ -72,32 +59,7 @@ export default function Header({searchValue=''}) {
             </Box>
           </Grid>
           <Grid item xs={8}>
-            <CentredBox sx={{alignItems: 'center', height: '100%'}}>
-              <FormControl
-                sx={{
-                  width: '60%',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                <Search>
-                  <SearchInput 
-                    size="small"
-                    startAdornment={
-                      <InputAdornment position='start'>
-                        <SearchSharpIcon/>
-                      </InputAdornment>
-                    }
-                    fullWidth={true}
-                    placeholder='Search'
-                    onChange={handleSearch}
-                    onKeyPress={handleSubmitSearch}
-                    value={searchString}
-                  >
-                  </SearchInput>
-                </Search>
-              </FormControl>
-            </CentredBox>
+            
           </Grid>
           {loggedIn()
             ? <Grid item xs={2}>

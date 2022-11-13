@@ -2,6 +2,7 @@ import React from 'react'
 import { styled, alpha } from '@mui/system';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
+import { IconButton } from '@mui/material';
 
 export const TickrName = styled('div')({
   height: '50px',
@@ -35,8 +36,8 @@ export const Backdrop = styled(Box)({
   margin: 'auto',
   minHeight: '100vh',
   height: '100%',
-  padding: '10px'
-  // position: 'fixed',
+  padding: '10px',
+  position: 'fixed',
 })
 
 export const BackdropNoBG = styled(Box)({
@@ -45,6 +46,15 @@ export const BackdropNoBG = styled(Box)({
   margin: 'auto',
   minHeight: '100vh',
   height: '100%',
+  backgroundColor: '#F1F9F9',
+})
+
+export const BackdropNoBG_VH = styled(Box)({
+  width: '100%',
+  backgroundSize: 'cover',
+  margin: 'auto',
+  minHeight: '100vh',
+  height: '100vh',
   backgroundColor: '#F1F9F9',
 })
 
@@ -92,3 +102,14 @@ export const ScrollableBox = styled(Box)({
     borderRadius: 5
   }
 })
+
+export const ExpandMore = styled((props) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  marginLeft: 'auto',
+  transition: theme.transitions.create('transform', {
+    duration: theme.transitions.duration.shortest,
+  }),
+}));
