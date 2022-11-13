@@ -1747,7 +1747,7 @@ public class TickrController {
         session.remove(ticket);
     }
 
-    public CategoriesResponse categoriesList (ModelSession session, Map<String, String> params) {
+    public CategoriesResponse categoriesList (ModelSession session) {
         return new CategoriesResponse(Category.getValidCategories());
     }
 
@@ -1779,6 +1779,8 @@ public class TickrController {
         var eventCount = new AtomicInteger();
         var events = session.getAllWithStream(Category.class, "category", category)
                 .map(Category::getEvent)
+                .filter(Event::isPublished)
+                .filter(e -> e.getEventEnd().isAfter(ZonedDateTime.now(ZoneId.of("UTC"))))
                 .peek(c -> eventCount.getAndIncrement())
                 .sorted(Comparator.comparing(Event::getEventStart))
                 .skip(pageStart)

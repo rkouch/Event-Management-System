@@ -57,7 +57,7 @@ public class TestEventCategory {
     public void testCategoryList () {
         var categories = List.of("Food", "Music", "Travel & Outdoor", "Health", "Sport & Fitness", "Hobbies", "Business", "Free", "Tourism", "Education");
 
-        assertArrayEquals(categories.toArray(new String[0]), controller.categoriesList(session, Map.of()).categories.toArray(new String[0]));
+        assertArrayEquals(categories.toArray(new String[0]), controller.categoriesList(session).categories.toArray(new String[0]));
     }
 
     @Test
