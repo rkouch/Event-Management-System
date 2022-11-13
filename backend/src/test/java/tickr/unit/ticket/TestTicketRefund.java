@@ -163,4 +163,39 @@ public class TestTicketRefund {
 
         assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());
     }
+
+    @Test
+    public void testFreeRefund () {
+        var newEvent = controller.createEvent(session, new CreateEventReqBuilder()
+                .withSeatingDetails(List.of(new CreateEventRequest.SeatingDetails("TestSection", 10, 0, false)))
+                .withStartDate(startTime.minusMinutes(2))
+                .withEndDate(endTime)
+                .build(authToken)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(newEvent, authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
+        var reqId = controller.ticketReserve(session, new TicketReserve.Request(authToken, newEvent, startTime, List.of(
+                new TicketReserve.TicketDetails("TestSection", 1, List.of())
+        ))).reserveTickets.stream().map(TicketReserve.ReserveDetails::getReserveId).collect(Collectors.toList()).get(0);
+        session = TestHelper.commitMakeSession(model, session);
+        var url = controller.ticketPurchase(session, new TicketPurchase.Request(authToken, "http://example.com", "http://example.com", List.of(
+            new TicketPurchase.TicketDetails(reqId)
+        ))).redirectUrl;
+        session = TestHelper.commitMakeSession(model, session);
+        purchaseAPI.fulfillOrder(url, "test_customer");
+
+        assertEquals(15, purchaseAPI.getCustomer("test_customer").getBalance());
+
+        var ticketId = controller.ticketBookings(session, Map.of("auth_token", authToken, "event_id", newEvent)).tickets.get(0);
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.ticketRefund(session, new TicketRefundRequest(authToken, ticketId));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertEquals(15, purchaseAPI.getCustomer("test_customer").getBalance());
+        assertThrows(ForbiddenException.class, () -> controller.ticketView(session, Map.of("ticket_id", ticketId)));
+    }
 }
