@@ -3,6 +3,7 @@ package tickr.application.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import tickr.application.recommendations.EventVector;
 import tickr.application.recommendations.SparseVector;
 import tickr.application.serialised.SerializedLocation;
 import tickr.application.serialised.requests.EditEventRequest;
@@ -590,5 +591,10 @@ public class Event {
 
     public double getDistance (Event other) {
         return getLocation().getDistance(other.getLocation());
+    }
+
+    public EventVector getEventVector (int numDocuments) {
+        return new EventVector(getTfIdfVector(numDocuments), getTagVector(), getCategoryVector(),
+                new SparseVector<>(List.of(host.getId().toString()), List.of(Utils.getIdf(host.getHostingEvents().size(), numDocuments))));
     }
 }

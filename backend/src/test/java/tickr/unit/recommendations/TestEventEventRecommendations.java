@@ -1,5 +1,6 @@
 package tickr.unit.recommendations;
 
+import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import tickr.application.TickrController;
 import tickr.application.apis.ApiLocator;
 import tickr.application.apis.location.ILocationAPI;
 import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.requests.EditEventRequest;
 import tickr.mock.MockLocationApi;
 import tickr.persistence.DataModel;
 import tickr.persistence.HibernateModel;
@@ -125,8 +127,8 @@ public class TestEventEventRecommendations {
         var resultEvents = result.events;
 
         assertEquals(eventIds.get(0), resultEvents.get(0).id);
-        assertEquals(eventIds.get(1), resultEvents.get(1).id);
-        assertEquals(eventIds.get(2), resultEvents.get(2).id);
+        assertEquals(eventIds.get(2), resultEvents.get(1).id);
+        assertEquals(eventIds.get(1), resultEvents.get(2).id);
     }
 
     @Test
@@ -139,10 +141,16 @@ public class TestEventEventRecommendations {
                 .withDescription("testing")
                 .build(authToken2)).event_id;
         session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(event1, authToken2, null, null, null, null, null,
+                null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
         var event2 = controller.createEvent(session, new CreateEventReqBuilder()
                 .withEventName("testing beta")
                 .withDescription("testing")
                 .build(authToken2)).event_id;
+        session = TestHelper.commitMakeSession(model, session);
+        controller.editEvent(session, new EditEventRequest(event2, authToken2, null, null, null, null, null,
+                null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
 
         var result = controller.recommendEventEvent(session, Map.of("event_id", event1, "page_start", "0", "max_results", "10"));
@@ -199,6 +207,10 @@ public class TestEventEventRecommendations {
                 .build(authToken)).event_id);
         session = TestHelper.commitMakeSession(model, session);
 
+        controller.editEvent(session, new EditEventRequest(eventIds.get(0), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
                 .withEventName("Test three testing")
                 .withDescription("metal hydrogen force hydrogen hydrogen hydrogen cookie testing")
@@ -213,6 +225,10 @@ public class TestEventEventRecommendations {
                 .withCategories(Set.of("business", "education"))
                 .withTags(Set.of("science", "experiment", "test"))
                 .build(authToken)).event_id);
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventIds.get(1), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
         session = TestHelper.commitMakeSession(model, session);
 
         eventIds.add(controller.createEvent(session, new CreateEventReqBuilder()
@@ -230,6 +246,14 @@ public class TestEventEventRecommendations {
                 .withTags(Set.of("sweet", "delicious", "test"))
                 .build(authToken)).event_id);
         session = TestHelper.commitMakeSession(model, session);
+
+        controller.editEvent(session, new EditEventRequest(eventIds.get(2), authToken, null, null, null, null,
+                null, null, null, null, null, null, true));
+        session = TestHelper.commitMakeSession(model, session);
+
+        controller.createEvent(session, new CreateEventReqBuilder().build(authToken));
+        session = TestHelper.commitMakeSession(model, session);
+
         locationApi.awaitLocations();
         return eventIds;
     }

@@ -79,4 +79,12 @@ public class PurchaseItem {
     public void setPaymentDetails (String paymentId) {
         this.paymentId = paymentId;
     }
+
+    public Event getEvent () {
+        return ticketReservation.getSection().getEvent();
+    }
+
+    public User getUser () {
+        return ticketReservation.getUser();
+    }
 }

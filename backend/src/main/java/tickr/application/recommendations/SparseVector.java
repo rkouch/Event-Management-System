@@ -25,11 +25,15 @@ public class SparseVector<K extends Comparable<K>> {
     }
 
     public double length () {
-        return Math.sqrt(elements.stream()
+        return Math.sqrt(sqLength());
+    }
+
+    public double sqLength () {
+        return elements.stream()
                 .map(VectorElement::getVal)
                 .map(t -> t * t)
                 .mapToDouble(x -> x)
-                .sum());
+                .sum();
     }
 
     public SparseVector<K> normalised () {
@@ -96,6 +100,44 @@ public class SparseVector<K extends Comparable<K>> {
         return result;
     }
 
+    public SparseVector<K> multiply (double val) {
+        return new SparseVector<>(elements.stream().map(v -> v.multiply(val)).collect(Collectors.toList()));
+    }
+
+    public SparseVector<K> add (SparseVector<K> other) {
+        int it1 = 0;
+        int it2 = 0;
+
+        List<VectorElement<K>> newElements = new ArrayList<>();
+        while (it1 < elements.size() && it2 < other.elements.size()) {
+            var val1 = elements.get(it1);
+            var val2 = other.elements.get(it2);
+
+            int cmp = val1.getKey().compareTo(val2.getKey());
+            if (cmp < 0) {
+                newElements.add(val1);
+                it1++;
+            } else if (cmp > 0) {
+                newElements.add(val2);
+                it2++;
+            } else {
+                newElements.add(val1.add(val2));
+                it1++;
+                it2++;
+            }
+        }
+
+        while (it1 < elements.size()) {
+            newElements.add(elements.get(it1++));
+        }
+
+        while (it2 < other.elements.size()) {
+            newElements.add(other.elements.get(it2++));
+        }
+
+        return new SparseVector<>(newElements);
+    }
+
     private static class VectorElement<K> {
         private K key;
         private double val;
@@ -121,6 +163,12 @@ public class SparseVector<K extends Comparable<K>> {
             assert this.key.equals(other.key);
 
             return new VectorElement<>(key, val * other.val);
+        }
+
+        public VectorElement<K> add (VectorElement<K> other) {
+            assert this.key.equals(other.key);
+
+            return new VectorElement<>(key, val + other.val);
         }
     }
 }

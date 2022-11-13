@@ -61,27 +61,64 @@ public class RecommenderEngine {
         return similarityVector.dotProduct(WEIGHT_VECTOR);
     }
 
+    public static double calculateUserScore (ModelSession session, Event event, EventVector userProfile) {
+        return calculateUserScoreVector(session, event, userProfile).dotProduct(WEIGHT_VECTOR);
+    }
+
+    public static double calculateUserEventScore (ModelSession session, Event testEvent, Event currEvent, EventVector userProfile) {
+        var eventEventVec = buildSimilarityVector(session, testEvent, currEvent);
+        var userEventVec = calculateUserScoreVector(session, testEvent, userProfile);
+
+        return eventEventVec.add(userEventVec).multiply(0.5).dotProduct(WEIGHT_VECTOR);
+    }
+
+    private static Vector calculateUserScoreVector (ModelSession session, Event event, EventVector userProfile) {
+        int numEvents = session.getAll(Event.class).size(); // TODO
+        var tagIdf = getTagIdf(session, numEvents);
+        var categoryIdf = getCategoryIdf(session, numEvents);
+
+        var userVector = userProfile.applyIdfs(tagIdf, categoryIdf);
+        var eventVector = event.getEventVector(numEvents).applyIdfs(tagIdf, categoryIdf);
+
+        return userVector.combine(eventVector, 0.0);
+    }
+
 
     private static Vector buildSimilarityVector (ModelSession session, Event e1, Event e2) {
         int numEvents = session.getAll(Event.class).size(); // TODO
-        var e1TermVec = e1.getTfIdfVector(numEvents);
-        var e2TermVec = e2.getTfIdfVector(numEvents);
-        var termTfIdf = e1TermVec.dot(e2TermVec);
+        var e1Vec = e1.getEventVector(numEvents);
+        var e2Vec = e2.getEventVector(numEvents);
 
         var tagIdf = getTagIdf(session, numEvents);
-        var e1TagVec = e1.getTagVector().cartesianProduct(tagIdf).normalised();
-        var e2TagVec = e2.getTagVector().cartesianProduct(tagIdf).normalised();
-        var tagTfIdf = e1TagVec.dot(e2TagVec);
-
         var categoryIdf = getCategoryIdf(session, numEvents);
-        var e1CategoryVec = e1.getCategoryVector().cartesianProduct(categoryIdf).normalised();
-        var e2CategoryVec = e2.getCategoryVector().cartesianProduct(categoryIdf).normalised();
-        var categoryTfIdf = e1TagVec.dot(e2TagVec);
 
-        var hostTfIdf = getHostTfIdf(session, e1, e2, numEvents);
+        e1Vec = e1Vec.applyIdfs(tagIdf, categoryIdf);
+        e2Vec = e2Vec.applyIdfs(tagIdf, categoryIdf);
+
         var invDistance = 1.0 / (e1.getDistance(e2) + 1);
 
-        return new Vector(List.of(termTfIdf, tagTfIdf, categoryTfIdf, hostTfIdf, invDistance));
+        return e1Vec.combine(e2Vec, invDistance);
+    }
+
+    public static EventVector buildUserProfile (ModelSession session, User user) {
+        int numEvents = session.getAll(Event.class).size(); // TODO
+        var profile = EventVector.identity();
+        for (var i : user.getInteractions()) {
+            profile = profile.add(i.getVector(numEvents));
+        }
+
+        return profile.normalise();
+    }
+
+    public static void recordInteraction (ModelSession session, User user, Event event, InteractionType type) {
+        assert type != InteractionType.REVIEW;
+        var interaction = new UserInteraction(user, event, type, null);
+        session.save(interaction);
+    }
+
+    public static void recordRating (ModelSession session, User user, Event event, double rating) {
+        var interaction = new UserInteraction(user, event, InteractionType.REVIEW, rating);
+        session.save(interaction);
     }
 
     private static SparseVector<String> getTagIdf (ModelSession session, int numEvents) {
@@ -108,15 +145,5 @@ public class RecommenderEngine {
         return new SparseVector<>(entries.stream().map(Map.Entry::getKey).collect(Collectors.toList()),
                 entries.stream().map(Map.Entry::getValue).map(x -> Utils.getIdf(x.intValue(), numEvents)).collect(Collectors.toList()))
                 .normalised();
-    }
-
-    private static double getHostTfIdf (ModelSession session, Event e1, Event e2, int numEvents) {
-        if (!e1.getHost().getId().equals(e2.getHost().getId())) {
-            return 0;
-        }
-
-        int numEventsHosted = e1.getHost().getHostingEvents().size();
-
-        return Utils.getIdf(numEventsHosted, numEvents);
     }
 }
