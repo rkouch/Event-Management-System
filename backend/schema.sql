@@ -80,7 +80,7 @@ create table notification_members (
     primary key (event_id, user_id),
     foreign key (event_id) references `events` (id),
     foreign key (user_id) references users(id)     
-)
+);
 
 create table seating_plan (
     id          varchar(36) not null,
