@@ -157,7 +157,7 @@ public class TestEventCategory {
         eventIds.add(response.getBody(CreateEventResponse.class).event_id);
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventIds.get(0), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
@@ -180,7 +180,7 @@ public class TestEventCategory {
         eventIds.add(response.getBody(CreateEventResponse.class).event_id);
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventIds.get(1), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
@@ -203,7 +203,7 @@ public class TestEventCategory {
         eventIds.add(response.getBody(CreateEventResponse.class).event_id);
 
         response = httpHelper.put("/api/event/edit", new EditEventRequest(eventIds.get(2), authToken, null, null, null, null,
-                null, null, null, null, null, null, true));
+                null, null, null, null, null, null, true, null));
         assertEquals(200, response.getStatus());
 
         response = httpHelper.post("/api/event/create", new CreateEventReqBuilder()
