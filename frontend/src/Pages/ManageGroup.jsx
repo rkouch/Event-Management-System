@@ -58,7 +58,7 @@ export default function ManageGroup({}) {
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/group/details?${searchParams}`, null)
       setGroupDetails(response)
-      // getEventData(response.event_id, setEvent)
+      getEventData(response.event_id, setEvent)
       // setGroupMembers(response.group_members)
       // setPendingInvites(response.pending_invites)
       // setAvailableReserves(response.available_reserves)
@@ -96,7 +96,7 @@ export default function ManageGroup({}) {
           paddingTop: 1,
         }}
       >
-        {(groupDetails.event_id === 'k')
+        {(groupDetails.event_id === '')
           ? <Box sx={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '50px', paddingTop: '100px'}}> 
               <Box sx={{ width: '90%', hieght: 50}}>
                 <LinearProgress color='secondary'/>
@@ -108,9 +108,9 @@ export default function ManageGroup({}) {
                   <Grid container>
                     <Grid item xs={1}>
                       <CentredBox sx={{height: '100%'}}>
-                        <Tooltip title="Back to event">
+                        <Tooltip title="Back to tickets">
                           <IconButton onClick={()=>{
-                            navigate(`/view_event/${event.event_id}`) 
+                            navigate(`/view_tickets/${event.event_id}`) 
                           }}>
                             <ArrowBackIcon/>
                           </IconButton>

@@ -14,7 +14,7 @@ import TagsBar from "../Components/TagsBar";
 import UserAvatar from "../Components/UserAvatar";
 import AdminsBar from "../Components/AdminBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData, loggedIn } from "../Helpers";
+import { apiFetch, checkIfUser, getEventData, getTicketIds, getToken, getUserData, isValidSpotifyURL, loggedIn } from "../Helpers";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -26,7 +26,6 @@ import { ContrastInputNoOutline, ContrastInputWrapper, HoverChipSelected, TkrBut
 import EventReview from "../Components/EventReview";
 import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
-import Spotify from "../Components/Spotify";
 import SpotifyPlayer from "../Components/SpotifyPlayer";
 import CategorySelector from "../Components/CategorySelector";
 
@@ -102,7 +101,7 @@ export default function ViewEvent({}) {
   React.useEffect(()=> {
     getEventData(params.event_id, setEvent)
 
-    // Check if we have the host_id is provided
+    // Check if we have the host_id is provided to check if event data has been captured
     if (event.host_id !== '') {
       if (dayjs() > dayjs(event.end_date)) {
         setEventOver(true)
@@ -538,9 +537,10 @@ export default function ViewEvent({}) {
                       </Box>
                     : <></>
                   }
-                  {(event.spotify_playlist !== null) 
+                  <br/>
+                  {(isValidSpotifyURL('https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=287439ed80a94727')) 
                     ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
-                        <SpotifyPlayer link="https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=d555815cf35b4505"/>
+                        <SpotifyPlayer link={'https://open.spotify.com/playlist/0DDpOLCvdtnU04ENVoTSL7?si=287439ed80a94727'}/>
                       </Box>
                     : <></>
                   }

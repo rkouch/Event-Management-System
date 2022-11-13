@@ -48,6 +48,8 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
       const filler_t = Array(filler_a).fill(1)
       console.log('Creating fillers')
       setFillerCard([...filler_t])
+    } else {
+      setFillerCard([])
     }
     // if (fillerNum !== 0) {
     //   console.log(event_ids)

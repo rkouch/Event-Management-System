@@ -33,6 +33,7 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
 
     // Check valid first name
     setFieldInState('value', e.target.value, firstName, setFirstName)
+    setFieldInState('firstName', e.target.value, userDetails, setUserDetails)
   }
 
   const handleLastNameChange = (e) => {
@@ -43,6 +44,7 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
 
     // Check valid last name
     setFieldInState('value', e.target.value, lastName, setLastName)
+    setFieldInState('lastName', e.target.value, userDetails, setUserDetails)
   }
 
   const handleEmailChange = (e) => {
@@ -53,6 +55,7 @@ export default function OrderDetails({userDetails, setError, setErrorMsg, setUse
 
     // check valid email
     setFieldInState('value', e.target.value, email, setEmail)
+    setFieldInState('email', e.target.value, userDetails, setUserDetails)
   }
 
 

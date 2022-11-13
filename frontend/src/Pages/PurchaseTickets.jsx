@@ -624,11 +624,14 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
                               <Grid item xs={6}>
                               </Grid>
                               <Grid item xs={6}>
-                                <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
-                                  <FormGroup >
-                                    <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
-                                  </FormGroup>
-                                </Box>  
+                                {(reservedTickets.length > 1)
+                                  ? <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+                                      <FormGroup >
+                                        <FormControlLabel label="Assign details per ticket" labelPlacement="start" sx={{display: 'flex', justifyContent: 'flex-end'}} control={<Switch onChange={(e) => {setCustomNames(e.target.checked)}}/>}/>
+                                      </FormGroup>
+                                    </Box>  
+                                  : <></>
+                                }
                               </Grid>
                             </Grid>
                             {customNames

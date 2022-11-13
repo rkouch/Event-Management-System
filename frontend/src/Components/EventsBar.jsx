@@ -47,6 +47,10 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
     window.addEventListener("resize", getWindowSize)
   }, [])
 
+  React.useEffect(() => {
+    setCenter(false)
+  }, [cardsPerPage])
+
   // ---------------------------------------------------- //
 
   // Handles for swipeable views interaction
@@ -156,7 +160,9 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
         </SwipeableViews>
       </Box>
       <MobileStepper
-        sx={{color: 'red'}}
+        sx={{
+          '.MuiMobileStepper-dotActive': { backgroundColor: '#AE759F' },
+        }}
         steps={maxPages}
         position="static"
         activeStep={activePage}
@@ -165,6 +171,7 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
             size="small"
             onClick={handlePageNext}
             disabled={activePage === maxPages - 1}
+            sx={{color: '#AE759F'}}
           >
             Next
             {theme.direction === 'rtl' ? (
@@ -175,7 +182,12 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
           </Button>
         }
         backButton={
-          <Button size="small" onClick={handlePageBack} disabled={activePage === 0}>
+          <Button 
+            size="small"
+            onClick={handlePageBack}
+            disabled={activePage === 0}
+            sx={{color: '#AE759F'}}
+          >
             {theme.direction === 'rtl' ? (
               <KeyboardArrowRight />
             ) : (

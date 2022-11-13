@@ -168,6 +168,40 @@ export default function SearchResults({}) {
     getSearchResults(0)
   }, [searchOptions])
 
+  // Effects to detect if filter is used
+  React.useEffect(() => {
+    if (address.value.length !== 0 && suburb.value.length !==  0 && postcode.value.length !== 0 && state.value.length !== 0 && country.value.length !== 0){
+      setLocationFilter(true)
+    } else {
+      setLocationFilter(false)
+    }
+  }, [address, suburb, postcode, state, country])
+
+  React.useEffect(() => {
+    if (selectCategories.length > 0) {
+      setCategoriesFilter(true)
+    } else {
+      setCategoriesFilter(false)
+    }
+  }, [selectCategories])
+
+  React.useEffect(() => {
+    if (tags.length > 0) {
+      setTagsFilter(true)
+    } else {
+      setTagsFilter(false)
+    }
+  }, [tags])
+
+  React.useState(() => {
+    // Check date filter
+    if (startDate.value !== null && endDate.value !== null) {
+      setDateFilter(true)
+    } else {
+      setDateFilter(false)
+    }
+  }, [startDate.value, endDate.value])
+
   // Hanlde search change
   const handleStringChange = (e) => {
     setSearchString(e.target.value)
@@ -192,6 +226,13 @@ export default function SearchResults({}) {
   // Handle start date change
   const handleStartChange = (newValue) => {
     setFieldInState("value", newValue, startDate, setStartDate)
+
+    if (newValue !== null && endDate.value !== null) {
+      setDateFilter(true)
+    } else {
+      setDateFilter(false)
+    }
+
     setFieldInState("error", false, startDate, setStartDate)
     if (endDate.value < startDate.value) {
       setFieldInState("error", true, endDate, setEndDate);
@@ -210,6 +251,13 @@ export default function SearchResults({}) {
   // Handle end date change
   const handleEndChange = (newValue) => {
     setFieldInState("value", newValue, endDate, setEndDate);
+
+    if (startDate.value !== null && newValue !== null) {
+      setDateFilter(true)
+    } else {
+      setDateFilter(false)
+    }
+
     setFieldInState("error", true, endDate, setEndDate);
     console.log(endDate.value);
     if (endDate.value <= startDate.value) {
@@ -245,7 +293,7 @@ export default function SearchResults({}) {
   const handleApplyFilters = (e) => {
     // Check if address filter values
     var locationFilter_t = false
-    if (address.value.length !== 0 || suburb.value.length !==  0 || postcode.value.length !== 0 || state.value.length !== 0 || country.value.length !== 0){
+    if (address.value.length !== 0 && suburb.value.length !==  0 && postcode.value.length !== 0 && state.value.length !== 0 && country.value.length !== 0){
       setLocationFilter(true)
       locationFilter_t = true
     } else {
@@ -546,7 +594,7 @@ export default function SearchResults({}) {
                           <br/>
                           <FormControl fullWidth>
                             <Typography sx={{fontFamily: 'Segoe UI', color: categoriesFilter ? '#333333' : '#AAAAAA', fontSize: 20, fontWeight: 'bold'}}>Categories Filter</Typography>
-                            <CategorySelector setSelectCategories={setSelectCategories} selectCategories={selectCategories}/>
+                            <CategorySelector setSelectCategories={setSelectCategories} selectCategories={selectCategories} editable={true}/>
                           </FormControl>
                         </Grid>
                         <Divider orientation='vertical' flexItem sx={{pr: 1}}></Divider>

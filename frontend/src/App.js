@@ -29,6 +29,7 @@ import CancelReservations from './Pages/CancelReservations';
 import SearchResults from './Pages/SearchResults';
 import AcceptInvite from './Pages/AcceptInvite';
 import ManageGroup from './Pages/ManageGroup';
+import RefundTicket from './Pages/RefundTicket';
 
 
 function App() {  
@@ -123,6 +124,10 @@ function App() {
     {
       path: '/group/manage/:group_id',
       element: <ManageGroup/>
+    },
+    {
+      path: '/ticket/refund/:ticket_id',
+      element: <RefundTicket/>
     }
   ])
 

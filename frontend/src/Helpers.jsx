@@ -33,12 +33,13 @@ export const apiFetch = (method, route, body) => {
             break;
           default:
             reject("Defaulted fetch response")
+            break
         }
       })
       .catch((response) => {
         console.log(response);
         response.json().then((data) => {
-          resolve(data);
+          reject(data);
         });
       });
   });
@@ -317,4 +318,20 @@ export const attachFields = (object1, object2) => {
     object1[param] = object2[param]
   }) 
   return object1
+}
+
+export const isValidSpotifyURL = (link) => {
+  try {
+    // Check for valid url
+    const url = new URL(link)
+    
+    // Check for valid spotify url
+    if (!link.includes('open.spotify.com/playlist')) {
+      return false
+    } else {
+      return true
+    }
+  } catch (e) {
+    return false
+  }
 }

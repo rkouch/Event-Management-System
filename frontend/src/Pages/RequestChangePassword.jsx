@@ -14,12 +14,10 @@ import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
-
 import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
-import {CircularProgress, Typography } from '@mui/material';
-
+import {CircularProgress, Tooltip, Typography } from '@mui/material';
 import '../App.css';
-
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiFetch, checkValidEmail, getToken, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';
@@ -91,13 +89,29 @@ export default function RequestChangePassword({}) {
                 </H3>
               </CentredBox>
             : <>
-              <H3
-                sx={{
-                  fontSize: '30px',
-                }}
-              >
-                Confirm Your Email
-              </H3>
+              <Grid container>
+                <Grid item xs={1}>
+                  <CentredBox sx={{height: '100%', pl: 5}}>
+                    <Tooltip title="Rememebered your password?">
+                      <IconButton onClick={(e) => {navigate('/login')}}>
+                        <ArrowBackIcon/>
+                      </IconButton>
+                    </Tooltip>
+                  </CentredBox>
+                </Grid>
+                <Grid item xs={10}>
+                  <H3
+                    sx={{
+                      fontSize: '30px',
+                    }}
+                  >
+                    Confirm your email
+                  </H3>
+                </Grid>
+                <Grid item xs={1}>
+
+                </Grid>
+              </Grid>
               <Divider/>
               <br/>
               <FormInput>

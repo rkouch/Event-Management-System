@@ -7,7 +7,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { apiFetch, checkValidEmail, getToken } from "../Helpers";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
-
 export default function GroupTicket({ticket, groupId}) {
   const [email, setEmail] = React.useState('')
   const [error, setError] = React.useState(false)

@@ -6,7 +6,7 @@ import { CentredBox } from '../Styles/HelperStyles';
 
 export default function EventCardsPaper({events, moreEvents, handleMoreEvents, noResultsText="No Results"}) {
   return (
-    <Box sx={{display: 'flex', flexWrap:'wrap', borderRadius: 3, p:2, backgroundColor: '#F6F6F6'}}>
+    <Box sx={{display: 'flex', flexWrap:'wrap', borderRadius: 3, p:2, backgroundColor: '#F6F6F6', gap: 3}}>
       {(events.length > 0)
         ? <>
             {events.map((event, key) => {

@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser, sortSection } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, getEventData, checkIfUser, sortSection, isValidSpotifyURL } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -340,11 +340,21 @@ export default function EditEvent({}) {
     try {
       // Check for valid url
       const url = new URL(link)
+      
+      // Check for valid spotify url
+      if (!e.target.value.includes('open.spotify.com/playlist')) {
+        setSpotifyError('Invalid playlist URL.')
+        setSpotifyPlaylist('')
+        return
+      }
       setSpotifyPlaylist(e.target.value)
       setSpotifyError('')
     } catch (e) {
+      setSpotifyPlaylist('')
       setSpotifyError('Invalid playlist URL.')
+      return
     }
+    
   }
 
   const removeAdmin = (index) => {
@@ -510,7 +520,7 @@ export default function EditEvent({}) {
       tags: tags,
       admins: adminList,
       published:published,
-      spotify_playlist: validURL ? spotifyPlaylist : null
+      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
     };
 
     try {
@@ -1173,13 +1183,15 @@ export default function EditEvent({}) {
                               </InputAdornment>
                             }
                             onChange={handleSpotifyChange}
+                            placeholder="Add Spotify playlist"
+                            value={event.spotifyPlaylist}
                           />
                         </ContrastInputWrapper>
                         <FormHelperText>{spotifyError}</FormHelperText>
                       </FormControl>
                       
                       {(spotifyPlaylist !== '')
-                        ? <Box sx={{width: '100%', height: 500, borderRadius: 8, pt: 2}}>
+                        ? <Box sx={{width: '100%', height: 500, borderRadius: 8}}>
                             <SpotifyPlayer link={spotifyPlaylist} setValidURL={setValidURL} editable={true}/>
                           </Box>
                         : <></>

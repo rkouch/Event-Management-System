@@ -60,6 +60,7 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
 
     // Check valid first name
     setFieldInState('value', e.target.value, firstName, setFirstName)
+    handleTicketInput(reserve_id, 'first_name', e.target.value)
   }
 
   const handleLastNameChange = (e) => {
@@ -69,6 +70,7 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
 
     // Check valid last name
     setFieldInState('value', e.target.value, lastName, setLastName)
+    handleTicketInput(reserve_id, 'last_name', e.target.value)
   }
 
   const handleEmailChange = (e) => {
@@ -78,6 +80,7 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
 
     // check valid email
     setFieldInState('value', e.target.value, email, setEmail)
+    handleTicketInput(reserve_id, 'email', e.target.value)
   }
 
 
@@ -122,7 +125,7 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
                     fullWidth
                     placeholder="First Name"
                     onChange={handleFirstNameChange}
-                    defaultValue={firstName.value}
+                    value={firstName.value}
                     error={firstName.error}
                     onBlur={() => {handleOnBlur('first_name', firstName, setFirstName)}}
                   >

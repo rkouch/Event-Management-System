@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, sortSection } from "../Helpers";
+import { apiFetch, checkValidEmail, getToken, getUserData, setFieldInState, fileToDataUrl, sortSection, isValidSpotifyURL } from "../Helpers";
 import Grid from "@mui/material/Unstable_Grid2";
 import { H3 } from "../Styles/HelperStyles";
 import ListItemText from "@mui/material/ListItemText";
@@ -220,10 +220,19 @@ export default function CreateEvent({}) {
     try {
       // Check for valid url
       const url = new URL(link)
+      
+      // Check for valid spotify url
+      if (!e.target.value.includes('open.spotify.com/playlist')) {
+        setSpotifyError('Invalid playlist URL.')
+        setSpotifyPlaylist('')
+        return
+      }
       setSpotifyPlaylist(e.target.value)
       setSpotifyError('')
     } catch (e) {
+      setSpotifyPlaylist('')
       setSpotifyError('Invalid playlist URL.')
+      return
     }
   }
 
@@ -421,7 +430,7 @@ export default function CreateEvent({}) {
       tags: tags,
       admins: adminList,
       picture: eventPicture,
-      spotify_playlist: validURL ? spotifyPlaylist : null
+      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
     };
 
     try {
@@ -924,15 +933,15 @@ export default function CreateEvent({}) {
                   </Box>
                 </Box>
                 <br/>
-                <Box>
+                <Box sx={{pt: 1, pb: 1}}>
                   <h3> Categories </h3>
-                  <CategorySelector setSelectCategories={setCategories} selectCategories={categories}/>
+                  <CategorySelector setSelectCategories={setCategories} selectCategories={categories} editable={true}/>
                 </Box>
-                <Box>
+                <Box sx={{pt: 1, pb: 1}}>
                   <h3> Tags </h3>
                   <TagsBar tags={tags} setTags={setTags} editable={true}/>
                 </Box>
-                <Box>
+                <Box sx={{pt: 1, pb: 1}}>
                   <h3> Spotify playlist </h3>
                   <FormControl sx={{width: "100%"}}>
                     <ContrastInputWrapper>
@@ -944,6 +953,7 @@ export default function CreateEvent({}) {
                           </InputAdornment>
                         }
                         onChange={handleSpotifyChange}
+                        placeholder="Add Spotify playlist"
                       />
                     </ContrastInputWrapper>
                     <FormHelperText>{spotifyError}</FormHelperText>

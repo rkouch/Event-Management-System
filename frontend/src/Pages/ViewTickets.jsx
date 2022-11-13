@@ -115,7 +115,9 @@ export default function ViewTickets({}) {
               </Box>
               <Box width={'60%'}>
                 <MobileStepper
-                  sx={{color: 'red'}}
+                  sx={{
+                    '.MuiMobileStepper-dotActive': { backgroundColor: '#AE759F' },
+                  }}
                   steps={maxSteps}
                   position="static"
                   activeStep={activeStep}
@@ -124,6 +126,7 @@ export default function ViewTickets({}) {
                       size="small"
                       onClick={handleNext}
                       disabled={activeStep === maxSteps - 1}
+                      sx={{color: '#AE759F'}}
                     >
                       Next
                       {theme.direction === 'rtl' ? (
@@ -134,7 +137,12 @@ export default function ViewTickets({}) {
                     </Button>
                   }
                   backButton={
-                    <Button size="small" onClick={handleBack} disabled={activeStep === 0}>
+                    <Button
+                      size="small"
+                      onClick={handleBack}
+                      disabled={activeStep === 0}
+                      sx={{color: '#AE759F'}}
+                    >
                       {theme.direction === 'rtl' ? (
                         <KeyboardArrowRight />
                       ) : (

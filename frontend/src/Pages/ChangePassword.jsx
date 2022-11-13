@@ -9,11 +9,9 @@ import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import FormLabel from '@mui/material/FormLabel';
 import {CircularProgress} from '@mui/material';
-
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { FormInput, TkrButton} from '../Styles/InputStyles';
-
 import '../App.css';
-
 import { apiFetch, getToken, loggedIn, passwordCheck, setFieldInState, setToken } from '../Helpers';
 import { FlexRow, Logo, H3, CentredBox } from '../Styles/HelperStyles';
 import HelperText from '../Components/HelperText';

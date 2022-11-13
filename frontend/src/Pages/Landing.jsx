@@ -97,7 +97,7 @@ export default function Landing({}) {
               </Typography>
               <UpcomingEvents/>
               <UserBookings/>
-              {/* <UserHosting/> */}
+              <UserHosting/>
               <br/>
               <br/>
           </Box>

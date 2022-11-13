@@ -9,6 +9,9 @@ import { ContrastInputNoOutline, ContrastInputWrapper } from '../Styles/InputSty
 import SendIcon from '@mui/icons-material/Send';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useNavigate } from 'react-router-dom'
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 export default function TicketCard({event, ticket_id, ticketOwner}) {
   const navigate = useNavigate
@@ -20,6 +23,15 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
   const [sendEmail, setSendEmail] = React.useState('')
   const [openInput, setOpenInput] = React.useState(false)
   const [helperMsg, setHelperMsg] = React.useState('')
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const open = Boolean(anchorEl)
+  const handleClickMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
 
   // Get Ticket Data
   React.useEffect(()=> {
@@ -92,6 +104,10 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
     window.location.replace(`/group/manage/${ticketDetails.group_id}`)
   }
 
+  const handleRefund = () => {
+    window.location.replace(`/ticket/refund/${ticket_id}`)
+  }
+
   return (
     <Box sx={{boxShadow: 5, backgroundColor: '#FFFFFFF', m: 1, p: 3, borderRadius: 1}}>
       {(ticketDetails === null)
@@ -136,7 +152,18 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
             <Box sx={{backgroundColor: '#EEEEEE', display: 'flex', borderRadius: 2, p: 2}}>
               <Box sx={{width: '100%'}}>
                 <Grid container>
-                  <Grid item xs={1}></Grid>
+                  <Grid item xs={1}>
+                    <CentredBox sx={{height: '100%', alignItems: 'center'}}>
+                      {(ticketDetails.group_id !== undefined)
+                        ? <Tooltip title="Manage group ticket">
+                            <IconButton onClick={handleManageGroup}>
+                              <GroupsIcon/>
+                            </IconButton>
+                          </Tooltip>
+                        : <></>
+                      }
+                    </CentredBox>
+                  </Grid>
                   <Grid item xs={10}>
                     {(sectionSeating)
                       ? <Typography
@@ -160,16 +187,24 @@ export default function TicketCard({event, ticket_id, ticketOwner}) {
                     }
                   </Grid>
                   <Grid item xs={1}>
-                    <CentredBox sx={{height: '100%', alignItems: 'center'}}>
-                      {(ticketDetails.group_id !== undefined)
-                        ? <Tooltip title="Manage group ticket">
-                            <IconButton onClick={handleManageGroup}>
-                              <GroupsIcon/>
+                    {ticketOwner
+                      ? <CentredBox sx={{height: '100%', alignItems: 'center'}}>
+                          <Tooltip title="Ticket Menu">
+                            <IconButton onClick={handleClickMenu}>
+                              <MoreVertIcon/>
                             </IconButton>
                           </Tooltip>
-                        : <></>
-                      }
-                    </CentredBox>
+                          <Menu
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleCloseMenu}
+                            sx={{width: 300}}
+                          >
+                            <MenuItem sx={{width: '100%'}} onClick={handleRefund}>Refund Ticket</MenuItem>
+                          </Menu>
+                        </CentredBox>
+                      : <></>
+                    }
                   </Grid>
                   <Grid item xs={1} sx={{height: '100%'}}></Grid>
                   <Grid item xs={10}>

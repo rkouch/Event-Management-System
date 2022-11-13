@@ -5,6 +5,7 @@ import { CentredBox } from "../Styles/HelperStyles";
 import { ContrastInput, ContrastInputNoOutline, ContrastInputWrapper } from "../Styles/InputStyles";
 import AddIcon from '@mui/icons-material/Add';
 import { apiFetch, checkValidEmail, getToken } from "../Helpers";
+import RemoveIcon from '@mui/icons-material/Remove';
 
 
 export default function AddGroupMemberTicket({ticket, groupId, setTickets, tickets, index}) {
@@ -57,7 +58,6 @@ export default function AddGroupMemberTicket({ticket, groupId, setTickets, ticke
       setHelperMsg(error.reason)
       return
     }
-
     
     // Send invite
     try {
@@ -77,7 +77,23 @@ export default function AddGroupMemberTicket({ticket, groupId, setTickets, ticke
     } catch (e) {
       console.log(e)
     }
+  }
 
+  // Handle if ticket is removed from gorup
+  const handleRemoveTicket = async () => {
+    try {
+      const body = {
+        auth_token: getToken(),
+        reservations: [ticket]
+      }
+
+      const response = await apiFetch('DELETE', '/api/ticket/reserve/cancel', body)
+      const tickets_t = tickets
+      tickets_t.splice(index, 1)
+      setTickets([...tickets_t])
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   return (
@@ -118,6 +134,13 @@ export default function AddGroupMemberTicket({ticket, groupId, setTickets, ticke
           </Box>
         </Grid>
         <Grid item xs={1}>
+          <CentredBox sx={{height: '100%'}}>
+            <Tooltip title={'Remove ticket from group'}>
+              <IconButton onClick={handleRemoveTicket}>
+                <RemoveIcon/>
+              </IconButton>
+            </Tooltip>
+          </CentredBox>
         </Grid>
       </Grid>
       <CentredBox sx={{pt: 1}}>
