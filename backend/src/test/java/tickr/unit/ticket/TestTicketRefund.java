@@ -133,14 +133,14 @@ public class TestTicketRefund {
 
         assertThrows(ForbiddenException.class, () -> controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))));
         session = TestHelper.rollbackMakeSession(model, session);
-        assertDoesNotThrow(() -> controller.ticketView(session, Map.of("ticket_id", ticketIds.get(0))));
+        assertDoesNotThrow(() -> controller.ticketView(session, Map.of("ticket_id", ticketIds.get(1))));
         session = TestHelper.commitMakeSession(model, session);
 
         var bookings = controller.ticketBookings(session, Map.of("auth_token", authToken, "event_id", eventId)).tickets;
         assertEquals(1, bookings.size());
         assertEquals(ticketIds.get(1), bookings.get(0));
 
-        controller.ticketRefund(session, new TicketRefundRequest(authToken, ticketIds.get(0)));
+        controller.ticketRefund(session, new TicketRefundRequest(authToken, ticketIds.get(1)));
         session = TestHelper.commitMakeSession(model, session);
 
         assertEquals(20, purchaseAPI.getCustomer("test_customer").getBalance());

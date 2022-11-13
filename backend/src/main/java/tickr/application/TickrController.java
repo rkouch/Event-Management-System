@@ -695,7 +695,7 @@ public class TickrController {
                     .registerPurchaseItem(session, builder, orderId, user, i.firstName, i.lastName, i.email);
         }
 
-        return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)));
+        return new TicketPurchase.Response(purchaseAPI.registerOrder(builder.withUrls(request.successUrl, request.cancelUrl)).getRedirectUrl());
     }
 
     public void reservationCancel (ModelSession session, ReserveCancelRequest request) {
@@ -1636,6 +1636,12 @@ public class TickrController {
     }
 
     public void ticketRefund (ModelSession session, TicketRefundRequest request) {
+        var user = authenticateToken(session, request.authToken);
 
+        var ticket = session.getById(Ticket.class, parseUUID(request.ticketId))
+                .orElseThrow(() -> new ForbiddenException("Invalid ticket id!"));
+
+        ticket.refund(user);
+        session.remove(ticket);
     }
 }

@@ -34,11 +34,12 @@ public class NullPurchaseAPI implements IPurchaseAPI {
     }
 
     @Override
-    public String registerOrder (IOrderBuilder builder) {
+    public PurchaseResult registerOrder (IOrderBuilder builder) {
         var orderBuilder = (OrderBuilder)builder;
         logger.info("Registered order {}: ", orderBuilder.getReserveId());
         for (var i : orderBuilder.getItems()) {
             logger.info("Line item: {}, price: {}", i.getItemName(), i.getPrice());
+            i.getPurchaseItem().setPaymentDetails(orderBuilder.getReserveId());
         }
         logger.info("Fulfilling order and returning success url \"{}\"", orderBuilder.getSuccessUrl());
 
@@ -57,7 +58,7 @@ public class NullPurchaseAPI implements IPurchaseAPI {
 
         thread.start();
 
-        return orderBuilder.getSuccessUrl();
+        return new PurchaseResult(orderBuilder.getSuccessUrl(), Map.of());
     }
 
     @Override
@@ -84,6 +85,11 @@ public class NullPurchaseAPI implements IPurchaseAPI {
     @Override
     public String getSignatureHeader () {
         return "Null-Header";
+    }
+
+    @Override
+    public void refundItem (String refundId, long refundAmount) {
+        logger.info("Refunded payment from order {} for ${}!", refundId, (double)refundAmount / 100);
     }
 
     private static class OrderBuilder implements IOrderBuilder {

@@ -1,13 +1,17 @@
 package tickr.application.entities;
 
 import jakarta.persistence.*;
+import tickr.application.apis.ApiLocator;
+import tickr.application.apis.purchase.IPurchaseAPI;
 import tickr.application.serialised.responses.TicketViewResponse;
 import tickr.application.serialised.responses.GroupDetailsResponse.GroupMember;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import tickr.server.exceptions.ForbiddenException;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,6 +55,11 @@ public class Ticket {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
+
+    @Column(name = "payment_id")
+    private String paymentId;
+
+    private long price;
 
     public UUID getId () {
         return id;
@@ -107,11 +116,11 @@ public class Ticket {
     public Ticket () {
 
     }
-    public Ticket (User user,SeatingPlan section, int seatNumber) {
+    /*public Ticket (User user, SeatingPlan section, int seatNumber) {
         this(user, section, seatNumber, null, null, null);
-    }
+    }*/
 
-    public Ticket (User user,SeatingPlan section, int seatNumber, String firstName, String lastName, String email) {
+    public Ticket (User user,SeatingPlan section, int seatNumber, String firstName, String lastName, String email, String paymentId, long price) {
         this.user = user;
         this.event = section.getEvent();
         this.section = section;
@@ -119,6 +128,9 @@ public class Ticket {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+
+        this.paymentId = paymentId;
+        this.price = price;
     }
 
     public TicketViewResponse getTicketViewResponse () {
@@ -147,5 +159,15 @@ public class Ticket {
 
     public GroupMember createGroupMemberDetails() {
         return new GroupMember(user.getEmail(), section.getSection(), seatNumber, true);
+    }
+
+    public void refund (User user) {
+        if (!isOwnedBy(user)) {
+            throw new ForbiddenException("Attempted to refund other users ticket!");
+        } else if (getEvent().getEventStart().isBefore(ZonedDateTime.now())) {
+            throw new ForbiddenException("Attempted to refund ticket after event has started!");
+        }
+
+        ApiLocator.locateApi(IPurchaseAPI.class).refundItem(paymentId, price);
     }
 }
