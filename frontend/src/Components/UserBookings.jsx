@@ -56,6 +56,7 @@ export default function UserBookings({}) {
               <Tab label="This Week" value="1" />
               <Tab label="This Month" value="2" />
               <Tab label="This Year" value="3" />
+              <Tab label="Past" value="4" />
             </Tabs>
           </Box>
           <Box
@@ -77,10 +78,13 @@ export default function UserBookings({}) {
           <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfWeek}} responseField={'event_id'}/>
         </TabPanel>
         <TabPanel value="2" sx={{padding: 0}}>
-        <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfMonth}} responseField={'event_id'}/>
+          <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfMonth}} responseField={'event_id'}/>
         </TabPanel>
         <TabPanel value="3" sx={{padding: 0}}>
-        <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfYear}} responseField={'event_id'}/>
+          <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfYear}} responseField={'event_id'}/>
+        </TabPanel>
+        <TabPanel value="3" sx={{padding: 0}}>
+          <EventsBar endpoint={'/api/user/bookings/past'} additionalParams={{auth_token: getToken()}} responseField={'event_id'}/>
         </TabPanel>
       </TabContext>
     </Section>
