@@ -76,7 +76,7 @@ function Ticket ({seatNum, section, getTicketDetails, reserve_id, handleTicketIn
   const handleEmailChange = (e) => {
     // Clear error
     setFieldInState('error', false, email, setEmail)
-    setFieldInState('errorMsg', '', email, setFirstName)
+    setFieldInState('errorMsg', '', email, setEmail)
 
     // check valid email
     setFieldInState('value', e.target.value, email, setEmail)

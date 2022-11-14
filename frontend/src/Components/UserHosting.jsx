@@ -66,10 +66,9 @@ export default function UserHosting({}) {
               scrollButtons
               value={upcomingValue}
               >
-              <Tab label="All" value="1" />
-              {/* <Tab label="This Week" value="1" />
+              <Tab label="This Week" value="1" />
               <Tab label="This Month" value="2" />
-              <Tab label="This Year" value="3" /> */}
+              <Tab label="This Year" value="3" />
             </Tabs>
           </Box>
           <Box
@@ -88,13 +87,15 @@ export default function UserHosting({}) {
           </Box>
         </SectionHeading>
         <TabPanel value="1" sx={{padding: 0}}>
-          <EventsBar endpoint={'/api/event/hosting'} additionalParams={{auth_token: getToken()}} responseField={'eventIds'}/>
+          <EventsBar endpoint={'/api/event/hosting'} additionalParams={{auth_token: getToken(), before: endOfWeek}} responseField={'eventIds'}/>
           {/* <EventCardsBar event_ids={weekEvents}/> */}
         </TabPanel>
         <TabPanel value="2" sx={{padding: 0}}>
+          <EventsBar endpoint={'/api/event/hosting'} additionalParams={{auth_token: getToken(), before: endOfMonth}} responseField={'eventIds'}/>
           {/* <EventCardsBar event_ids={monthEvents}/> */}
         </TabPanel>
         <TabPanel value="3" sx={{padding: 0}}>
+          <EventsBar endpoint={'/api/event/hosting'} additionalParams={{auth_token: getToken(), before: endOfYear}} responseField={'eventIds'}/>
           {/* <EventCardsBar event_ids={yearEvents}/> */}
         </TabPanel>
       </TabContext>

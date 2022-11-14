@@ -104,7 +104,7 @@ export default function RefundTicket({}) {
                       Are you sure you want to refund your ticket to {eventDetails.event_name}?
                     </Typography>
                     <br/>
-                    <DeleteButton>Refund</DeleteButton>
+                    <DeleteButton onClick={handleRefund}>Refund</DeleteButton>
                   </CentredBox>
                 </Grid>
                 <Divider flexItem orientation='vertical'/>
