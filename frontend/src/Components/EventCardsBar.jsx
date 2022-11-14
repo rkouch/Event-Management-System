@@ -44,23 +44,13 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
     console.log('event_ids.length: ',event_ids.length)
     console.log('Need to fill: ',fillerNum)
     if (fillerNum !== 0 && center) {
-      const filler_a = []
-      const filler_t = Array(filler_a).fill(1)
+      const filler_t = Array.from(Array(fillerNum).keys())
       console.log('Creating fillers')
+      console.log(filler_t)
       setFillerCard([...filler_t])
     } else {
       setFillerCard([])
     }
-    // if (fillerNum !== 0) {
-    //   console.log(event_ids)
-    //   console.log('cardsPerBar: ',cardsPerBar)
-    //   console.log('event_ids.length: ',event_ids.length)
-    //   console.log('Need to fill: ',fillerNum)
-    //   const filler_a = []
-    //   const filler_t = Array(filler_a).fill(1)
-    //   console.log(filler_t)
-    //   setFillerCard([...filler_t])
-    // }
     
     
   }, [event_ids, center])
