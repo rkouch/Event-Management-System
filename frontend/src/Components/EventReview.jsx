@@ -54,9 +54,9 @@ export default function EventReview({isAttendee, event_id}) {
   // On initial review fetch, scroll to bottom
   React.useEffect(() => {
     if (initFetch) {
-      const element = document.getElementById('reviews');
-      element.scrollTop = element.scrollHeight;
-      setInitFectch(false)
+      // const element = document.getElementById('reviews');
+      // element.scrollTop = element.scrollHeight;
+      // setInitFectch(false)
     }
   }, [initFetch])
 
@@ -66,11 +66,10 @@ export default function EventReview({isAttendee, event_id}) {
     setInitFectch(false)
   }
 
-  setTimeout(scrollBottomReviews, 1000)
+  
 
   // Async function to request for reviews
   const fetchReviews = async (pageStart, maxResults) => {
-    console.log('Fetching reviews')
     try {
       const params = {
         event_id: event_id,
@@ -79,13 +78,15 @@ export default function EventReview({isAttendee, event_id}) {
       }
       const searchParams = new URLSearchParams(params)
       const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
-      console.log(response)
       const res_reviews = response.reviews
       if (pageStart === 0) {
         setReviews(response.reviews.reverse())
         setReviewNum(response.reviews.length)
         setMoreReviews(!(response.reviews.length === response.num_results))
-        bottomRef.current?.scrollIntoView({behavior: 'smooth'})
+        if (postReview) {
+          bottomRef.current?.scrollIntoView({behavior: 'smooth'})
+        }
+        
       } else {
         const reviews_t = response.review.reverse().concat(reviews)
         setReviewNum(reviewNum + response.reviews.length)
@@ -96,16 +97,13 @@ export default function EventReview({isAttendee, event_id}) {
       setInitFectch(true)
     }
   }
+
   // Handle for when a review is removed
   const handleRemoveReview = (index) => {
-    console.log('Removing review')
     try {
-      console.log('reviewsBefore')
-      console.log(reviews)
       const reviews_t = reviews
       const reviewToRemove = reviews_t.splice(index, 1)
-      console.log(reviewToRemove)
-      console.log(reviews_t)
+
       setReviews([...reviews_t])
       setHasReview(false)
       setReviewNum(reviewNum-1)
@@ -144,7 +142,6 @@ export default function EventReview({isAttendee, event_id}) {
         text: reviewText,
         rating: rating,
       }
-      console.log(body)
       const response = await apiFetch('POST', '/api/event/review/create', body)
       setPostReview(true)
       setReviewText('')

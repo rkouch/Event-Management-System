@@ -7,7 +7,6 @@ import TextField from '@mui/material/TextField';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import FormControl, { useFormControl } from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
@@ -18,7 +17,6 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
-import logo from '../Images/TickrLogo.png'
 import { Link, useNavigate } from "react-router-dom";
 
 import { FormInput, TextButton, TkrButton} from '../Styles/InputStyles';
@@ -101,11 +99,9 @@ export default function Register ({}) {
     if (!email.email.match(validEmail)) {
       setFieldInState('error', true, email, setEmail);
       setFieldInState('errorMsg', 'Enter a valid email', email, setEmail);
-      console.log('Invalid')
     } else {
       setFieldInState('error', false, email, setEmail);
       setFieldInState('errorMsg', '', email, setEmail);
-      console.log('Valid email')
     }
     setErrorStatus(false)
   };
@@ -171,7 +167,6 @@ export default function Register ({}) {
     } else {
       setFieldInState('disabled', false, confirmPassword, setConfirmPassword)
       if (confirmPassword.password !== password.password && confirmPassword.password.length > 0) {
-        console.log('passwords dont match')
         setFieldInState('error', true, password, setPassword)
         setFieldInState('error', true, confirmPassword, setConfirmPassword)
         setFieldInState('errorMsg', 'Passwords do not match', password, setPassword)
@@ -200,7 +195,6 @@ export default function Register ({}) {
   const ConfirmPasswordChange = (e) => {
     setFieldInState('password', e.target.value, confirmPassword, setConfirmPassword);
     if (confirmPassword.password !== password.password) {
-      console.log('passwords dont match')
       setFieldInState('error', true, password, setPassword)
       setFieldInState('error', true, confirmPassword, setConfirmPassword)
       setFieldInState('errorMsg', 'Passwords do not match', password, setPassword)

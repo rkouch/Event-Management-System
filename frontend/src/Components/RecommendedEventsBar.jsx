@@ -84,7 +84,6 @@ export default function RecommendedEventsBar({endpoint, additionalParams={}}) {
       
       // Set events
       const maxResults = response.num_results
-      console.log(response)
 
       const returnedEvents = []
       response.events.forEach(function (event) {
@@ -116,9 +115,6 @@ export default function RecommendedEventsBar({endpoint, additionalParams={}}) {
     }
     const maxResults = response.num_results
     const numPages = Math.ceil(maxResults/cardsPerPage)
-    // console.log('cardsPerPage: ', cardsPerPage)
-    // console.log('MaxResults: ', maxResults)
-    // console.log('numPages: ', numPages)
     const groups_t = []
 
     var i = 0
@@ -209,17 +205,13 @@ export default function RecommendedEventsBar({endpoint, additionalParams={}}) {
 
 function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage, center, setCenter}) {
   const [eventIds, setEventIds] = React.useState([])
-  // console.log("Render")
   // Get event ids for page if active page is this page
 
   React.useEffect(() => {
-    console.log('ActivePage: ', activePage)
-    console.log('PageNum', pageNum)
     if (!center && (cardsPerPage === eventIds.length)) {
       setCenter(true)
     }
     if (activePage === pageNum) {
-      console.log('fetching events')
       if (pageStart !== undefined) {
         getEvents(pageStart, setEventIds)
       }

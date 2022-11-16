@@ -2,69 +2,31 @@ import React from 'react'
 
 import { Box } from '@mui/system'
 import { useParams } from 'react-router-dom'
-import { apiFetch, getToken, search, setFieldInState } from '../Helpers'
-import { Grid, InputAdornment, TextField, Typography, Collapse, Divider, FormLabel, Tooltip } from '@mui/material'
+import { apiFetch, setFieldInState } from '../Helpers'
+import { Grid, InputAdornment, TextField, Typography, Collapse, Divider, Tooltip } from '@mui/material'
 import SearchSharpIcon from '@mui/icons-material/SearchSharp';
 import EventCardsPaper from '../Components/EventCardsPaper'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useTheme, alpha } from '@mui/material/styles';
-import Slider from '@mui/material/Slider';
+import { useTheme } from '@mui/material/styles';
 import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { DatePicker }  from '@mui/x-date-pickers/DatePicker';
 import FormControl from "@mui/material/FormControl";
-import FormHelperText from "@mui/material/FormHelperText";
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 
 import ShadowInput from "../Components/ShadowInput";
-import { ContrastInputNoOutline, ContrastInputWrapper, TextButton, TextButton2, TextButton3, TickrSlider, TkrButton } from '../Styles/InputStyles'
+import { ContrastInputWrapper, TextButton2, TickrSlider, TkrButton } from '../Styles/InputStyles'
 import HeaderSearch from '../Components/HeaderSearch'
-import Header from '../Components/Header'
 import TagsBar from '../Components/TagsBar'
 import { BackdropNoBG_VH, CentredBox, ScrollableBox, ExpandMore } from '../Styles/HelperStyles'
 import CategorySelector from '../Components/CategorySelector'
 
-const categories = [
-  'Food',
-  'Music',
-  'Travel & Outdoor',
-  'Health',
-  'Sport & Fitness',
-  'Hobbies',
-  'Business',
-  'Free',
-  'Tourism',
-  'Education'
-]
-
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
-
-function getStyles(name, personName, theme) {
-  return {
-    fontWeight:
-      personName.indexOf(name) === -1
-        ? theme.typography.fontWeightRegular
-        : theme.typography.fontWeightMedium,
-  };
-}
-
 
 export default function SearchResults({}) {
   const params = useParams()
-  const theme = useTheme();
   var utc = require('dayjs/plugin/utc')
   dayjs.extend(utc)
 
@@ -79,8 +41,6 @@ export default function SearchResults({}) {
   // Get Search options from params
   const getSearchOptions = () => {
     const searchParams = JSON.parse(atob(params.search_string))
-    console.log('Params from URL')
-    console.log(searchParams)
     searchParams.location = null
     searchParams.max_distance = null
     searchParams.start_time = null
@@ -154,8 +114,8 @@ export default function SearchResults({}) {
 
   // Get search results given a page start
   const getSearchResults = async (pageStart) => {
+    setResults([])
     const maxResults = 20
-    console.log(searchOptions)
     try {
       const search_option_str = JSON.stringify(searchOptions)
       const body = {
@@ -166,7 +126,6 @@ export default function SearchResults({}) {
 
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/event/search?${searchParams}`)
-      console.log(response)
       if (pageStart === 0) {
         setResults([...response.event_ids])
         setResultsNum(response.event_ids.length)
@@ -279,7 +238,6 @@ export default function SearchResults({}) {
     }
 
     setFieldInState("error", true, endDate, setEndDate);
-    console.log(endDate.value);
     if (endDate.value <= startDate.value) {
       setFieldInState("error", true, endDate, setEndDate);
       setFieldInState(
@@ -330,8 +288,6 @@ export default function SearchResults({}) {
       country: (country.value.length !== 0) ? country.value : null
     }
 
-    console.log(locationBody)
-
     // Check date filter
     var dateFilter_t = false
     var start_date_t = null
@@ -373,7 +329,6 @@ export default function SearchResults({}) {
       text: searchString
     }
 
-    console.log(search_filters)
     setSearchOptions(search_filters)
   }
 

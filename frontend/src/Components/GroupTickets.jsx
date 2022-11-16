@@ -128,6 +128,7 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
     setShowInvite(!showInvite)
   }
 
+  // Handle group leaders selected ticket
   const handleSelectTicket = (reserve_id) => {
     setSelectTicket(reserve_id)
 
@@ -135,7 +136,6 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
     reservedTickets.forEach(function(reserve) {
       if (reserve.reserve_id === reserve_id) {
         setGroupLeaderTicket(reserve)
-        console.log(reserve)
       }
     })
   }
@@ -175,7 +175,6 @@ export default function GroupTickets({reservedTickets, setGroupTicketBuy, create
 
       const response = await apiFetch('POST', '/api/group/create', body)
       setGroupId(response.group_id)
-      console.log(`Group ID: ${response.group_id}`)
       
     } catch (e) {
       console.log(e)

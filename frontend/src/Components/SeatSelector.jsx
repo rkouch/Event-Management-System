@@ -79,6 +79,7 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
     setSectionDetails(new_sections)
   }
 
+  // Handle for selecting a seat via checkbox
   const handleSelectSeat = (checked, seatVal) => {
     const currentlySelected = section.seatsSelected
     // If seat is checked, then add to selected list
@@ -97,7 +98,6 @@ export default function SeatSelector ({section, index, sectionDetails, setSectio
       return obj
     })
     setSectionDetails(newState)
-    console.log(currentlySelected)
     if (currentlySelected.length === section.quantity) {
       setDisableSeats(true)
       setExpanded(false)

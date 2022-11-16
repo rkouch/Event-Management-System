@@ -209,8 +209,6 @@ export default function Checkout ({ticketOrder}) {
         }
       })
       setTicketDetails(ticketDetails_t)
-      console.log(ticketDetails_t)
-      console.log(orderDetails_t)
       setOrderDetails(orderDetails_t)
 
     } catch (e) {
@@ -243,7 +241,6 @@ export default function Checkout ({ticketOrder}) {
   }
 
   const handlePayment = async () => {
-    console.log(ticketDetails)
 
     var errorStatus = false
     // If custom names, check all fields are filled
@@ -280,7 +277,6 @@ export default function Checkout ({ticketOrder}) {
     const newState = ticketDetails.map(ticket => {
       if (ticket.seat_num ===  seat_num) {
         ticket[field] = value
-        console.log(ticket)
         return ticket;
       }
       return ticket

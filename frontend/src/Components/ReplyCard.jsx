@@ -34,7 +34,6 @@ export default function ReplyCard({reply_details, reply_num, review_id, isAttend
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/event/reviews/replies?${searchParams}`, null)
       setReply(response.replies[0])
-      console.log(response)
     } catch (e) {
       console.log(e)
     }

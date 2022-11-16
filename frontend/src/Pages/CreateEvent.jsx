@@ -177,7 +177,6 @@ export default function CreateEvent({}) {
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
     setFieldInState("error", true, end, setEndValue);
-    console.log(end.end);
     if (end.end <= start) {
       setFieldInState("error", true, end, setEndValue);
       setFieldInState(
@@ -196,7 +195,6 @@ export default function CreateEvent({}) {
     const list = [...seatingList];
     list[index].sectionName = e.target.value;
     setSeatingList(list);
-    console.log(seatingList);
   };
 
   const handleCapacityChange = (e, index) => {
@@ -204,7 +202,6 @@ export default function CreateEvent({}) {
     const list = [...seatingList];
     list[index][name] = value;
     setSeatingList(list);
-    console.log(seatingList);
   };
 
   const handleNewAdmin = (e) => {
@@ -227,7 +224,6 @@ export default function CreateEvent({}) {
       if (!isValidSpotifyURL(e.target.value)) {
         setSpotifyError('Invalid playlist URL.')
         // setSpotifyPlaylist('')
-        console.log('Bad URL')
         return
       }
       
@@ -239,8 +235,6 @@ export default function CreateEvent({}) {
   }
 
   const addAdmin = async (e) => {
-    console.log(adminList)
-
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
 
@@ -268,7 +262,7 @@ export default function CreateEvent({}) {
     // Check if user exists
     try {
       const response = await apiFetch('GET', `/api/user/search?email=${newAdmin.email}`, null)
-      console.log(response)
+
       // Check if user already added as an admin
       if (adminList.includes(response.user_id)) {
         setFieldInState('email', '', newAdmin, setNewAdmin)
@@ -287,7 +281,6 @@ export default function CreateEvent({}) {
       setFieldInState('email', '', newAdmin, setNewAdmin)
       setAdminLoading(false)
     } catch (error) {
-      console.log('error')
       setFieldInState('error', true, newAdmin, setNewAdmin)
       setFieldInState('errorMsg', error.reason, newAdmin, setNewAdmin)
       setAdminLoading(false)
@@ -327,8 +320,6 @@ export default function CreateEvent({}) {
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
-      console.log("event empty")
-      console.log(eventName)
       setFieldInState('error', true, eventName, setEventName)
       error = true
     }
@@ -399,7 +390,6 @@ export default function CreateEvent({}) {
         end,
         setEndValue
       );
-      console.log('start date error')
       setErrorMsg('End date must be after start date')
       setLoading(false)
       return
@@ -437,7 +427,6 @@ export default function CreateEvent({}) {
 
     try {
       const response = await apiFetch('POST', '/api/event/create', body)
-      console.log(response)
       // Navigate to event
       navigate(`/view_event/${response.event_id}`)
       setLoading(false)
@@ -446,7 +435,6 @@ export default function CreateEvent({}) {
       setLoading(false)
       setErrorMsg(e.reason)
     }
-    console.log(body)
   };
 
   return (
@@ -516,7 +504,6 @@ export default function CreateEvent({}) {
                             onChange={async (e) => {
                               const image = await fileToDataUrl(e.target.files[0])
                               setEventPicture(image)
-                              console.log("uploaded image")
                             }}
                           />
                         </Button>

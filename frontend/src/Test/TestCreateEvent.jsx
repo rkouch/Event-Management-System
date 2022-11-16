@@ -160,7 +160,6 @@ export default function TestCreatEvent({}) {
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
     setFieldInState("error", true, end, setEndValue);
-    console.log(end.end);
     if (end.end <= start) {
       setFieldInState("error", true, end, setEndValue);
       setFieldInState(
@@ -179,7 +178,6 @@ export default function TestCreatEvent({}) {
     const list = [...seatingList];
     list[index].sectionName = e.target.value;
     setSeatingList(list);
-    console.log(seatingList);
   };
 
   const handleCapacityChange = (e, index) => {
@@ -187,7 +185,6 @@ export default function TestCreatEvent({}) {
     const list = [...seatingList];
     list[index][name] = value;
     setSeatingList(list);
-    console.log(seatingList);
   };
 
   const handleNewAdmin = (e) => {
@@ -198,8 +195,6 @@ export default function TestCreatEvent({}) {
   
 
   const addAdmin = async (e) => {
-    console.log(adminList)
-
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
 
@@ -227,7 +222,7 @@ export default function TestCreatEvent({}) {
     // Check if user exists
     try {
       const response = await apiFetch('GET', `/api/user/search?email=${newAdmin.email}`, null)
-      console.log(response)
+
       // Check if user already added as an admin
       if (adminList.includes(response.user_id)) {
         setFieldInState('email', '', newAdmin, setNewAdmin)
@@ -280,8 +275,6 @@ export default function TestCreatEvent({}) {
     // Check fields
     var error = false
     if (eventName.value.length === 0) {
-      console.log("event empty")
-      console.log(eventName)
       setFieldInState('error', true, eventName, setEventName)
       error = true
     }
@@ -350,7 +343,6 @@ export default function TestCreatEvent({}) {
         end,
         setEndValue
       );
-      console.log('start date error')
       setErrorMsg('End date must be after start date')
     }
 
@@ -382,7 +374,6 @@ export default function TestCreatEvent({}) {
 
     try {
       const response = await apiFetch('POST', '/api/test/event/create', body)
-      console.log(response)
       // Navigate to event
       navigate(`/view_event/${response.event_id}`)
       setLoading(false)
@@ -459,7 +450,6 @@ export default function TestCreatEvent({}) {
                             onChange={async (e) => {
                               const image = await fileToDataUrl(e.target.files[0])
                               setEventPicture(image)
-                              console.log("uploaded image")
                             }}
                           />
                         </Button>
