@@ -1,22 +1,22 @@
 # Tickr: An event management System
 
-## Functionalities
+## How to start Tickr
 
-### User Managements
+### Frontend
+Move into frontend directory using the following command
+```
+  cd ./frontend
+```
 
-### Event managments
+Once in the frontend directory paste the following command to install the required modules.
+This is required on the first start up of the front end
+```
+  npm install
+```
 
-### Navigation
+To start the frontend run the following command
+```
+  npm start
+```
 
-### Event Communications
-
-### Event Reviews
-
-### Tickets
-
-### Event Recomendation
-
-### Group buying
-
-
-### Playlist Creation
+### Backend
