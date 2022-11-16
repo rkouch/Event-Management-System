@@ -1,18 +1,18 @@
 import React from 'react'
 
-import { BackdropNoBG, CentredBox, H3, UploadPhoto  } from '../Styles/HelperStyles'
+import { BackdropNoBG, CentredBox, UploadPhoto  } from '../Styles/HelperStyles'
 import Grid from '@mui/material/Grid';
 
 import Header from '../Components/Header'
-import { Box, fontStyle } from '@mui/system';
-import { Avatar, Button, CircularProgress, Collapse, Divider, fabClasses, IconButton, OutlinedInput, Typography } from '@mui/material';
+import { Box } from '@mui/system';
+import { Avatar, Button, Divider, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
-import { ContrastInput, ContrastInputWrapper, DeleteButton, TextButton, TkrButton } from '../Styles/InputStyles';
-import { setFieldInState, getToken, getUserData, loggedIn, apiFetch, fileToDataUrl } from '../Helpers';
+import { ContrastInput, ContrastInputWrapper, DeleteButton, TkrButton } from '../Styles/InputStyles';
+import { setFieldInState, getToken, getUserData, apiFetch, fileToDataUrl } from '../Helpers';
 import ShadowInput from '../Components/ShadowInput';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormLabel from '@mui/material/FormLabel';
@@ -22,14 +22,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import ConfirmPassword from '../Components/ConfirmPassword';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import { borderRadius, styled, alpha } from '@mui/system';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { alpha } from '@mui/system';
+import { Link, useParams, } from 'react-router-dom';
 import LoadingButton from '../Components/LoadingButton';
 import HostEvents from '../Components/HostEvents';
 
 export default function Profile({editable=false}){
   const params = useParams()
-  const navigate = useNavigate()
 
   const [hover, setHover] = React.useState(false)
 
@@ -51,7 +50,6 @@ export default function Profile({editable=false}){
 
   const setNotificationsVal = (settings) => {
     for (const option in settings) {
-      console.log(`${option} : ${settings[option]}`)
       setFieldInState(option, settings[option], notifications, setNotifications)
     }
   }
@@ -107,7 +105,6 @@ export default function Profile({editable=false}){
   }
 
   const notificationChange = async (e) => {
-    console.log(notifications)
     setFieldInState(e.target.name, e.target.checked, notifications, setNotifications)
     // Send API call
     try {
@@ -115,9 +112,7 @@ export default function Profile({editable=false}){
         auth_token: getToken(),
         settings: notifications
       }
-      console.log(notifications)
       const response = await apiFetch('PUT', '/api/user/settings/update', body)
-      console.log(response)
     } catch (e) {
       console.log(e)
     }

@@ -69,6 +69,8 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
 
   // Function to get events
   const getEvents = async (pageStart, setEvents) => {
+    setEvents([])
+
     const body_t = {
       max_results: cardsPerPage,
       page_start: pageStart,
@@ -84,7 +86,6 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
       
       // Set events
       const maxResults = response.num_results
-      console.log(response)
       setEvents([...response[responseField]])
     } catch (e) {
       console.log(e)
@@ -110,9 +111,6 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
     }
     const maxResults = response.num_results
     const numPages = Math.ceil(maxResults/cardsPerPage)
-    // console.log('cardsPerPage: ', cardsPerPage)
-    // console.log('MaxResults: ', maxResults)
-    // console.log('numPages: ', numPages)
     const groups_t = []
 
     var i = 0
@@ -203,17 +201,13 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
 
 function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage, center, setCenter}) {
   const [eventIds, setEventIds] = React.useState([])
-  // console.log("Render")
-  // Get event ids for page if active page is this page
 
+  // Get event ids for page if active page is this page
   React.useEffect(() => {
-    console.log('ActivePage: ', activePage)
-    console.log('PageNum', pageNum)
     if (!center && (cardsPerPage === eventIds.length)) {
       setCenter(true)
     }
     if (activePage === pageNum) {
-      console.log('fetching events')
       if (pageStart !== undefined) {
         getEvents(pageStart, setEventIds)
       }

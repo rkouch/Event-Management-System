@@ -252,7 +252,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
       return ticket
     })
-    console.log(newState)
     setReservedTickets(newState)
   }
 
@@ -280,7 +279,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     // set tickets reserved to false, cancel reserves
     try {
       // cancel all reservations
-      console.log(reservedTickets)
       const reserveIds = []
       reservedTickets.forEach(function (reserve) {
         reserveIds.push(reserve.reserve_id)
@@ -292,7 +290,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       }
 
       const response = await apiFetch('DELETE', '/api/ticket/reserve/cancel', body)
-      // setReservedTickets([])
     } catch (e) {
       console.log(e)
       return
@@ -300,10 +297,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
     setAreTicketsReserved(false)
     setTicketSelect(true)
     setDetailsInput(false)
-    console.log('orderDetails')
-    console.log(orderDetails)
-    console.log('sectionDetails')
-    console.log(sectionDetails)
     return
   }
 
@@ -317,7 +310,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         section.seatsSelected.forEach(function (seat) {
           seatsSelected.push(seat.slice(1))
         })
-        console.log(seatsSelected)
         const sectionBody = {
           section: section.section,
           quantity: section.quantity,
@@ -338,7 +330,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
 
     try {
       // Send API call
-      console.log('Make api call')
       const response = await apiFetch('POST', '/api/ticket/reserve', body)
       
       const reservedTickets_t = []
@@ -365,11 +356,10 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         }))
         orderDetails_t.push(section)
       })
-      console.log(orderDetails_t)
       setOrderDetails(orderDetails_t)
 
       body['reserve_tickets'] = response.reserve_tickets
-      console.log(body)
+
       setAreTicketsReserved(true)
       setTicketSelect(false)
       setDetailsInput(true)
@@ -406,7 +396,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         setErrorMsg2("Invalid form details. Check all fields have been filled.")
         return
       }
-      console.log(reservedTickets)
       const body = {
         auth_token: getToken(),
         ticket_details: reservedTickets,
@@ -416,17 +405,11 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
         window.location.replace(response.redirect_url)
-        // console.log(response)
-        // const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
-        // console.log(redirect_url)
 
-        // navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }
-
     } else {
-      console.log(userDetails)
       if (userDetails.first_name === '' || userDetails.last_name === '' || userDetails.email === '' || !checkValidEmail(userDetails.email)) {
         setError2(true)
         setErrorMsg2("Invalid form details. Check all fields have been filled.")
@@ -437,7 +420,6 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
         return {...ticket, first_name: userDetails.firstName, last_name: userDetails.lastName, email: userDetails.email}
       })
 
-      console.log(newState)
       const body = {
         auth_token: getToken(),
         ticket_details: newState,
@@ -448,10 +430,7 @@ export default function PurchaseTicket ({setTicketOrder, ticketOrder}) {
       try {
         const response = await apiFetch('POST', '/api/ticket/purchase', body)
         window.location.replace(response.redirect_url)
-        // const redirect_url = response.redirect_url.split("http://localhost:3000")[1]
-        // console.log(redirect_url)
 
-        // navigate(redirect_url)
       } catch (error) {
         console.log(error)
       }

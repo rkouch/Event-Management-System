@@ -83,7 +83,7 @@ export default function UserBookings({}) {
         <TabPanel value="3" sx={{padding: 0}}>
           <EventsBar endpoint={'/api/user/bookings'} additionalParams={{auth_token: getToken(), before: endOfYear}} responseField={'event_id'}/>
         </TabPanel>
-        <TabPanel value="3" sx={{padding: 0}}>
+        <TabPanel value="4" sx={{padding: 0}}>
           <EventsBar endpoint={'/api/user/bookings/past'} additionalParams={{auth_token: getToken()}} responseField={'event_id'}/>
         </TabPanel>
       </TabContext>

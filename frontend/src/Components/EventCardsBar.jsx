@@ -39,14 +39,8 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
   React.useEffect(() => {
     setEventIds([...event_ids])
     const fillerNum = cardsPerBar - event_ids.length
-    console.log(event_ids)
-    console.log('cardsPerBar: ',cardsPerBar)
-    console.log('event_ids.length: ',event_ids.length)
-    console.log('Need to fill: ',fillerNum)
     if (fillerNum !== 0 && center) {
       const filler_t = Array.from(Array(fillerNum).keys())
-      console.log('Creating fillers')
-      console.log(filler_t)
       setFillerCard([...filler_t])
     } else {
       setFillerCard([])
@@ -69,7 +63,6 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
               )
             })}
             {fillerCard.map((value, key) => {
-              console.log(value)
               return (
                 <FillerCard key={key}/>
               )

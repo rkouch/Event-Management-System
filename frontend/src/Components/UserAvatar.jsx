@@ -35,7 +35,6 @@ export default function UserAvatar({userId, size=35, host=false}) {
   const handleClick = async (e) => {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
-    console.log('viewing profile')
 
     try {
       // Check if a uyser is logged in

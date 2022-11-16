@@ -3,22 +3,17 @@ import { BackdropNoBG, CentredBox } from "../Styles/HelperStyles"
 import Header from "../Components/Header"
 import { getEventData, getTicketIds } from "../Helpers"
 import { useParams, useNavigate } from "react-router-dom"
-import { EventForm } from "./CreateEvent"
 import { Box } from "@mui/system"
-import EventCard from "../Components/EventCard"
 import TicketCard from "../Components/TicketCard"
 import { useTheme } from '@mui/material/styles';
 import MobileStepper from '@mui/material/MobileStepper';
-import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import SwipeableViews from 'react-swipeable-views';
-import { autoPlay } from 'react-swipeable-views-utils';
 import { Divider, Grid, IconButton, Tooltip } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
-
 
 export default function ViewTickets({}) {
   const params = useParams()
@@ -26,7 +21,6 @@ export default function ViewTickets({}) {
   const theme = useTheme();
 
   const [event, setEvent] = React.useState(null)
-  const [retrievedTicket, setRetrievedTickets] = React.useState(true)
 
   const [ticketIds, setTicketIds] = React.useState([])
 
@@ -45,20 +39,19 @@ export default function ViewTickets({}) {
     setActiveStep(step);
   };
 
+  // Initial fetch of event data
   React.useEffect(() => {
     if (ticketIds.length === 0) {
       getEventData(params.event_id, setEvent)
     }
   }, [])
 
+  // Initial fetch of tickets
   React.useEffect(() => {
     if (event !== null) {
       // Fetch Ticket ids
-      console.log('fetching tickets')
       getTicketIds(params.event_id, setTicketIds)
-    } else {
-      console.log('null event')
-    }
+    } 
   }, [event])
 
   return (

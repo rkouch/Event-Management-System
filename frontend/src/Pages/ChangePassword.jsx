@@ -192,7 +192,6 @@ export default function ChangePassword({}) {
     try {
       // Split if a reset token is required
       if (loggedIn()) {
-        console.log("success")
         const body = {
           password: currentPW.password,
           new_password: newPW.password,
@@ -228,7 +227,7 @@ export default function ChangePassword({}) {
         }
       }
     } catch (e) {
-      console.log("sucess")
+      console.log(e)
     }
   }
 

@@ -256,7 +256,6 @@ export default function EditEvent({}) {
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
     setFieldInState("error", true, end, setEndValue);
-    console.log(end.end);
     if (end.end <= start) {
       setFieldInState("error", true, end, setEndValue);
       setFieldInState(
@@ -354,7 +353,6 @@ export default function EditEvent({}) {
       // Check for valid spotify url
       if (!isValidSpotifyURL(e.target.value)) {
         setSpotifyError('Invalid playlist URL.')
-        console.log('Bad URL')
         return
       }
       setSpotifyError('')
@@ -494,7 +492,6 @@ export default function EditEvent({}) {
         end,
         setEndValue
       );
-      console.log('start date error')
       setErrorMsg('End date must be after start date')
     }
 

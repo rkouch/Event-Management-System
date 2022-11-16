@@ -54,7 +54,7 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
   }
 
   const showReplyInput = () => {
-    replyRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'})
+    // replyRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'})
   }
 
   // Scoll to bottom of show reply
@@ -79,7 +79,6 @@ export default function ReviewCard({review_details, review_num, isAttendee, isHo
       const searchParams = new URLSearchParams(body)
       const response = await apiFetch('GET', `/api/event/reviews?${searchParams}`, null)
       setReview(response.reviews[0])
-      console.log(response)
     } catch (e) {
       console.log(e)
     }

@@ -1,26 +1,13 @@
 import React from 'react'
 import Box from '@mui/material/Box';
-import Header from '../Components/Header'
-import { Backdrop, BackdropNoBG, CentredBox, ContentBox } from '../Styles/HelperStyles';
 import { styled } from '@mui/system';
-import { Link } from "react-router-dom";
-import Grid from '@mui/material/Grid';
-import { Container, Divider } from '@mui/material';
+import { useNavigate } from "react-router-dom";
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import EventCard from '../Components/EventCard';
 import Button from '@mui/material/Button';
-import EventCardsBar from '../Components/EventCardsBar';
-import { apiFetch, getToken } from '../Helpers';
-import dayjs from 'dayjs';
-import SwipeableViews from 'react-swipeable-views';
-import ArrowBackIcon from "@mui/icons-material/ArrowBack"
-import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
-import MobileStepper from '@mui/material/MobileStepper';
+import { apiFetch, search } from '../Helpers';
 import { useTheme } from '@mui/material/styles';
 import { useRef } from 'react';
 import EventsBar from './EventsBar';
@@ -40,24 +27,9 @@ const SectionHeading = styled(Box)({
   marginBottom: '10px'
 })
 
-const EVENT_CARD_WIDTH = 250
-
-const categories_t = [
-  'Food',
-  'Music',
-  'Travel & Outdoor',
-  'Health',
-  'Sport & Fitness',
-  'Hobbies',
-  'Business',
-  'Free',
-  'Tourism',
-  'Education'
-]
-
 export default function CategoriesEventsBar({}) {
-  const theme = useTheme();
   const ref = useRef(null)
+  const navigate = useNavigate()
   const [upcomingValue, setUpcomingValue] = React.useState('0');
   const [categories, setCategories] = React.useState([])
   const upcomingChange = (event, newValue) => {
@@ -77,6 +49,10 @@ export default function CategoriesEventsBar({}) {
     getCategories()
   }, [])
 
+  const handleSeeAll = () => {
+    search('categories', [categories[upcomingValue]], navigate)
+  }
+
   return (
     <Section ref={ref} sx={{pt: 2, pb: 10}}>
       <TabContext value={upcomingValue}>
@@ -95,6 +71,20 @@ export default function CategoriesEventsBar({}) {
                 )
               })}
             </Tabs>
+          </Box>
+          <Box
+            sx={{
+              width: 'auto',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'flex-end',
+              paddingBottom: '6px',
+              flexGrow: '4'
+            }}
+          >
+            <Button color='secondary' onClick={handleSeeAll}>
+              see all
+            </Button>
           </Box>
         </SectionHeading>
         {categories.map((category, key) => {

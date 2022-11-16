@@ -89,7 +89,6 @@ export default function Login({customNavigateTo=false}) {
       }
     } catch (errorResponse) {
       console.log(errorResponse.reason)
-      console.log(error)
       setFieldInState('state', true, error, setError)
       setFieldInState('msg', errorResponse.reason, error, setError)
       setFieldInState('error', true, email, setEmail)
