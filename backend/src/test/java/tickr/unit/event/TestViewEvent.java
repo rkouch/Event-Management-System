@@ -279,5 +279,17 @@ public class TestViewEvent {
         session = TestHelper.commitMakeSession(model, session);
 
         assertEquals("spotify2", response.spotifyPlaylist);
+
+        controller.editEvent(session, new EditEventRequest(eventId2, authToken, null, null, null, null,
+                null, null, null, null, null, null, true, null));
+        session = TestHelper.commitMakeSession(model, session);
+
+        response = controller.eventView(session, Map.of(
+                "event_id", eventId2,
+                "auth_token", authToken
+        ));
+        session = TestHelper.commitMakeSession(model, session);
+
+        assertEquals("spotify2", response.spotifyPlaylist);
     }
 }

@@ -6,6 +6,7 @@ import org.hibernate.annotations.TimeZoneStorageType;
 import tickr.application.recommendations.EventVector;
 import tickr.application.recommendations.SparseVector;
 import tickr.application.serialised.SerializedLocation;
+import tickr.application.serialised.requests.CreateEventRequest;
 import tickr.application.serialised.requests.EditEventRequest;
 import tickr.application.serialised.responses.EventViewResponse;
 import tickr.application.serialised.responses.EventAttendeesResponse.Attendee;
@@ -118,20 +119,6 @@ public class Event {
     private String spotifyPlaylist;
 
     public Event() {}
-
-    public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
-            String eventDescription, Location location, int seatAvailability, String eventPicture) {
-        this.location = location;
-        this.eventName = eventName;
-        this.eventStart = eventStart;
-        this.eventEnd = eventEnd;
-        this.eventDescription = eventDescription;
-        this.seatAvailability = seatAvailability;
-        this.seatCapacity = seatAvailability;
-        this.host = host;
-        this.eventPicture = eventPicture;
-        this.published = false;
-    }
 
     public Event(String eventName, User host, ZonedDateTime eventStart, ZonedDateTime eventEnd,
             String eventDescription, Location location, int seatAvailability, String eventPicture, String spotifyPlaylist) {
@@ -377,7 +364,10 @@ public class Event {
             this.eventDescription = description;
         }
 
-        this.spotifyPlaylist = spotifyPlaylist;
+        if (spotifyPlaylist != null) {
+            this.spotifyPlaylist = spotifyPlaylist;
+        }
+        
 
         if (categories != null) {
             List<Category> oldCat = session.getAllWith(Category.class, "event", this);
@@ -683,9 +673,74 @@ public class Event {
                 new SparseVector<>(List.of(host.getId().toString()), List.of(Utils.getIdf(host.getHostingEvents().size(), numDocuments))));
     }
 
-    public EventViewResponse getEventViewResponse (SerializedLocation location, List<EventViewResponse.SeatingDetails> seatingResponse, Set<String> tags, Set<String> categories, Set<String> admins) {
+    public EventViewResponse getEventViewResponse (ModelSession session) {
+        List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", this);        
+
+        List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
+        for (SeatingPlan seats : seatingDetails) {
+            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats(), seats.ticketPrice, seats.getTotalSeats(), seats.hasSeats);
+            seatingResponse.add(newSeats);
+        }
+        Set<String> tags = new HashSet<String>();
+        for (Tag tag : this.tags) {
+            tags.add(tag.getTags());
+        }
+        Set<String> categories = new HashSet<String>();
+        for (Category category : this.categories) {
+            categories.add(category.getCategory());
+        }
+        Set<String> admins = new HashSet<String>();
+        for (User admin : this.admins) {
+            admins.add(admin.getId().toString());
+        }
+        SerializedLocation location = new SerializedLocation(this.location.getStreetName(), this.location.getStreetNo(), this.location.getUnitNo(), this.location.getSuburb(),
+                this.location.getPostcode(), this.location.getState(), this.location.getCountry(), this.location.getLongitude(), this.location.getLatitude());
+        
         return new EventViewResponse(host.getId().toString(), eventName, eventPicture, location, eventStart.format(DateTimeFormatter.ISO_INSTANT), 
                 eventEnd.format(DateTimeFormatter.ISO_INSTANT), eventDescription, seatingResponse,
                 admins, categories, tags, published, seatAvailability, seatCapacity, spotifyPlaylist);
+    }
+
+    public void makeHost(User newHost, User oldHost) {
+        admins.remove(newHost);
+        addAdmin(oldHost);
+        setHost(newHost);
+    }
+    
+    public void handleCreateEvent(CreateEventRequest request, ModelSession session, Location location) {
+        if (request.seatingDetails != null) {
+            for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
+                SeatingPlan seatingPlan = new SeatingPlan(this, location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
+                session.save(seatingPlan);
+            }
+        }
+
+        if (request.tags != null) {
+            for (String tagStr : request.tags) {
+                Tag newTag = new Tag(tagStr);
+                newTag.setEvent(this);
+                this.addTag(newTag);
+                session.save(newTag);
+            }
+        }
+
+        if (request.categories != null) {
+            for (String catStr : request.categories) {
+                Category newCat = new Category(catStr);
+                newCat.setEvent(this);
+                this.addCategory(newCat);
+                session.save(newCat);
+            }
+        }
+
+        if (request.admins != null) {
+            for (String admin : request.admins) {
+                User userAdmin = session.getById(User.class, UUID.fromString(admin))
+                        .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
+                userAdmin.addAdminEvents(this);
+                this.addAdmin(userAdmin);
+            }
+        }
+        setLocation(location);
     }
 }

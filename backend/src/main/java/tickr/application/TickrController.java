@@ -258,22 +258,18 @@ public class TickrController {
         if (request.authToken == null) {
             throw new UnauthorizedException("Missing auth token!");
         }
-
         if (!request.isValid() ) {
             throw new BadRequestException("Invalid event request!");
         }
-
         if (!request.isSeatingDetailsValid()) {
             throw new BadRequestException("Invalid seating details!");
         }
-
         if (request.location != null && !request.isLocationValid()) {
             throw new BadRequestException("Invalid location details!");
         }
 
         ZonedDateTime startDate;
         ZonedDateTime endDate;
-
         try {
             startDate = ZonedDateTime.parse(request.startDate, DateTimeFormatter.ISO_DATE_TIME);
             endDate = ZonedDateTime.parse(request.endDate, DateTimeFormatter.ISO_DATE_TIME);
@@ -284,89 +280,28 @@ public class TickrController {
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("Event start time is later than event end time!");
         }
-
         if (checkDates && startDate.isBefore(ZonedDateTime.now(ZoneId.of("UTC")))) {
             throw new ForbiddenException("Cannot create event in the past!");
         }
 
-
-        // getting user from token
         var user = authenticateToken(session, request.authToken);
-        // creating location from request
-        Location location = null;
-        if (request.location != null) {
-            location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
-                    request.location.suburb, request.location.state, request.location.country);
-            session.save(location);
-            location.lookupLongitudeLatitude();
-        }
 
-        // creating event from request
+        Location location = new Location(request.location.streetNo, request.location.streetName, request.location.unitNo, request.location.postcode,
+                    request.location.suburb, request.location.state, request.location.country);
+        session.save(location);
+        location.lookupLongitudeLatitude();
+
         Event event;
         if (request.picture == null) {
-            if (request.spotifyPlaylist == null) {
-                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "");
-            } else {
-                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "", request.spotifyPlaylist);
-            }
-            
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(), "", request.spotifyPlaylist);
         } else {
-            if (request.spotifyPlaylist == null) {
-                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
-                        FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture)
-                                .orElseThrow(() -> new ForbiddenException("Invalid event image!")));
-            } else {
-                event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
-                        FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture)
-                                .orElseThrow(() -> new ForbiddenException("Invalid event image!")), request.spotifyPlaylist);
-            } 
-            
+            event = new Event(request.eventName, user, startDate, endDate, request.description, location, request.getSeatCapacity(),
+                            FileHelper.uploadFromDataUrl("event", UUID.randomUUID().toString(), request.picture)
+                                    .orElseThrow(() -> new ForbiddenException("Invalid event image!")), request.spotifyPlaylist);   
         }
         session.save(event);
-        // creating seating plan for each section
-        if (request.seatingDetails != null) {
-            for (CreateEventRequest.SeatingDetails seats : request.seatingDetails) {
-                SeatingPlan seatingPlan = new SeatingPlan(event, location, seats.section, seats.availability, seats.ticketPrice, seats.hasSeats);
-                session.save(seatingPlan);
-            }
-        }
-
-        if (request.tags != null) {
-            for (String tagStr : request.tags) {
-                Tag newTag = new Tag(tagStr);
-                newTag.setEvent(event);
-                event.addTag(newTag);
-                session.save(newTag);
-            }
-        }
-
-        if (request.categories != null) {
-            for (String catStr : request.categories) {
-                Category newCat = new Category(catStr);
-                newCat.setEvent(event);
-                event.addCategory(newCat);
-                session.save(newCat);
-            }
-        }
-
-        if (request.admins != null) {
-            for (String admin : request.admins) {
-                User userAdmin;
-                try {
-                    userAdmin = session.getById(User.class, UUID.fromString(admin))
-                            .orElseThrow(() -> new ForbiddenException(String.format("Unknown account \"%s\".", admin)));
-                } catch (IllegalArgumentException e) {
-                    throw new ForbiddenException("invalid admin Id");
-                }
-
-                userAdmin.addAdminEvents(event);
-                event.addAdmin(userAdmin);
-            }
-        }
-
-        event.setLocation(location);
+        event.handleCreateEvent(request, session, location);
         RecommenderEngine.forceRecalculate(session); // TODO
-
         return new CreateEventResponse(event.getId().toString());
     }
 
@@ -497,9 +432,6 @@ public class TickrController {
             throw new BadRequestException("Invalid seating details!");
         }
 
-        // if (event.hasTickdetsBeenSold() && request.getSeatingDetails()!= null) {
-        //     throw new ForbiddenException("Cannot edit seating details where tickets have been sold");
-        // }
         String notification = "";
         if ((request.getStartDate() != null || request.getEndDate() != null) && (!event.getEventStart().equals(request.getStartDate()) || !event.getEventEnd().equals(request.getEndDate()))) {
             notification = String.format("Event dates has changed from %s -> %s to %s -> %s\n",
@@ -512,33 +444,18 @@ public class TickrController {
         if (!notification.equals("") && !notification.equals(null)) {
             event.makeEventChangeNotification(user, notification);
         }
-
+        
         if (request.picture == null) {
-            if (request.spotifyPlaylist == null) {
-                event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
-                request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-                , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, null);
-            } else {
-                event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
-                request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-                , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
-            }
-            
+            event.editEvent(request, session, request.getEventName(), null, request.getLocation(),
+                    request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories(), 
+                            request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
         } else {
-            if (request.spotifyPlaylist == null) {
-                event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
-                .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
-             request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-             , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, null);
-            } else {
-                event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
-                .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
-             request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories()
-             , request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
-            }
+            event.editEvent(request, session, request.getEventName(), FileHelper.uploadFromDataUrl("profile", UUID.randomUUID().toString(), request.picture)
+                    .orElseThrow(() -> new ForbiddenException("Invalid data url!")), request.getLocation(),
+                            request.getStartDate(), request.getEndDate(), request.getDescription(), request.getCategories(), 
+                                    request.getTags(), request.getAdmins(), request.getSeatingDetails(), request.published, request.spotifyPlaylist);
             
         }
-
         RecommenderEngine.forceRecalculate(session); // TODO
         return;
     }
@@ -563,29 +480,7 @@ public class TickrController {
             RecommenderEngine.recordInteraction(session, user, event, InteractionType.VIEW);
         }
 
-        List<SeatingPlan> seatingDetails = session.getAllWith(SeatingPlan.class, "event", event);
-
-        List<EventViewResponse.SeatingDetails> seatingResponse = new ArrayList<EventViewResponse.SeatingDetails>();
-        for (SeatingPlan seats : seatingDetails) {
-            EventViewResponse.SeatingDetails newSeats = new EventViewResponse.SeatingDetails(seats.getSection(), seats.getAvailableSeats(), seats.ticketPrice, seats.getTotalSeats(), seats.hasSeats);
-            seatingResponse.add(newSeats);
-        }
-        Set<String> tags = new HashSet<String>();
-        for (Tag tag : event.getTags()) {
-            tags.add(tag.getTags());
-        }
-        Set<String> categories = new HashSet<String>();
-        for (Category category : event.getCategories()) {
-            categories.add(category.getCategory());
-        }
-        Set<String> admins = new HashSet<String>();
-        for (User admin : event.getAdmins()) {
-            admins.add(admin.getId().toString());
-        }
-        SerializedLocation location = new SerializedLocation(event.getLocation().getStreetName(), event.getLocation().getStreetNo(), event.getLocation().getUnitNo(), event.getLocation().getSuburb(),
-        event.getLocation().getPostcode(), event.getLocation().getState(), event.getLocation().getCountry(), event.getLocation().getLongitude(), event.getLocation().getLatitude());
-
-        return event.getEventViewResponse(location, seatingResponse, tags, categories, admins);
+        return event.getEventViewResponse(session);
     }
 
     public void makeHost (ModelSession session, EditHostRequest request) {

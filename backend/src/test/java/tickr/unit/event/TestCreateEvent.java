@@ -77,7 +77,7 @@ public class TestCreateEvent {
         seats.add(seats1);
         seats.add(seats2);
         Set<String> admins = new HashSet<>();
-        admins.add("test1@example.com");
+        admins.add(UUID.randomUUID().toString());
         Set<String> categories = new HashSet<>();
         categories.add("testcategory");
         Set<String> tags = new HashSet<>();
