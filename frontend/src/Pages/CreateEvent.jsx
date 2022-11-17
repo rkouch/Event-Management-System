@@ -422,7 +422,7 @@ export default function CreateEvent({}) {
       tags: tags,
       admins: adminList,
       picture: eventPicture,
-      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
+      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : ""
     };
 
     try {

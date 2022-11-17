@@ -524,7 +524,7 @@ export default function EditEvent({}) {
       tags: tags,
       admins: adminList,
       published:published,
-      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : null
+      spotify_playlist: isValidSpotifyURL(spotifyPlaylist) ? spotifyPlaylist : ""
     };
 
     console.log(body)

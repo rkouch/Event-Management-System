@@ -95,7 +95,8 @@ public class TestSendEventNotification {
 
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, null, null, null,
                 null, null, null, null, null, null, null, true, null));
-
+        session = TestHelper.commitMakeSession(model, session);
+        
         var response = controller.ticketReserve(session, new TicketReserve.Request(authToken, eventId, startTime, List.of(
                 new TicketReserve.TicketDetails("test_section", 1, List.of()),
                 new TicketReserve.TicketDetails("test_section2", 1, List.of())
@@ -135,6 +136,7 @@ public class TestSendEventNotification {
     @Test
     public void testEventEditEmail() {
         controller.eventNotificationsUpdate(session, new EventNotificationsUpdateRequest(authToken, eventId, true));
+        session = TestHelper.commitMakeSession(model, session);
         controller.editEvent(session, new EditEventRequest(eventId, hostToken, "update name", null, null, "2031-12-04T10:15:30Z","2031-12-05T10:15:30Z",
         null, null, null, null, null, true, null));
         session = TestHelper.commitMakeSession(model, session);
