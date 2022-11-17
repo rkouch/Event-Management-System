@@ -8,7 +8,7 @@ import Grid from '@mui/material/Unstable_Grid2';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import FormLabel from '@mui/material/FormLabel';
-import {CircularProgress} from '@mui/material';
+import {CircularProgress, IconButton, Tooltip} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { FormInput, TkrButton} from '../Styles/InputStyles';
 import '../App.css';
@@ -18,7 +18,6 @@ import HelperText from '../Components/HelperText';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import StandardLogo from "../Components/StandardLogo";
 import PasswordInput from "../Components/PasswordInput";
-
 
 export default function ChangePassword({}) {
   const navigate = useNavigate()
@@ -236,13 +235,33 @@ export default function ChangePassword({}) {
       <StandardLogo/>
       <Box disabled className='Background'> 
         <Box disabled sx={{ boxShadow: 3, width:500, borderRadius:2, backgroundColor: '#F5F5F5', padding: 1}} >
-          <H3
-            sx={{
-              fontSize: '30px',
-            }}
-          >
-            Change Password
-          </H3>
+          <Grid container spacing={2}>
+            <Grid item xs={1}>
+              {(loggedIn())
+                ? <CentredBox sx={{height: '100%', pl: 5, alignItems: 'center'}}>
+                    <Tooltip title="Back to profile">
+                      <IconButton onClick={() => {navigate('/my_profile')}}>
+                        <ArrowBackIcon/>
+                      </IconButton>
+                    </Tooltip>
+                  </CentredBox>
+                : <></>
+              }
+            </Grid>
+            <Grid item xs={10}>
+              <H3
+                sx={{
+                  fontSize: '30px',
+                }}
+              >
+                Change Password
+              </H3>
+            </Grid>
+            <Grid item xs={1}>
+
+            </Grid>
+          </Grid>
+          
           <Divider/>
           <br/>
           <FormInput>

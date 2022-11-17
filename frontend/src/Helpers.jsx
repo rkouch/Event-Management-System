@@ -22,7 +22,6 @@ export const apiFetch = (method, route, body) => {
             break;
           case 400:
             response.json().then((data) => {
-              console.log(data);
               reject(data);
             });
             break;
@@ -37,7 +36,6 @@ export const apiFetch = (method, route, body) => {
         }
       })
       .catch((response) => {
-        console.log(response);
         response.json().then((data) => {
           reject(data);
         });
@@ -113,12 +111,12 @@ export const getUserData = async (body, setUserData=null) => {
   }
 }
 
-export const getEventData = async (eventId, setEventData=null) => {
+export const getEventData = async (eventId, setEventData=null, token=null) => {
   try {
     var response
-    if (loggedIn()) {
+    if (token !== null) {
       const body = {
-        auth_token: getToken(),
+        auth_token: token,
         event_id: eventId
       }
       const searchParams = new URLSearchParams(body)

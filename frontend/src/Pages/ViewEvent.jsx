@@ -102,7 +102,7 @@ export default function ViewEvent({}) {
 
   // Initial load
   React.useEffect(()=> {
-    getEventData(params.event_id, setEvent)
+    getEventData(params.event_id, setEvent, getToken())
 
     // Check if we have the host_id is provided to check if event data has been captured
     if (event.host_id !== '') {

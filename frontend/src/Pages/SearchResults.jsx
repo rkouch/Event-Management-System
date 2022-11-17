@@ -3,7 +3,7 @@ import React from 'react'
 import { Box } from '@mui/system'
 import { useParams } from 'react-router-dom'
 import { apiFetch, setFieldInState } from '../Helpers'
-import { Grid, InputAdornment, TextField, Typography, Collapse, Divider, Tooltip } from '@mui/material'
+import { Grid, InputAdornment, TextField, Typography, Collapse, Divider, Tooltip, Link } from '@mui/material'
 import SearchSharpIcon from '@mui/icons-material/SearchSharp';
 import EventCardsPaper from '../Components/EventCardsPaper'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -502,6 +502,15 @@ export default function SearchResults({}) {
                                   valueLabelDisplay="auto"
                                   marks={[{value: 1, label: '1km'}, {value: 100, label: '100km'}]}
                                   onChange={handleDistanceChange}/>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
+                                <Tooltip title="Location data courtesy of OpenStreetMap">
+                                  <Link underline='none' href="#" sx={{fontFamily: 'Segoe UI', color: '#AAAAAA'}} onClick={() => {window.open('https://openstreetmap.org/copyright')}}>
+                                    ©OpenStreetMap
+                                  </Link>
+                                </Tooltip>
                               </Box>
                             </Grid>
                           </Grid>
