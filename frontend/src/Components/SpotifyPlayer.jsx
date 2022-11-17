@@ -1,9 +1,13 @@
+/*
+  Spotify embded component courtesy of Spotify
+*/
+
 import { Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import React from 'react'
 import { alpha } from '@mui/system';
 
-const CLIENT_ID = '7fe8e700da1947a88047f156715ab612'
+const CLIENT_ID = '7fe8e700da1947a88047f156715ab612';
 const CLIENT_SECRET = 'a508ed7ca9cc45529d3f62e805b3d34a'
 
 export default function SpotifyPlayer({link, editable=false}) {
