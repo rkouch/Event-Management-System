@@ -181,7 +181,7 @@ export default function EditEvent({}) {
   })
 
   React.useState(() => {
-    getEventData(params.event_id, setEvent)
+    getEventData(params.event_id, setEvent, getToken())
   }, [])
 
   // Set Values

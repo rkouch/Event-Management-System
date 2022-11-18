@@ -16,7 +16,7 @@ import { apiFetch, attachFields } from '../Helpers';
 
 const EVENT_CARD_WIDTH = 250
 
-export default function EventsBar({endpoint, additionalParams={}, responseField}) {
+export default function EventsBar({endpoint, additionalParams={}, responseField, tokenReq=false}) {
   const theme = useTheme();
   const ref = useRef()
 
@@ -151,7 +151,7 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
           {eventGroups.map((event, key) => (
             <div key={key}>
               {Math.abs(activePage - key) <= 2 ? (
-                <EventCardsPage setCenter={setCenter} center={center} pageStart={event.pageStart} pageNum={event.pageNum} activePage={activePage} getEvents={getEvents} cardsPerPage={cardsPerPage}/>
+                <EventCardsPage setCenter={setCenter} center={center} pageStart={event.pageStart} pageNum={event.pageNum} activePage={activePage} getEvents={getEvents} cardsPerPage={cardsPerPage} tokenReq={tokenReq}/>
               ) : null}
             </div>
           ))}
@@ -199,7 +199,7 @@ export default function EventsBar({endpoint, additionalParams={}, responseField}
   )
 }
 
-function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage, center, setCenter}) {
+function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage, center, setCenter, tokenReq=false}) {
   const [eventIds, setEventIds] = React.useState([])
 
   // Get event ids for page if active page is this page
@@ -221,6 +221,6 @@ function EventCardsPage({pageStart, getEvents, activePage, pageNum, cardsPerPage
   // }, [])
 
   return (
-    <EventCardsBar center={(cardsPerPage === eventIds.length) || center} event_ids={eventIds} cardsPerBar={cardsPerPage}/>
+    <EventCardsBar center={(cardsPerPage === eventIds.length) || center} event_ids={eventIds} cardsPerBar={cardsPerPage} tokenReq={tokenReq}/>
   )
 }

@@ -3,13 +3,13 @@ import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 import { fontWeight } from '@mui/system';
 import dayjs from "dayjs";
-import { getEventData } from '../Helpers';
+import { getEventData, getToken } from '../Helpers';
 import { CentredBox, UploadPhoto } from '../Styles/HelperStyles';
 import { useNavigate } from 'react-router-dom';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
-export default function EventCard({event_id}) {
+export default function EventCard({event_id, tokenReq=false}) {
   const navigate = useNavigate()
   var utc = require('dayjs/plugin/utc')
   dayjs.extend(utc)
@@ -36,7 +36,11 @@ export default function EventCard({event_id}) {
 
   React.useEffect(() => {
     try {
-      getEventData(event_id, setEvent)
+      if(tokenReq) {
+        getEventData(event_id, setEvent, getToken())
+      } else {
+        getEventData(event_id, setEvent)
+      }
       setSuccessLoad(true)
     } catch(e) {
       console.log(e)
