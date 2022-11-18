@@ -181,7 +181,7 @@ export default function EditEvent({}) {
   })
 
   React.useState(() => {
-    getEventData(params.event_id, setEvent)
+    getEventData(params.event_id, setEvent, getToken())
   }, [])
 
   // Set Values
@@ -247,11 +247,6 @@ export default function EditEvent({}) {
       setFieldInState("errorMsg", "", end, setEndValue);
     }
   };
-
-  // Handle disable from start date
-  function disableStartDate (date) {
-    return (date < start.start)
-  }
 
   const handleEndChange = (newValue) => {
     setFieldInState("end", newValue, end, setEndValue);
@@ -783,7 +778,6 @@ export default function EditEvent({}) {
                                 inputFormat="DD/MM/YYYY HH:mm"
                                 renderInput={(params) => <TextField {...params} />}
                                 disablePast = {true}
-                                shouldDisableDate={disableStartDate}
                               />
                             </ContrastInputWrapper>
                             <FormHelperText>{end.errorMsg}</FormHelperText>
