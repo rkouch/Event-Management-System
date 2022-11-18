@@ -33,7 +33,7 @@ const FillerCard = styled(Box)({
   height: '400px',
 })
 
-export default function EventCardsBar({event_ids = [], filterKeys=[], filterValues=[], center=false, cardsPerBar}) {
+export default function EventCardsBar({event_ids = [], filterKeys=[], filterValues=[], center=false, cardsPerBar, tokenReq=false}) {
   const [eventIds, setEventIds] = React.useState([...event_ids])
 
   React.useEffect(() => {
@@ -59,7 +59,7 @@ export default function EventCardsBar({event_ids = [], filterKeys=[], filterValu
         ? <CardsBar>
             {eventIds.map((value, key) => {
               return (
-                <EventCard key={key} event_id={value}/>
+                <EventCard key={key} event_id={value} tokenReq={tokenReq}/>
               )
             })}
             {fillerCard.map((value, key) => {
